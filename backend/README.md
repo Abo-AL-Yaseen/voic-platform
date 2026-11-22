@@ -60,6 +60,18 @@ over `.env`. Run from `backend/` so its local file resolves consistently.
 
 ## MySQL setup: choose native or Docker
 
+Choose the database setup first, then use the same API and migration commands below:
+
+| Setting | Native MySQL | Optional Compose |
+| --- | --- | --- |
+| `DB_HOST` | Native server address, normally `127.0.0.1` | `127.0.0.1` when the API runs on the host |
+| `DB_PORT` | Actual native port, commonly `3306` | Free localhost port, default `3308` |
+| `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Separate VOIC database and limited user provisioned by an administrator | Separate VOIC database and user initialized by the image |
+| `MYSQL_ROOT_PASSWORD` | Not required by the application or migrations | Required only for Compose initialization and its optional test helper |
+
+Docker is not invoked by `start`, `db:check`, any `migration:*` command or `test:database`.
+The optional `test:compose` helper is the only database-check command that invokes Docker.
+
 ### Option A: native MySQL on Windows
 
 Use a suitable existing MySQL installation only when a separate VOIC database and dedicated
@@ -271,8 +283,14 @@ production build passed without tracked frontend changes. A real API bootstrap r
 liveness 200 and readiness 503 when no suitable database connection was available.
 
 Docker/Compose were installed; Docker Desktop was stopped. `docker desktop start` was run
-once, followed by read-only version/container inspection. No restart of Docker Desktop or
-project-specific mutation of unrelated containers/databases/volumes was performed.
+once to try the originally requested reproducible local database, followed by read-only
+`docker version`, `docker ps -a`, `docker inspect` and `docker logs` inspection. No restart
+of Docker Desktop or project-specific mutation of unrelated containers/databases/volumes
+was performed.
+FitMind containers were observed running afterward with `unless-stopped` restart policies
+and clustered start times around engine startup. That is consistent with automatic startup,
+but the unavailable daemon prevented a before-start snapshot, so their prior running state
+and the cause of the nginx container's one recorded restart cannot be established.
 `docker compose config --quiet` passed. Both `docker compose up -d --wait` and a subsequent
 `docker pull mysql:9.7.4` failed to obtain the target image because Docker Hub requests timed out.
 

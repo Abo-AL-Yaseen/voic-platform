@@ -108,7 +108,11 @@ deployment, end-to-end browser coverage, capacity or legal/content approval.
 
 All VOIC work now uses the permanent `mahmoud` branch. Feature/task branches must not be
 created. Prior branch tips and the current foundation are preserved through ordinary commits,
-without rewriting history; remote preservation is required before deleting old branches.
+without rewriting history. `mahmoud` is pushed with upstream `origin/mahmoud` and verified as
+the GitHub default branch. After verifying every old tip was an ancestor of remote `mahmoud`,
+local and remote `main`, `chore/spec-kit-setup` and `001-public-product-catalog` branch
+references were deleted, along with the local `feat/backend-foundation` reference. Their
+commits remain in the permanent branch's history; no force push or history rewrite occurred.
 
 On 2026-11-23:
 
