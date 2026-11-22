@@ -1,0 +1,151 @@
+[
+  {
+    "slug": "semolina-maamoul",
+    "titleAr": "معمول السميد بالتمر",
+    "titleEn": "Date-filled Semolina Maamoul",
+    "category": "sweets-baking",
+    "descriptionAr": "معمول بحشوة التمر ولمسة المحلب، مع سمن النباتين.",
+    "productKeys": ["nabateen"],
+    "image": "assets/recipe-maamoul.jpg",
+    "ingredientsAr": [
+      "1 كغم سميد ناعم",
+      "2 ملعقة كبيرة محلب مطحون",
+      "3 أكواب سمن النباتين",
+      "1 ملعقة كبيرة خميرة فورية",
+      "1 كوب حليب كامل الدسم دافئ",
+      "400 غم تمر مهروس",
+      "2 ملعقة صغيرة جوزة الطيب",
+      "1 ملعقة كبيرة قرفة",
+      "زيت زيتون للحشوة حسب الحاجة",
+      "سكر بودرة للتقديم حسب الرغبة"
+    ],
+    "stepsAr": [
+      "افرك السميد بالمحلب والسمن، ثم غطّه واتركه أربع ساعات.",
+      "أضف الخميرة والحليب بالتدريج واعجن حتى تتكوّن عجينة طرية.",
+      "حضّر حشوة التمر مع القرفة وجوزة الطيب وقليل من الزيت.",
+      "قسّم العجين واحشه بالتمر، وشكّل الحبات بالقالب. اتركها ترتاح 15 دقيقة.",
+      "اخبز على 175°م لمدة 15–20 دقيقة مع متابعة اللون، ثم برّد الحبات وقدّمها مع السكر حسب الرغبة."
+    ],
+    "knownTimeAr": "راحة العجين: 4 ساعات، ثم 15 دقيقة بعد التشكيل. الخبز: 15–20 دقيقة.",
+    "temperatureC": 175,
+    "yield": null,
+    "internalSource": "https://www.voic.ps/index.php/ar/recipes/159-2018-06-12-19-02-40",
+    "internalNotes": [
+      "A concise date-filling variant of the company recipe; original also offers walnut filling. Ingredient list says ghee while one instruction says butter; this edition follows the explicit three-cup Nabateen ingredient. Source does not specify output servings, cup volume or total prep time."
+    ]
+  },
+  {
+    "slug": "qidra-with-lamb",
+    "titleAr": "القدرة باللحم",
+    "titleEn": "Qidra with Lamb",
+    "category": "main-dishes",
+    "descriptionAr": "أرز ولحم وحمص، مع زيت نباتي وسمن النباتين.",
+    "productKeys": ["nabateen", "reem-sunflower", "ghazalein-corn"],
+    "image": "assets/recipe-qidra-lamb.jpg",
+    "ingredientsAr": [
+      "2 كوب أرز بسمتي",
+      "1 كغم لحم",
+      "1 كوب حمص مسلوق",
+      "½ كوب زيت ريم أو الغزالين",
+      "1 ملعقة كبيرة سمن النباتين",
+      "2 لتر ماء",
+      "2 بصلة مفرومة و2 بصلة شرائح",
+      "3 ملاعق كبيرة ثوم مهروس",
+      "1 مكعب مرق دجاج",
+      "2 ورقة غار",
+      "½ ملعقة صغيرة كمون",
+      "1 ملعقة صغيرة كركم و1 ملعقة صغيرة حب هال",
+      "1 ملعقة كبيرة هال مطحون",
+      "ملح وفلفل أسود حسب الذوق"
+    ],
+    "stepsAr": [
+      "شوّح البصل المفروم بنصف الزيت، وأضف اللحم والغار وحب الهال. اسكب الماء واترك اللحم حتى ينضج، ثم احفظ المرق.",
+      "حمّر شرائح البصل ببقية الزيت وقلّب معها الحمص والكمون والفلفل.",
+      "تبّل الأرز بالثوم والكركم والهال المطحون والملح. رتّب نصفه ثم خليط الحمص ثم بقية الأرز.",
+      "أضف مكعب المرق وأربعة أكواب من مرق اللحم المصفّى. ابدأ بالغليان ثم خفّف النار حتى ينضج الأرز.",
+      "وزّع السمن فوق الأرز وغطّه ليذوب، ثم قدّم الأرز مع اللحم."
+    ],
+    "knownTimeAr": null,
+    "temperatureC": null,
+    "yield": null,
+    "internalSource": "https://www.voic.ps/index.php/ar/recipes/152-2018-05-19-12-27-00",
+    "internalNotes": [
+      "Use this specific lamb recipe, not the separate chicken/qidra page whose image filename says bulgur. Serving yield and total cooking time are not supplied. Optional garnish omitted because source did not quantify it."
+    ]
+  },
+  {
+    "slug": "shishbarak-with-yogurt",
+    "titleAr": "شيشبرك باللبن",
+    "titleEn": "Shishbarak with Yogurt",
+    "category": "main-dishes",
+    "descriptionAr": "عجينة محشوة باللحم، تُقدّم مع اللبن والثوم والكزبرة.",
+    "productKeys": ["reem-sunflower"],
+    "image": "assets/recipe-shishbarak.jpg",
+    "ingredientsAr": [
+      "500 غم لحم مفروم",
+      "2 كوب دقيق منخول",
+      "1 بصلة صغيرة مفرومة",
+      "2 ملعقة كبيرة زيت ريم للحشوة",
+      "½ ملعقة كبيرة زيت للثوم والكزبرة",
+      "1 ملعقة صغيرة جوزة الطيب",
+      "ملح وبهارات حسب الذوق",
+      "1 كغم لبن",
+      "2 ملعقة كبيرة كزبرة مفرومة",
+      "1 فص ثوم مفروم",
+      "3 ملاعق كبيرة نشا مذابة في ½ كوب ماء",
+      "ماء للعجين حسب الحاجة"
+    ],
+    "stepsAr": [
+      "اعجن الدقيق والملح بماء يضاف تدريجيًا. غطّ العجين وبرّده 30 دقيقة.",
+      "قلّب البصل في الزيت، ثم أضف اللحم والبهارات وجوزة الطيب واطبخ الحشوة حتى تنضج.",
+      "افرد العجين وقطّعه دوائر، واحشها وأغلقها بشكل الشيشبرك.",
+      "رتّبها على صينية مدهونة قليلًا، واخبز عند 180°م نحو 10 دقائق مع متابعة التحمير.",
+      "حرّك اللبن مع النشا على نار متوسطة حتى يثخن. قلّب الثوم والكزبرة بالزيت وأضفهما إلى اللبن، ثم قدّم مع الشيشبرك."
+    ],
+    "knownTimeAr": "تبريد العجين: 30 دقيقة. خبز الحبات: نحو 10 دقائق.",
+    "temperatureC": 180,
+    "yield": null,
+    "internalSource": "https://www.voic.ps/index.php/ar/recipes/155-2018-05-27-09-20-09",
+    "internalNotes": [
+      "The source separately adds half a tablespoon of oil for aromatics; keep it explicit instead of silently counting it within the two tablespoons. Do not present bake time as total preparation time."
+    ]
+  },
+  {
+    "slug": "fish-with-vegetables",
+    "titleAr": "صينية سمك بالخضروات",
+    "titleEn": "Baked Fish with Vegetables",
+    "category": "main-dishes",
+    "descriptionAr": "سمك بالفرن مع الخضروات والليمون والثوم والبهارات.",
+    "productKeys": [],
+    "image": "assets/recipe-fish.jpg",
+    "ingredientsAr": [
+      "4 سمكات متوسطة",
+      "1 كوب بقدونس مفروم، وقليل للتزيين",
+      "¼ كوب عصير ليمون",
+      "2 ملعقة كبيرة زيت زيتون",
+      "6 فصوص ثوم مهروس",
+      "1 ملعقة صغيرة من كل من الكركم والكمون والبابريكا والملح",
+      "½ ملعقة صغيرة زعفران و½ ملعقة صغيرة فلفل أسود",
+      "1 قرن فلفل حار شرائح",
+      "3 حبات جزر كبيرة شرائح",
+      "4 أوراق غار",
+      "1 ليمونة شرائح",
+      "1 بصلة شرائح",
+      "2 فلفل أخضر حلو مكعبات",
+      "1 طماطم مقشرة ومفرومة"
+    ],
+    "stepsAr": [
+      "حضّر السمك ونظّفه وصفّه. اخلط العصير والزيت والثوم والبقدونس والتوابل.",
+      "تبّل السمك من الداخل والخارج، وضع ورقة غار داخل كل سمكة.",
+      "وزّع جزءًا من الخضروات والليمون في الصينية، ثم السمك وبقية الخضروات والطماطم والتتبيلة.",
+      "غطّ الصينية بورق الألمنيوم واخبزها على 190°م نحو 60 دقيقة حتى النضج، ثم اكشفها للتحمير وقدّمها ساخنة."
+    ],
+    "knownTimeAr": "الخبز: نحو 60 دقيقة، ثم التحمير.",
+    "temperatureC": 190,
+    "yield": null,
+    "internalSource": "https://www.voic.ps/index.php/ar/recipes/157-2018-06-04-22-51-13",
+    "internalNotes": [
+      "Original recipe uses olive oil and names no VOIC product. Do not substitute a product or invent an olive-oil product. Omit the recipe-used-product block; a general product browsing CTA is acceptable. Fish count is not a verified serving yield."
+    ]
+  }
+]

@@ -1,0 +1,43 @@
+# Dependencies and generated output (all platform packages)
+node_modules/
+vendor/
+dist/
+build/
+out/
+coverage/
+.cache/
+.vite/
+.next/
+.nuxt/
+.turbo/
+*.tsbuildinfo
+vite.config.*.timestamp-*
+
+# Temporary files and logs
+.tmp/
+.tmp-*/
+tmp/
+logs/
+*.log
+*-debug.log*
+
+# Local environment and private credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+credentials.json
+service-account*.json
+*.dump
+*.sql.gz
+*.sqlite
+*.sqlite3
+*.db
+
+# Redundant generated frontend snapshot; retain Figma configuration and assets
+/frontend/.figma/master-baseline/

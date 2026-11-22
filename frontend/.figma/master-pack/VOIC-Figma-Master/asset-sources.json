@@ -1,0 +1,164 @@
+[
+  {
+    "file": "assets/recipe-maamoul.jpg",
+    "url": "https://www.voic.ps/images/Recipes/معمول.jpg",
+    "dimensions": [1589, 579],
+    "status": "downloaded"
+  },
+  {
+    "file": "assets/recipe-shishbarak.jpg",
+    "url": "https://www.voic.ps/images/Recipes/ششبرك.jpg",
+    "dimensions": [1589, 579],
+    "status": "downloaded"
+  },
+  {
+    "file": "assets/recipe-qidra-lamb.jpg",
+    "url": "https://www.voic.ps/images/Recipes/اليوم_الثالث_-_قدرة.jpg",
+    "dimensions": [1589, 579],
+    "status": "downloaded"
+  },
+  {
+    "file": "assets/recipe-fish.jpg",
+    "url": "https://www.voic.ps/images/Recipes/سمك.jpg",
+    "dimensions": [1589, 579],
+    "status": "downloaded"
+  },
+  {
+    "file": "assets/history-1954.jpg",
+    "url": "https://voic.ps/images/history/1954.jpg",
+    "dimensions": [674, 676],
+    "status": "downloaded"
+  },
+  {
+    "file": "assets/history-1961.jpg",
+    "url": "https://voic.ps/images/history/1961.jpg",
+    "dimensions": [676, 676],
+    "status": "downloaded"
+  },
+  {
+    "file": "assets/history-2016.jpg",
+    "url": "https://voic.ps/images/history/2016.jpg",
+    "dimensions": [500, 500],
+    "status": "downloaded"
+  },
+  {
+    "file": "assets/product-aseel.png",
+    "url": "https://voic.ps/images/virtuemart/product/aseel6.png",
+    "dimensions": [500, 334],
+    "status": "downloaded"
+  },
+  {
+    "file": "assets/product-mumtaz.png",
+    "url": "https://voic.ps/images/virtuemart/product/mumtaz.png",
+    "dimensions": [1187, 1187],
+    "status": "downloaded"
+  },
+  {
+    "file": "assets/product-kawkab.png",
+    "url": "https://voic.ps/images/virtuemart/product/kawakeb.png",
+    "dimensions": [1187, 1187],
+    "status": "downloaded"
+  },
+  {
+    "file": "assets/product-ghazalein.png",
+    "url": "https://voic.ps/images/ghazaleen_oil.png",
+    "dimensions": [800, 800],
+    "status": "downloaded"
+  },
+  {
+    "file": "assets/product-reem.png",
+    "url": "https://voic.ps/images/reem_oil.png",
+    "dimensions": [1426, 1341],
+    "status": "downloaded"
+  },
+  {
+    "file": "assets/ghazal-packshot.png",
+    "sourceDocument": "EN Catalog 4.pdf",
+    "page": 3,
+    "pdfImageXref": 178,
+    "dimensions": [676, 650],
+    "softMaskPreserved": true,
+    "status": "extracted"
+  },
+  {
+    "file": "assets/kawakib-packshot.png",
+    "sourceDocument": "EN Catalog 4.pdf",
+    "page": 4,
+    "pdfImageXref": 189,
+    "dimensions": [1424, 1050],
+    "softMaskPreserved": false,
+    "status": "extracted"
+  },
+  {
+    "file": "assets/nabatin-packshot.png",
+    "sourceDocument": "EN Catalog 4.pdf",
+    "page": 5,
+    "pdfImageXref": 195,
+    "dimensions": [582, 562],
+    "softMaskPreserved": true,
+    "status": "extracted"
+  },
+  {
+    "file": "assets/balqa-packshot.png",
+    "sourceDocument": "EN Catalog 4.pdf",
+    "page": 6,
+    "pdfImageXref": 204,
+    "dimensions": [650, 637],
+    "softMaskPreserved": true,
+    "status": "extracted"
+  },
+  {
+    "file": "assets/butter-flavor-packshot.png",
+    "sourceDocument": "EN Catalog 4.pdf",
+    "page": 7,
+    "pdfImageXref": 209,
+    "dimensions": [690, 538],
+    "softMaskPreserved": true,
+    "status": "extracted"
+  },
+  {
+    "file": "assets/bakery-croissant.png",
+    "sourceDocument": "catalouge 71 years final 2025.pdf",
+    "page": 2,
+    "pdfImageXref": 4385,
+    "dimensions": [1177, 785],
+    "softMaskPreserved": false,
+    "status": "extracted"
+  },
+  {
+    "file": "assets/factory-panorama.png",
+    "sourceDocument": "catalouge 71 years final 2025.pdf",
+    "page": 4,
+    "pdfImageXref": 4389,
+    "dimensions": [3508, 1047],
+    "softMaskPreserved": false,
+    "status": "extracted"
+  },
+  {
+    "file": "assets/kunafa-food.png",
+    "sourceDocument": "EN Catalog 4.pdf",
+    "page": 3,
+    "pdfImageXref": 179,
+    "dimensions": [1035, 1424],
+    "softMaskPreserved": false,
+    "status": "extracted"
+  },
+  {
+    "file": "assets/maamoul-food.png",
+    "sourceDocument": "EN Catalog 4.pdf",
+    "page": 5,
+    "pdfImageXref": 197,
+    "dimensions": [421, 582],
+    "softMaskPreserved": true,
+    "status": "extracted"
+  },
+  {
+    "file": "assets/baklava-food.png",
+    "sourceDocument": "EN Catalog 4.pdf",
+    "page": 6,
+    "pdfImageXref": 202,
+    "dimensions": [472, 591],
+    "softMaskPreserved": true,
+    "status": "extracted"
+  }
+]
