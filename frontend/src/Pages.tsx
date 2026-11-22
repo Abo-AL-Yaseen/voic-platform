@@ -1110,12 +1110,7 @@ export function RecipeDetailPage({ recipe, lang, go }: PageProps & { recipe: Rec
         <section className="method-panel">
           <h2>{pick(lang, "طريقة التحضير", "Method")}</h2>
           <ol>
-            {(lang === "ar"
-              ? recipe.stepsAr
-              : lang === "de"
-                ? recipe.stepsEn.map((step) => pick(lang, "", step))
-                : recipe.stepsEn
-            ).map((step, index) => (
+            {(lang === "ar" ? recipe.stepsAr : recipe.stepsEn).map((step, index) => (
               <li key={step}>
                 <span>{index + 1}</span>
                 <p>{step}</p>

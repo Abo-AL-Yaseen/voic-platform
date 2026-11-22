@@ -11,21 +11,17 @@ export function AccountAccessPage({ lang, go }: Props) {
   return (
     <main className="access-page section-pad">
       <div>
-        <p className="eyebrow">
-          {msg(lang, { ar: "حساب العميل", en: "Customer account", de: "Kundenkonto" })}
-        </p>
+        <p className="eyebrow">{msg(lang, { ar: "حساب العميل", en: "Customer account" })}</p>
         <h1>
           {msg(lang, {
             ar: "سجّل الدخول لعرض حسابك",
             en: "Sign in to view your account",
-            de: "Melden Sie sich für Ihr Konto an",
           })}
         </h1>
         <p>
           {msg(lang, {
             ar: "تبقى المنتجات والوصفات متاحة للجميع. الحساب مطلوب فقط لحفظ ومتابعة استفسارات التوريد.",
             en: "Products and recipes remain public. An account is only required to save and track supply inquiries.",
-            de: "Produkte und Rezepte bleiben öffentlich. Ein Konto ist nur zum Speichern und Verfolgen von Lieferanfragen erforderlich.",
           })}
         </p>
         <div className="page-actions">
@@ -34,14 +30,14 @@ export function AccountAccessPage({ lang, go }: Props) {
             go={go}
             className="button button-primary"
           >
-            {msg(lang, { ar: "تسجيل الدخول", en: "Sign in", de: "Anmelden" })}
+            {msg(lang, { ar: "تسجيل الدخول", en: "Sign in" })}
           </AppLink>
           <AppLink
             href={withLang("/register?returnTo=/account", lang)}
             go={go}
             className="button button-secondary"
           >
-            {msg(lang, { ar: "إنشاء حساب", en: "Create account", de: "Konto erstellen" })}
+            {msg(lang, { ar: "إنشاء حساب", en: "Create account" })}
           </AppLink>
         </div>
       </div>
@@ -61,16 +57,11 @@ function PreviewHeader({
   return (
     <header className="workspace-page-heading">
       <div>
-        <p className="eyebrow">
-          {msg(lang, { ar: "معاينة واجهة", en: "Interface preview", de: "Oberflächenvorschau" })}
-        </p>
+        <p className="eyebrow">{msg(lang, { ar: "معاينة واجهة", en: "Interface preview" })}</p>
         <h1>{title}</h1>
         <p>{description}</p>
       </div>
-      <StatusBadge
-        status="warning"
-        label={msg(lang, { ar: "غير متصل", en: "Disconnected", de: "Nicht verbunden" })}
-      />
+      <StatusBadge status="warning" label={msg(lang, { ar: "غير متصل", en: "Disconnected" })} />
     </header>
   );
 }
@@ -80,42 +71,36 @@ export function AccountOverviewPage({ lang, go }: Props) {
     <AccountLayout lang={lang} go={go} active="/account">
       <PreviewHeader
         lang={lang}
-        title={msg(lang, { ar: "نظرة عامة", en: "Account overview", de: "Kontoübersicht" })}
+        title={msg(lang, { ar: "نظرة عامة", en: "Account overview" })}
         description={msg(lang, {
           ar: "ملخص الحساب وحالة التحقق والاستفسارات دون أرقام مختلقة.",
           en: "Account, verification and inquiry summary without fabricated activity.",
-          de: "Zusammenfassung von Konto, Bestätigung und Anfragen ohne erfundene Aktivitäten.",
         })}
       />
       <div className="account-summary-grid">
         <section>
-          <span>{msg(lang, { ar: "حالة البريد", en: "Email status", de: "E-Mail-Status" })}</span>
+          <span>{msg(lang, { ar: "حالة البريد", en: "Email status" })}</span>
           <StatusBadge
             status="success"
             label={msg(lang, {
               ar: "تم التحقق — مثال بصري",
               en: "Verified — visual example",
-              de: "Bestätigt — visuelles Beispiel",
             })}
           />
           <p>
             {msg(lang, {
               ar: "يتطلب التحقق الفعلي استجابة من الخادم.",
               en: "Actual verification requires a server response.",
-              de: "Die tatsächliche Bestätigung erfordert eine Serverantwort.",
             })}
           </p>
         </section>
         <section>
-          <span>
-            {msg(lang, { ar: "استفسارات التوريد", en: "Supply inquiries", de: "Lieferanfragen" })}
-          </span>
+          <span>{msg(lang, { ar: "استفسارات التوريد", en: "Supply inquiries" })}</span>
           <strong>—</strong>
           <p>
             {msg(lang, {
               ar: "لا تُعرض قيمة صفرية قبل تحميل البيانات.",
               en: "No zero value is shown before data is loaded.",
-              de: "Vor dem Laden der Daten wird kein Nullwert angezeigt.",
             })}
           </p>
         </section>
@@ -125,12 +110,10 @@ export function AccountOverviewPage({ lang, go }: Props) {
         title={msg(lang, {
           ar: "لا توجد بيانات استفسارات محمّلة",
           en: "No inquiry data loaded",
-          de: "Keine Anfragedaten geladen",
         })}
         description={msg(lang, {
           ar: "هذه ليست قائمة فارغة مؤكدة؛ يلزم ربط الحساب بالخدمة.",
           en: "This is not a confirmed empty list; account integration is required.",
-          de: "Dies ist keine bestätigte leere Liste; die Kontoanbindung ist erforderlich.",
         })}
         action={
           <AppLink
@@ -138,7 +121,7 @@ export function AccountOverviewPage({ lang, go }: Props) {
             go={go}
             className="button button-primary"
           >
-            {msg(lang, { ar: "ابدأ استفسارًا", en: "Start an inquiry", de: "Anfrage beginnen" })}
+            {msg(lang, { ar: "ابدأ استفسارًا", en: "Start an inquiry" })}
           </AppLink>
         }
       />
@@ -153,11 +136,10 @@ export function ProfilePage({ lang, go }: Props) {
     <AccountLayout lang={lang} go={go} active="/account/profile">
       <PreviewHeader
         lang={lang}
-        title={msg(lang, { ar: "الملف الشخصي", en: "Profile", de: "Profil" })}
+        title={msg(lang, { ar: "الملف الشخصي", en: "Profile" })}
         description={msg(lang, {
           ar: "بيانات الحساب القابلة للتعديل.",
           en: "Editable account details.",
-          de: "Bearbeitbare Kontodaten.",
         })}
       />
       <form
@@ -168,68 +150,57 @@ export function ProfilePage({ lang, go }: Props) {
             msg(lang, {
               ar: "لم تُحفظ التغييرات؛ خدمة الحساب غير متصلة.",
               en: "Changes were not saved; the account service is disconnected.",
-              de: "Änderungen wurden nicht gespeichert; der Kontodienst ist nicht verbunden.",
             }),
           );
         }}
       >
         <div className="form-grid">
           <TextField
-            label={msg(lang, { ar: "الاسم الكامل", en: "Full name", de: "Vollständiger Name" })}
+            label={msg(lang, { ar: "الاسم الكامل", en: "Full name" })}
             placeholder="—"
             required
           />
           <SelectField
-            label={msg(lang, { ar: "نوع الحساب", en: "Account type", de: "Kontotyp" })}
+            label={msg(lang, { ar: "نوع الحساب", en: "Account type" })}
             value={kind}
             onChange={(e) => setKind(e.target.value)}
           >
-            <option value="individual">
-              {msg(lang, { ar: "فرد", en: "Individual", de: "Privatperson" })}
-            </option>
-            <option value="company">
-              {msg(lang, { ar: "شركة", en: "Company", de: "Unternehmen" })}
-            </option>
+            <option value="individual">{msg(lang, { ar: "فرد", en: "Individual" })}</option>
+            <option value="company">{msg(lang, { ar: "شركة", en: "Company" })}</option>
           </SelectField>
           {kind === "company" && (
             <TextField
-              label={msg(lang, { ar: "اسم الشركة", en: "Company name", de: "Unternehmensname" })}
+              label={msg(lang, { ar: "اسم الشركة", en: "Company name" })}
               placeholder="—"
               required
             />
           )}
-          <TextField
-            label={msg(lang, { ar: "الدولة", en: "Country", de: "Land" })}
-            placeholder="—"
-            required
-          />
+          <TextField label={msg(lang, { ar: "الدولة", en: "Country" })} placeholder="—" required />
           <TextField
             label={msg(lang, {
               ar: "الهاتف (اختياري)",
               en: "Phone (optional)",
-              de: "Telefon (optional)",
             })}
             type="tel"
             placeholder="—"
           />
           <TextField
-            label={msg(lang, { ar: "البريد الإلكتروني", en: "Email", de: "E-Mail" })}
+            label={msg(lang, { ar: "البريد الإلكتروني", en: "Email" })}
             type="email"
             placeholder="—"
             disabled
             hint={msg(lang, {
               ar: "تغيير البريد يتطلب تحققًا جديدًا.",
               en: "Changing email requires reverification.",
-              de: "Eine Änderung erfordert eine erneute Bestätigung.",
             })}
           />
         </div>
         <div className="page-actions">
           <button className="button button-primary" type="submit">
-            {msg(lang, { ar: "حفظ التغييرات", en: "Save changes", de: "Änderungen speichern" })}
+            {msg(lang, { ar: "حفظ التغييرات", en: "Save changes" })}
           </button>
           <button className="button button-secondary" type="reset">
-            {msg(lang, { ar: "إلغاء", en: "Cancel", de: "Abbrechen" })}
+            {msg(lang, { ar: "إلغاء", en: "Cancel" })}
           </button>
         </div>
         {notice && (
@@ -248,11 +219,10 @@ export function SecurityPage({ lang, go }: Props) {
     <AccountLayout lang={lang} go={go} active="/account/security">
       <PreviewHeader
         lang={lang}
-        title={msg(lang, { ar: "أمان الحساب", en: "Account security", de: "Kontosicherheit" })}
+        title={msg(lang, { ar: "أمان الحساب", en: "Account security" })}
         description={msg(lang, {
           ar: "تغيير كلمة المرور وإدارة الجلسة الحالية.",
           en: "Password change and current-session controls.",
-          de: "Passwortänderung und Steuerung der aktuellen Sitzung.",
         })}
       />
       <form
@@ -263,7 +233,6 @@ export function SecurityPage({ lang, go }: Props) {
             msg(lang, {
               ar: "لم يتم تغيير كلمة المرور؛ الخدمة غير متصلة.",
               en: "Password was not changed; the service is disconnected.",
-              de: "Das Passwort wurde nicht geändert; der Dienst ist nicht verbunden.",
             }),
           );
         }}
@@ -273,13 +242,12 @@ export function SecurityPage({ lang, go }: Props) {
           label={msg(lang, {
             ar: "كلمة المرور الحالية",
             en: "Current password",
-            de: "Aktuelles Passwort",
           })}
           required
         />
         <PasswordField
           lang={lang}
-          label={msg(lang, { ar: "كلمة المرور الجديدة", en: "New password", de: "Neues Passwort" })}
+          label={msg(lang, { ar: "كلمة المرور الجديدة", en: "New password" })}
           required
         />
         <PasswordField
@@ -287,7 +255,6 @@ export function SecurityPage({ lang, go }: Props) {
           label={msg(lang, {
             ar: "تأكيد كلمة المرور",
             en: "Confirm password",
-            de: "Passwort bestätigen",
           })}
           required
         />
@@ -295,7 +262,6 @@ export function SecurityPage({ lang, go }: Props) {
           {msg(lang, {
             ar: "تحديث كلمة المرور",
             en: "Update password",
-            de: "Passwort aktualisieren",
           })}
         </button>
         {notice && (
@@ -305,21 +271,17 @@ export function SecurityPage({ lang, go }: Props) {
         )}
       </form>
       <section className="workspace-section">
-        <h2>
-          {msg(lang, { ar: "الجلسة الحالية", en: "Current session", de: "Aktuelle Sitzung" })}
-        </h2>
+        <h2>{msg(lang, { ar: "الجلسة الحالية", en: "Current session" })}</h2>
         <p>
           {msg(lang, {
             ar: "لا تُعرض سجلات أجهزة أو مواقع غير حقيقية.",
             en: "No fabricated device or location history is shown.",
-            de: "Es werden keine erfundenen Geräte- oder Standortdaten angezeigt.",
           })}
         </p>
         <button className="button button-secondary" type="button">
           {msg(lang, {
             ar: "تسجيل الخروج من هذه الجلسة",
             en: "Log out of this session",
-            de: "Von dieser Sitzung abmelden",
           })}
         </button>
       </section>
@@ -332,21 +294,20 @@ export function InquiryListPage({ lang, go }: Props) {
     <AccountLayout lang={lang} go={go} active="/account/inquiries">
       <PreviewHeader
         lang={lang}
-        title={msg(lang, { ar: "استفساراتي", en: "My inquiries", de: "Meine Anfragen" })}
+        title={msg(lang, { ar: "استفساراتي", en: "My inquiries" })}
         description={msg(lang, {
           ar: "متابعة استفسارات التوريد المحفوظة للحساب.",
           en: "Track supply inquiries saved to the account.",
-          de: "Gespeicherte Lieferanfragen verfolgen.",
         })}
       />
       <div className="list-toolbar">
         <TextField
-          label={msg(lang, { ar: "ابحث بالمرجع", en: "Search reference", de: "Referenz suchen" })}
+          label={msg(lang, { ar: "ابحث بالمرجع", en: "Search reference" })}
           type="search"
           placeholder="—"
         />
-        <SelectField label={msg(lang, { ar: "الحالة", en: "Status", de: "Status" })}>
-          <option>{msg(lang, { ar: "كل الحالات", en: "All statuses", de: "Alle Status" })}</option>
+        <SelectField label={msg(lang, { ar: "الحالة", en: "Status" })}>
+          <option>{msg(lang, { ar: "كل الحالات", en: "All statuses" })}</option>
           <option>submitted</option>
           <option>under_review</option>
           <option>awaiting_customer</option>
@@ -354,32 +315,26 @@ export function InquiryListPage({ lang, go }: Props) {
           <option>closed</option>
           <option>cancelled</option>
         </SelectField>
-        <SelectField
-          label={msg(lang, { ar: "ترتيب التاريخ", en: "Date order", de: "Datumssortierung" })}
-        >
-          <option>
-            {msg(lang, { ar: "الأحدث أولًا", en: "Newest first", de: "Neueste zuerst" })}
-          </option>
-          <option>
-            {msg(lang, { ar: "الأقدم أولًا", en: "Oldest first", de: "Älteste zuerst" })}
-          </option>
+        <SelectField label={msg(lang, { ar: "ترتيب التاريخ", en: "Date order" })}>
+          <option>{msg(lang, { ar: "الأحدث أولًا", en: "Newest first" })}</option>
+          <option>{msg(lang, { ar: "الأقدم أولًا", en: "Oldest first" })}</option>
         </SelectField>
       </div>
       <IntegrationNotice lang={lang} />
       <div
         className="responsive-table"
         role="region"
-        aria-label={msg(lang, { ar: "قائمة الاستفسارات", en: "Inquiry list", de: "Anfrageliste" })}
+        aria-label={msg(lang, { ar: "قائمة الاستفسارات", en: "Inquiry list" })}
         tabIndex={0}
       >
         <table className="data-table">
           <thead>
             <tr>
-              <th>{msg(lang, { ar: "المرجع", en: "Reference", de: "Referenz" })}</th>
-              <th>{msg(lang, { ar: "المنتجات", en: "Products", de: "Produkte" })}</th>
-              <th>{msg(lang, { ar: "الوجهة", en: "Destination", de: "Ziel" })}</th>
-              <th>{msg(lang, { ar: "الحالة", en: "Status", de: "Status" })}</th>
-              <th>{msg(lang, { ar: "التاريخ", en: "Date", de: "Datum" })}</th>
+              <th>{msg(lang, { ar: "المرجع", en: "Reference" })}</th>
+              <th>{msg(lang, { ar: "المنتجات", en: "Products" })}</th>
+              <th>{msg(lang, { ar: "الوجهة", en: "Destination" })}</th>
+              <th>{msg(lang, { ar: "الحالة", en: "Status" })}</th>
+              <th>{msg(lang, { ar: "التاريخ", en: "Date" })}</th>
             </tr>
           </thead>
           <tbody>
@@ -388,7 +343,6 @@ export function InquiryListPage({ lang, go }: Props) {
                 {msg(lang, {
                   ar: "لا توجد بيانات محمّلة. هذه ليست نتيجة صفر مؤكدة.",
                   en: "No data is loaded. This is not a confirmed zero result.",
-                  de: "Keine Daten geladen. Dies ist kein bestätigtes Nullergebnis.",
                 })}
               </td>
             </tr>
@@ -405,11 +359,10 @@ export function InquiryDetailPage({ lang, go, inquiryId }: Props) {
     <AccountLayout lang={lang} go={go} active="/account/inquiries">
       <PreviewHeader
         lang={lang}
-        title={msg(lang, { ar: "تفاصيل الاستفسار", en: "Inquiry details", de: "Anfragedetails" })}
+        title={msg(lang, { ar: "تفاصيل الاستفسار", en: "Inquiry details" })}
         description={msg(lang, {
           ar: "يُحمّل السجل الحقيقي حسب المرجع وملكية الحساب.",
           en: "The real record is loaded by reference and account ownership.",
-          de: "Der echte Datensatz wird anhand der Referenz und Kontoinhaberschaft geladen.",
         })}
       />
       <IntegrationNotice
@@ -419,7 +372,6 @@ export function InquiryDetailPage({ lang, go, inquiryId }: Props) {
             ? msg(lang, {
                 ar: "لا يمكن تحميل هذا الاستفسار",
                 en: "This inquiry cannot be loaded",
-                de: "Diese Anfrage kann nicht geladen werden",
               })
             : undefined
         }
@@ -427,7 +379,6 @@ export function InquiryDetailPage({ lang, go, inquiryId }: Props) {
         {msg(lang, {
           ar: "لم يتم اختلاق سجل لهذا المعرّف. يلزم API يتحقق من الملكية.",
           en: "No record was fabricated for this identifier. An ownership-enforcing API is required.",
-          de: "Für diese Kennung wurde kein Datensatz erfunden. Eine API mit Eigentumsprüfung ist erforderlich.",
         })}
       </IntegrationNotice>
       <div className="detail-placeholder-grid">
@@ -449,19 +400,17 @@ export function InquiryDetailPage({ lang, go, inquiryId }: Props) {
           label={msg(lang, {
             ar: "رد بمعلومات إضافية",
             en: "Reply with additional information",
-            de: "Mit zusätzlichen Informationen antworten",
           })}
           rows={5}
           placeholder="—"
         />
         <button className="button button-primary" type="button" disabled>
-          {msg(lang, { ar: "إرسال الرد", en: "Send reply", de: "Antwort senden" })}
+          {msg(lang, { ar: "إرسال الرد", en: "Send reply" })}
         </button>
         <button className="text-link danger-link" type="button" disabled>
           {msg(lang, {
             ar: "طلب إلغاء الاستفسار",
             en: "Request cancellation",
-            de: "Stornierung anfragen",
           })}
         </button>
       </form>

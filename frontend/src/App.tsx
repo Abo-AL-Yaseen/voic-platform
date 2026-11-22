@@ -8,6 +8,7 @@ import {
   pick,
   productDescription,
   productName,
+  resolveLang,
   ui,
   withLang,
   type Lang,
@@ -84,7 +85,7 @@ export default function App() {
   const url = new URL(location, window.location.origin);
   const path = url.pathname.replace(/\/+$/, "") || "/";
   const requestedLang = url.searchParams.get("lang");
-  const lang: Lang = requestedLang === "en" || requestedLang === "de" ? requestedLang : "ar";
+  const lang = resolveLang(requestedLang);
   const t = ui[lang];
 
   useEffect(() => {
@@ -133,50 +134,43 @@ export default function App() {
                   : path === "/contact"
                     ? t.contact
                     : path === "/login"
-                      ? msg(lang, { ar: "تسجيل الدخول", en: "Sign in", de: "Anmelden" })
+                      ? msg(lang, { ar: "تسجيل الدخول", en: "Sign in" })
                       : path === "/register"
                         ? msg(lang, {
                             ar: "إنشاء حساب",
                             en: "Create account",
-                            de: "Konto erstellen",
                           })
                         : path === "/verify-email"
                           ? msg(lang, {
                               ar: "التحقق من البريد",
                               en: "Verify email",
-                              de: "E-Mail bestätigen",
                             })
                           : path === "/forgot-password"
                             ? msg(lang, {
                                 ar: "استعادة كلمة المرور",
                                 en: "Recover password",
-                                de: "Passwort wiederherstellen",
                               })
                             : path === "/reset-password"
                               ? msg(lang, {
                                   ar: "تعيين كلمة المرور",
                                   en: "Reset password",
-                                  de: "Passwort zurücksetzen",
                                 })
                               : path.startsWith("/account")
-                                ? msg(lang, { ar: "حسابي", en: "My account", de: "Mein Konto" })
+                                ? msg(lang, { ar: "حسابي", en: "My account" })
                                 : path.startsWith("/inquiries")
                                   ? msg(lang, {
                                       ar: "استفسار توريد",
                                       en: "Supply inquiry",
-                                      de: "Lieferanfrage",
                                     })
                                   : path.startsWith("/staff")
                                     ? msg(lang, {
                                         ar: "مساحة الموظفين",
                                         en: "Staff workspace",
-                                        de: "Mitarbeiterbereich",
                                       })
                                     : path === "/privacy"
                                       ? msg(lang, {
                                           ar: "الخصوصية",
                                           en: "Privacy",
-                                          de: "Datenschutz",
                                         })
                                       : pick(lang, "صفحة غير موجودة", "Page not found");
     document.title = `${routeTitle} | VOIC`;
@@ -319,7 +313,7 @@ export default function App() {
   return (
     <div className="site-shell" dir={direction(lang)}>
       <a className="skip-link" href="#main-content">
-        {msg(lang, { ar: "انتقل إلى المحتوى", en: "Skip to content", de: "Zum Inhalt springen" })}
+        {msg(lang, { ar: "انتقل إلى المحتوى", en: "Skip to content" })}
       </a>
       <div className="identity-strip">
         {pick(
@@ -353,9 +347,7 @@ export default function App() {
         </nav>
         <div className="header-actions">
           <label className="language-select">
-            <span className="visually-hidden">
-              {msg(lang, { ar: "اللغة", en: "Language", de: "Sprache" })}
-            </span>
+            <span className="visually-hidden">{msg(lang, { ar: "اللغة", en: "Language" })}</span>
             <select value={lang} onChange={(event) => setLanguage(event.target.value as Lang)}>
               {(Object.keys(localeName) as Lang[]).map((code) => (
                 <option key={code} value={code}>
@@ -365,7 +357,7 @@ export default function App() {
             </select>
           </label>
           <AppLink className="header-login" href={withLang("/login", lang)} go={go}>
-            {msg(lang, { ar: "دخول", en: "Sign in", de: "Anmelden" })}
+            {msg(lang, { ar: "دخول", en: "Sign in" })}
           </AppLink>
           <AppLink
             className="button button-primary header-contact"
@@ -666,7 +658,7 @@ function SiteFooter({ lang, go }: { lang: Lang; go: (href: string) => void }) {
           </AppLink>
           <span>|</span>
           <AppLink href={withLang("/privacy", lang)} go={go}>
-            {msg(lang, { ar: "الخصوصية", en: "Privacy", de: "Datenschutz" })}
+            {msg(lang, { ar: "الخصوصية", en: "Privacy" })}
           </AppLink>
         </div>
         <p>© {pick(lang, "شركة مصانع الزيوت النباتية", "Vegetable Oil Industries Co.")}</p>

@@ -66,7 +66,6 @@ export default function Modal({
             aria-label={msg(lang, {
               ar: "إغلاق النافذة",
               en: "Close dialog",
-              de: "Dialog schließen",
             })}
           >
             ×

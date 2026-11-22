@@ -6,12 +6,7 @@ export function productInquiryHref(productId: string, lang: Lang) {
   const product = products.find((item) => item.id === productId);
   if (!product) return "mailto:info@voic.ps";
   const name = productName(product, lang);
-  const subject =
-    lang === "ar"
-      ? `استفسار تجاري عن ${name}`
-      : lang === "de"
-        ? `Lieferanfrage zu ${name}`
-        : `Commercial inquiry about ${name}`;
+  const subject = lang === "ar" ? `استفسار تجاري عن ${name}` : `Commercial inquiry about ${name}`;
   const body =
     lang === "ar"
       ? `مرحبًا فريق شركة مصانع الزيوت النباتية،
@@ -25,19 +20,7 @@ export function productInquiryHref(productId: string, lang: Lang) {
 
 تفاصيل إضافية:
 `
-      : lang === "de"
-        ? `Guten Tag liebes Team von Vegetable Oil Industries Co.,
-
-ich möchte mich zu folgendem Produkt erkundigen: ${name}
-
-Unternehmen:
-Zielland:
-Gewünschte Packungsgröße:
-Geschätzte Menge:
-
-Weitere Angaben:
-`
-        : `Hello Vegetable Oil Industries Co. team,
+      : `Hello Vegetable Oil Industries Co. team,
 
 I would like to inquire about: ${name}
 
@@ -93,21 +76,6 @@ Desired package size or need: ${values.sizeNeed || "—"}
 Estimated quantity: ${values.quantity ? `${values.quantity} ${values.quantityUnit}` : "—"}
 
 Notes:
-${values.notes || "—"}`;
-  }
-  if (lang === "de") {
-    return `Lieferanfrage
-
-Kontaktperson: ${values.name}
-Unternehmen: ${values.company || "—"}
-E-Mail: ${values.email}
-Zielland: ${values.destination}
-Unternehmenstyp / Thema: ${values.businessType || values.topic}
-Produkt(e): ${selected || values.topic}
-Gewünschte Packungsgröße oder Bedarf: ${values.sizeNeed || "—"}
-Geschätzte Menge: ${values.quantity ? `${values.quantity} ${values.quantityUnit}` : "—"}
-
-Hinweise:
 ${values.notes || "—"}`;
   }
   return `استفسار تجاري
@@ -168,14 +136,12 @@ export default function InquiryForm({
     const required = msg(lang, {
       ar: "هذا الحقل مطلوب",
       en: "This field is required",
-      de: "Dieses Feld ist erforderlich",
     });
     if (!values.name.trim()) next.name = required;
     if (!values.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email))
       next.email = msg(lang, {
         ar: "أدخل بريدًا إلكترونيًا صحيحًا",
         en: "Enter a valid email address",
-        de: "Geben Sie eine gültige E-Mail-Adresse ein",
       });
     if (!values.destination.trim()) next.destination = required;
     if (mode === "business" && !values.company.trim()) next.company = required;
@@ -183,7 +149,6 @@ export default function InquiryForm({
       next.topic = msg(lang, {
         ar: "اختر منتجًا أو موضوعًا",
         en: "Choose a product or topic",
-        de: "Wählen Sie ein Produkt oder Thema",
       });
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -192,7 +157,6 @@ export default function InquiryForm({
     msg(lang, {
       ar: "استفسار من موقع VOIC",
       en: "Inquiry from the VOIC website",
-      de: "Anfrage über die VOIC-Website",
     }),
   )}&body=${encodeURIComponent(message)}`;
   const prepareEmail = (event: React.FormEvent) => {
@@ -225,7 +189,7 @@ export default function InquiryForm({
   ) => (
     <label className="form-field">
       <span>
-        {lang === "ar" ? labelAr : lang === "de" ? germanFieldLabels[labelEn] || labelEn : labelEn}
+        {lang === "ar" ? labelAr : labelEn}
         {required && " *"}
       </span>
       <input
@@ -252,56 +216,48 @@ export default function InquiryForm({
         {field("destination", "بلد الوجهة", "Destination country", true)}
         {mode === "business" ? (
           <label className="form-field">
-            <span>
-              {msg(lang, { ar: "نوع النشاط", en: "Business type", de: "Unternehmenstyp" })}
-            </span>
+            <span>{msg(lang, { ar: "نوع النشاط", en: "Business type" })}</span>
             <select
               value={values.businessType}
               onChange={(event) => set("businessType", event.target.value)}
             >
-              <option value="">{msg(lang, { ar: "اختر", en: "Select", de: "Auswählen" })}</option>
+              <option value="">{msg(lang, { ar: "اختر", en: "Select" })}</option>
               <option
                 value={lang === "ar" ? "مطعم أو مطبخ مهني" : "Restaurant / professional kitchen"}
               >
                 {msg(lang, {
                   ar: "مطعم أو مطبخ مهني",
                   en: "Restaurant / professional kitchen",
-                  de: "Restaurant / professionelle Küche",
                 })}
               </option>
               <option value={lang === "ar" ? "محل حلويات" : "Sweet shop"}>
-                {msg(lang, { ar: "محل حلويات", en: "Sweet shop", de: "Süßwarengeschäft" })}
+                {msg(lang, { ar: "محل حلويات", en: "Sweet shop" })}
               </option>
               <option value={lang === "ar" ? "مخبز" : "Bakery"}>
-                {msg(lang, { ar: "مخبز", en: "Bakery", de: "Bäckerei" })}
+                {msg(lang, { ar: "مخبز", en: "Bakery" })}
               </option>
               <option value={lang === "ar" ? "موزع أو مستورد" : "Distributor / importer"}>
                 {msg(lang, {
                   ar: "موزع أو مستورد",
                   en: "Distributor / importer",
-                  de: "Händler / Importeur",
                 })}
               </option>
             </select>
           </label>
         ) : (
           <label className="form-field">
-            <span>
-              {msg(lang, { ar: "موضوع الاستفسار", en: "Inquiry topic", de: "Thema der Anfrage" })} *
-            </span>
+            <span>{msg(lang, { ar: "موضوع الاستفسار", en: "Inquiry topic" })} *</span>
             <select
               value={values.topic}
               onChange={(event) => set("topic", event.target.value)}
               aria-invalid={!!errors.topic}
             >
-              <option value="">
-                {msg(lang, { ar: "اختر الموضوع", en: "Choose a topic", de: "Thema auswählen" })}
-              </option>
+              <option value="">{msg(lang, { ar: "اختر الموضوع", en: "Choose a topic" })}</option>
               <option value={lang === "ar" ? "سؤال عن منتج" : "Product question"}>
-                {msg(lang, { ar: "سؤال عن منتج", en: "Product question", de: "Produktfrage" })}
+                {msg(lang, { ar: "سؤال عن منتج", en: "Product question" })}
               </option>
               <option value={lang === "ar" ? "استفسار توريد" : "Supply inquiry"}>
-                {msg(lang, { ar: "استفسار توريد", en: "Supply inquiry", de: "Lieferanfrage" })}
+                {msg(lang, { ar: "استفسار توريد", en: "Supply inquiry" })}
               </option>
               <option
                 value={
@@ -311,11 +267,10 @@ export default function InquiryForm({
                 {msg(lang, {
                   ar: "وثائق الجودة والمواصفات",
                   en: "Quality and specification documents",
-                  de: "Qualitäts- und Spezifikationsunterlagen",
                 })}
               </option>
               <option value={lang === "ar" ? "استفسار عام" : "General inquiry"}>
-                {msg(lang, { ar: "استفسار عام", en: "General inquiry", de: "Allgemeine Anfrage" })}
+                {msg(lang, { ar: "استفسار عام", en: "General inquiry" })}
               </option>
             </select>
             {errors.topic && <small className="field-error">{errors.topic}</small>}
@@ -323,7 +278,7 @@ export default function InquiryForm({
         )}
       </div>
       <fieldset className="product-picks">
-        <legend>{msg(lang, { ar: "المنتجات", en: "Products", de: "Produkte" })}</legend>
+        <legend>{msg(lang, { ar: "المنتجات", en: "Products" })}</legend>
         <div>
           {products.map((product) => (
             <label key={product.id}>
@@ -344,7 +299,7 @@ export default function InquiryForm({
         {field("sizeNeed", "حجم العبوة أو الاحتياج", "Desired package size or need")}
         {field("quantity", "الكمية التقديرية", "Estimated quantity")}
         <label className="form-field form-unit">
-          <span>{msg(lang, { ar: "الوحدة", en: "Unit", de: "Einheit" })}</span>
+          <span>{msg(lang, { ar: "الوحدة", en: "Unit" })}</span>
           <input
             value={values.quantityUnit}
             onChange={(event) => set("quantityUnit", event.target.value)}
@@ -352,7 +307,7 @@ export default function InquiryForm({
         </label>
       </div>
       <label className="form-field">
-        <span>{msg(lang, { ar: "ملاحظات", en: "Notes", de: "Hinweise" })}</span>
+        <span>{msg(lang, { ar: "ملاحظات", en: "Notes" })}</span>
         <textarea
           value={values.notes}
           onChange={(event) => set("notes", event.target.value)}
@@ -364,35 +319,24 @@ export default function InquiryForm({
           {msg(lang, {
             ar: "جهّز رسالة الاستفسار",
             en: "Prepare inquiry email",
-            de: "Anfrage-E-Mail vorbereiten",
           })}
         </button>
         <button className="button button-secondary" type="button" onClick={copyMessage}>
-          {msg(lang, { ar: "انسخ نص الرسالة", en: "Copy message", de: "Nachricht kopieren" })}
+          {msg(lang, { ar: "انسخ نص الرسالة", en: "Copy message" })}
         </button>
       </div>
       <p className="form-hint">
         {msg(lang, {
           ar: "يفتح تطبيق البريد لإرسال استفسارك. يمكنك مراجعة الرسالة وتعديلها قبل الإرسال.",
           en: "Opens your email app. You can review and edit the message before sending.",
-          de: "Öffnet Ihr E-Mail-Programm. Sie können die Nachricht vor dem Senden prüfen und bearbeiten.",
         })}
       </p>
       {copied && (
         <p className="copy-status" role="status">
-          {msg(lang, { ar: "تم نسخ نص الرسالة.", en: "Message copied.", de: "Nachricht kopiert." })}
+          {msg(lang, { ar: "تم نسخ نص الرسالة.", en: "Message copied." })}
         </p>
       )}
       {errors.copy && <p className="field-error">{errors.copy}</p>}
     </form>
   );
 }
-
-const germanFieldLabels: Record<string, string> = {
-  "Contact name": "Kontaktperson",
-  Company: "Unternehmen",
-  Email: "E-Mail",
-  "Destination country": "Zielland",
-  "Desired package size or need": "Gewünschte Packungsgröße oder Bedarf",
-  "Estimated quantity": "Geschätzte Menge",
-};

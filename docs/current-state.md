@@ -12,8 +12,10 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
   runs locally; its four contract tests and TypeScript check passed at baseline import.
 - Public product, recipe, and page content comes from local source files, notably
   `frontend/src/catalog.ts`, `recipes.ts`, `Pages.tsx`, and `i18n.ts`, with local assets/fonts.
-- Arabic RTL, English LTR, and German LTR interfaces exist. German and legal/privacy copy
-  require human review before publication; presence in source is not publication approval.
+- Supported interfaces are Arabic (default, RTL) and English (LTR) only. Unsupported locale
+  links fall back to Arabic without changing the product route or other query parameters.
+  Brand names retain approved Arabic names and official Latin spellings. Commercial and
+  legal/privacy copy require human approval; presence in source is not publication approval.
 - The homepage's featured order is `ghazal-butter`, `nabateen`, `kawakeb`, `ghazal`.
   Preserve routes, existing product IDs/slugs, packaging units, and recipe associations.
 - Vite imports `.figma/make/site.json`; retain the required Figma configuration. Original
@@ -53,33 +55,39 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
   The approved frontend architecture is independent of the eventual backend stack.
 - The plan records further product-source conflicts (including Al-Ghazal sizes/units,
   butter-flavor 450 g versus 455 g, Al-Nabatin packaging, and separate Al-Aseel oil/ghee
-  identities). This setup preserves those findings without adjudicating them. The external
-  PDFs referenced by that plan were not independently reviewed as part of this setup.
-- The constitution records the currently approved business rules, including open customer
-  registration and the inquiry/RFQ flow. Older proposals do not override those rules.
+  identities). These findings remain unresolved. The external PDFs referenced by that plan
+  were not independently reviewed as part of the repository setup.
+- [The project plan](project-plan.md) records the approved architecture and business rules,
+  including open customer registration, email verification, the inquiry/RFQ flow and staff
+  permissions. Older proposals do not override these rules.
 
 ## Proposed first bounded feature
 
 **Public product catalog backed by a real database/API and integrated through Services and
 React Query Hooks.**
 
-Preserve the approved catalog UI, featured order, routes, IDs/slugs, locale behavior,
-filtering/selection/comparison, and related recipe links. Define explicit loading, error,
-empty, refetch, and cache behavior. Expose approved public content only, with no silent
-local-data fallback once genuinely integrated. Auth, staff CRUD, saved inquiries, and
-operational endpoints are outside this first public-read slice unless separately specified.
+The detailed [catalog requirements](product-catalog.md) preserve the existing UI and public
+flows, and define loading/error/empty states, independent selection and comparison across
+paginated results, related products and recipes, publication boundaries, and no silent local
+fallback. They contain six stories, 25 requirements, 29 acceptance scenarios and eight outcomes.
+Auth, staff CRUD and saved inquiries remain outside this first public-read slice.
 
-Decisions still open; this document does not approve them:
+The [project plan](project-plan.md) is the source of approved rules and the incremental work
+sequence. Catalog behavioral assumptions still need review; backend/database/environment,
+schema, API contracts, pagination and cache timing remain open technical decisions. No backend,
+migrations, seed/import implementation, API endpoints or product hooks were added by the
+language and tooling maintenance task.
 
-| Decision | Required clarification |
-| --- | --- |
-| Backend stack | Select the final supported framework/runtime; Laravel is only proposed. |
-| Database and local development | Select the database, version, local environment, and reproducible setup. |
-| Product/translation/package schema | Agree on publication rules, localized fields, associations, units, and source approval. |
-| API contract | Agree on response/error shapes, locale handling, filters, sorting, pagination, and cancellation. |
-| Existing IDs and slugs | Agree on stable mappings and compatibility; do not assume numeric identifiers or rename routes. |
+## Latest maintenance verification
 
-The next action is `$speckit-specify` with the bounded feature description above, followed
-by `$speckit-clarify`. Record open decisions as clarification items, then approve the actual
-technical choices before `$speckit-plan`. This setup does not start that feature or authorize
-migrations, seed/import code, API endpoints, frontend integration, or application changes.
+On 2026-11-23, from `frontend/`:
+
+- `pnpm.cmd test`: seven tests passed, including unsupported-locale fallback, link context
+  preservation, official brand spellings, existing product/recipe identities and preview guards.
+- `pnpm.cmd typecheck`: passed.
+- `pnpm.cmd build`: production build passed. Generated output is ignored and is not committed.
+- No dependencies were installed or upgraded. The catalog/recipes, styles, assets, fonts,
+  frontend LFS attributes and Figma configuration remain unchanged by this maintenance.
+
+These checks validate the maintenance change; they do not claim a live backend, production
+deployment, end-to-end browser coverage, capacity or legal/content approval.

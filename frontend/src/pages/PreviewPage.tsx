@@ -122,7 +122,6 @@ export default function PreviewPage({ lang, go, search }: Props) {
           {msg(lang, {
             ar: "حالات الواجهة المشتركة",
             en: "Shared interface states",
-            de: "Gemeinsame Oberflächenzustände",
           })}
         </h1>
         <SkeletonState />
@@ -143,7 +142,6 @@ export default function PreviewPage({ lang, go, search }: Props) {
           {msg(lang, {
             ar: "الوصول غير متاح",
             en: "Access unavailable",
-            de: "Zugriff nicht verfügbar",
           })}
         </h1>
         <AccessDenied lang={lang} />

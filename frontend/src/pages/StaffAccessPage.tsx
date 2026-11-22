@@ -11,17 +11,13 @@ export default function StaffAccessPage({ lang, go }: { lang: Lang; go: (href: s
           label={msg(lang, {
             ar: "وصول مقيّد",
             en: "Restricted access",
-            de: "Eingeschränkter Zugriff",
           })}
         />
-        <h1>
-          {msg(lang, { ar: "مساحة الموظفين", en: "Staff workspace", de: "Mitarbeiterbereich" })}
-        </h1>
+        <h1>{msg(lang, { ar: "مساحة الموظفين", en: "Staff workspace" })}</h1>
         <p>
           {msg(lang, {
             ar: "يلزم تسجيل دخول موظف وصلاحيات يمنحها المسؤول ويطبقها الخادم. إخفاء الروابط في الواجهة ليس حماية.",
             en: "An employee session and server-enforced permissions are required. Hiding frontend links is not authorization.",
-            de: "Eine Mitarbeitersitzung und serverseitig durchgesetzte Berechtigungen sind erforderlich. Ausgeblendete Links sind keine Autorisierung.",
           })}
         </p>
         <AppLink
@@ -32,7 +28,6 @@ export default function StaffAccessPage({ lang, go }: { lang: Lang; go: (href: s
           {msg(lang, {
             ar: "تسجيل الدخول المشترك",
             en: "Shared sign in",
-            de: "Gemeinsame Anmeldung",
           })}
         </AppLink>
       </div>

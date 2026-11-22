@@ -52,9 +52,7 @@ export function PasswordField(
     <div className="password-field">
       <TextField {...fieldProps} type={visible ? "text" : "password"} />
       <button className="field-inline-action" type="button" onClick={() => setVisible(!visible)}>
-        {visible
-          ? msg(lang, { ar: "إخفاء", en: "Hide", de: "Ausblenden" })
-          : msg(lang, { ar: "إظهار", en: "Show", de: "Anzeigen" })}
+        {visible ? msg(lang, { ar: "إخفاء", en: "Hide" }) : msg(lang, { ar: "إظهار", en: "Show" })}
       </button>
     </div>
   );

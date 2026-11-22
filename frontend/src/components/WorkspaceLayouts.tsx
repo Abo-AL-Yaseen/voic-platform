@@ -16,31 +16,28 @@ export function AccountLayout({
   children: ReactNode;
 }) {
   const items: NavItem[] = [
-    { href: "/account", label: msg(lang, { ar: "نظرة عامة", en: "Overview", de: "Übersicht" }) },
+    { href: "/account", label: msg(lang, { ar: "نظرة عامة", en: "Overview" }) },
     {
       href: "/account/inquiries",
-      label: msg(lang, { ar: "استفساراتي", en: "My inquiries", de: "Meine Anfragen" }),
+      label: msg(lang, { ar: "استفساراتي", en: "My inquiries" }),
     },
     {
       href: "/account/profile",
-      label: msg(lang, { ar: "الملف الشخصي", en: "Profile", de: "Profil" }),
+      label: msg(lang, { ar: "الملف الشخصي", en: "Profile" }),
     },
     {
       href: "/account/security",
-      label: msg(lang, { ar: "أمان الحساب", en: "Account security", de: "Kontosicherheit" }),
+      label: msg(lang, { ar: "أمان الحساب", en: "Account security" }),
     },
   ];
   return (
     <main className="workspace-shell account-shell section-pad">
       <aside className="workspace-sidebar">
-        <p className="eyebrow">
-          {msg(lang, { ar: "حساب VOIC", en: "VOIC account", de: "VOIC-Konto" })}
-        </p>
+        <p className="eyebrow">{msg(lang, { ar: "حساب VOIC", en: "VOIC account" })}</p>
         <nav
           aria-label={msg(lang, {
             ar: "تنقل الحساب",
             en: "Account navigation",
-            de: "Kontonavigation",
           })}
         >
           {items.map((item) => (
@@ -55,7 +52,7 @@ export function AccountLayout({
           ))}
         </nav>
         <button className="text-link" type="button">
-          {msg(lang, { ar: "تسجيل الخروج", en: "Log out", de: "Abmelden" })}
+          {msg(lang, { ar: "تسجيل الخروج", en: "Log out" })}
         </button>
       </aside>
       <div className="workspace-content">{children}</div>
@@ -96,14 +93,11 @@ export function StaffLayout({
         <AppLink href={withLang("/", lang)} go={go} className="workspace-brand">
           VOIC
         </AppLink>
-        <span>
-          {msg(lang, { ar: "مساحة الموظفين", en: "Staff workspace", de: "Mitarbeiterbereich" })}
-        </span>
+        <span>{msg(lang, { ar: "مساحة الموظفين", en: "Staff workspace" })}</span>
         <nav
           aria-label={msg(lang, {
             ar: "تنقل الموظفين",
             en: "Staff navigation",
-            de: "Mitarbeiternavigation",
           })}
         >
           {staffNavigation.map((item) => (
@@ -144,7 +138,6 @@ export function TranslationTabs({ lang }: { lang: Lang }) {
       {[
         ["ar", "العربية"],
         ["en", "English"],
-        ["de", "Deutsch"],
       ].map(([code, label]) => (
         <button
           key={code}
@@ -162,16 +155,13 @@ export function TranslationTabs({ lang }: { lang: Lang }) {
 
 export function Pagination({ lang }: { lang: Lang }) {
   return (
-    <nav
-      className="pagination"
-      aria-label={msg(lang, { ar: "ترقيم الصفحات", en: "Pagination", de: "Seitennavigation" })}
-    >
+    <nav className="pagination" aria-label={msg(lang, { ar: "ترقيم الصفحات", en: "Pagination" })}>
       <button type="button" disabled>
-        {msg(lang, { ar: "السابق", en: "Previous", de: "Zurück" })}
+        {msg(lang, { ar: "السابق", en: "Previous" })}
       </button>
       <span aria-current="page">1</span>
       <button type="button" disabled>
-        {msg(lang, { ar: "التالي", en: "Next", de: "Weiter" })}
+        {msg(lang, { ar: "التالي", en: "Next" })}
       </button>
     </nav>
   );

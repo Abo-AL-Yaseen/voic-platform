@@ -18,17 +18,13 @@ export function StaffAccessPage({ lang, go }: Omit<Props, "path">) {
           label={msg(lang, {
             ar: "وصول مقيّد",
             en: "Restricted access",
-            de: "Eingeschränkter Zugriff",
           })}
         />
-        <h1>
-          {msg(lang, { ar: "مساحة الموظفين", en: "Staff workspace", de: "Mitarbeiterbereich" })}
-        </h1>
+        <h1>{msg(lang, { ar: "مساحة الموظفين", en: "Staff workspace" })}</h1>
         <p>
           {msg(lang, {
             ar: "يلزم تسجيل دخول موظف وصلاحيات يمنحها المسؤول ويطبقها الخادم. إخفاء الروابط في الواجهة ليس حماية.",
             en: "An employee session and server-enforced permissions are required. Hiding frontend links is not authorization.",
-            de: "Eine Mitarbeitersitzung und serverseitig durchgesetzte Berechtigungen sind erforderlich. Ausgeblendete Links sind keine Autorisierung.",
           })}
         </p>
         <AppLink
@@ -39,7 +35,6 @@ export function StaffAccessPage({ lang, go }: Omit<Props, "path">) {
           {msg(lang, {
             ar: "تسجيل الدخول المشترك",
             en: "Shared sign in",
-            de: "Gemeinsame Anmeldung",
           })}
         </AppLink>
       </div>
@@ -78,12 +73,12 @@ function Toolbar({
   return (
     <div className="list-toolbar">
       <TextField
-        label={msg(lang, { ar: "بحث", en: "Search", de: "Suchen" })}
+        label={msg(lang, { ar: "بحث", en: "Search" })}
         type="search"
-        placeholder={msg(lang, { ar: "ابحث…", en: "Search…", de: "Suchen …" })}
+        placeholder={msg(lang, { ar: "ابحث…", en: "Search…" })}
       />
-      <SelectField label={msg(lang, { ar: "الحالة", en: "Status", de: "Status" })}>
-        <option>{msg(lang, { ar: "كل الحالات", en: "All statuses", de: "Alle Status" })}</option>
+      <SelectField label={msg(lang, { ar: "الحالة", en: "Status" })}>
+        <option>{msg(lang, { ar: "كل الحالات", en: "All statuses" })}</option>
         {type === "inquiries" ? (
           <>
             <option>submitted</option>
@@ -104,11 +99,11 @@ function Toolbar({
       <SelectField
         label={
           type === "people"
-            ? msg(lang, { ar: "نوع الحساب", en: "Account type", de: "Kontotyp" })
-            : msg(lang, { ar: "الفئة", en: "Category", de: "Kategorie" })
+            ? msg(lang, { ar: "نوع الحساب", en: "Account type" })
+            : msg(lang, { ar: "الفئة", en: "Category" })
         }
       >
-        <option>{msg(lang, { ar: "الكل", en: "All", de: "Alle" })}</option>
+        <option>{msg(lang, { ar: "الكل", en: "All" })}</option>
       </SelectField>
     </div>
   );
@@ -133,7 +128,6 @@ function UnavailableTable({ lang, columns }: { lang: Lang; columns: string[] }) 
                 {msg(lang, {
                   ar: "لا توجد بيانات متصلة. لم تُنشأ سجلات تجريبية.",
                   en: "No data source is connected. No demo records were created.",
-                  de: "Keine Datenquelle verbunden. Es wurden keine Demo-Datensätze erstellt.",
                 })}
               </td>
             </tr>
@@ -152,12 +146,10 @@ function Dashboard({ lang, go }: Omit<Props, "path">) {
         title={msg(lang, {
           ar: "لوحة الموظفين",
           en: "Staff dashboard",
-          de: "Mitarbeiter-Dashboard",
         })}
         description={msg(lang, {
           ar: "نقطة بداية حسب الصلاحيات الفعلية.",
           en: "A starting point shaped by real permissions.",
-          de: "Ein Ausgangspunkt entsprechend den tatsächlichen Berechtigungen.",
         })}
       />
       <div className="staff-overview-grid">
@@ -179,13 +171,11 @@ function Dashboard({ lang, go }: Omit<Props, "path">) {
         title={msg(lang, {
           ar: "لا توجد إحصاءات متاحة",
           en: "Statistics unavailable",
-          de: "Statistiken nicht verfügbar",
         })}
       >
         {msg(lang, {
           ar: "لن تُعرض أرقام صفرية أو رسوم قبل وصول بيانات حقيقية.",
           en: "No zero totals or charts are shown before real data is available.",
-          de: "Vor Verfügbarkeit echter Daten werden keine Nullwerte oder Diagramme angezeigt.",
         })}
       </IntegrationNotice>
     </>
@@ -199,12 +189,10 @@ function ProductsList({ lang, go }: Omit<Props, "path">) {
         title={msg(lang, {
           ar: "إدارة المنتجات",
           en: "Product management",
-          de: "Produktverwaltung",
         })}
         description={msg(lang, {
           ar: "المنتجات الحالية محفوظة محليًا للعرض العام.",
           en: "Current products remain local for the public catalog.",
-          de: "Aktuelle Produkte bleiben für den öffentlichen Katalog lokal.",
         })}
         action={
           <AppLink
@@ -212,7 +200,7 @@ function ProductsList({ lang, go }: Omit<Props, "path">) {
             go={go}
             className="button button-primary"
           >
-            {msg(lang, { ar: "منتج جديد", en: "New product", de: "Neues Produkt" })}
+            {msg(lang, { ar: "منتج جديد", en: "New product" })}
           </AppLink>
         }
       />
@@ -221,10 +209,10 @@ function ProductsList({ lang, go }: Omit<Props, "path">) {
         <table className="data-table product-admin-table">
           <thead>
             <tr>
-              <th>{msg(lang, { ar: "المنتج", en: "Product", de: "Produkt" })}</th>
+              <th>{msg(lang, { ar: "المنتج", en: "Product" })}</th>
               <th>ID</th>
-              <th>{msg(lang, { ar: "الفئة", en: "Category", de: "Kategorie" })}</th>
-              <th>{msg(lang, { ar: "الحالة", en: "Status", de: "Status" })}</th>
+              <th>{msg(lang, { ar: "الفئة", en: "Category" })}</th>
+              <th>{msg(lang, { ar: "الحالة", en: "Status" })}</th>
               <th />
             </tr>
           </thead>
@@ -242,7 +230,7 @@ function ProductsList({ lang, go }: Omit<Props, "path">) {
                 <td>
                   <StatusBadge
                     status="info"
-                    label={msg(lang, { ar: "بيانات محلية", en: "Local data", de: "Lokale Daten" })}
+                    label={msg(lang, { ar: "بيانات محلية", en: "Local data" })}
                   />
                 </td>
                 <td>
@@ -251,7 +239,7 @@ function ProductsList({ lang, go }: Omit<Props, "path">) {
                     go={go}
                     className="text-link"
                   >
-                    {msg(lang, { ar: "تحرير", en: "Edit", de: "Bearbeiten" })}
+                    {msg(lang, { ar: "تحرير", en: "Edit" })}
                   </AppLink>
                 </td>
               </tr>
@@ -271,17 +259,16 @@ function ProductEditor({ lang, isNew = false }: { lang: Lang; isNew?: boolean })
       <PageHeading
         title={
           isNew
-            ? msg(lang, { ar: "منتج جديد", en: "New product", de: "Neues Produkt" })
-            : msg(lang, { ar: "تحرير المنتج", en: "Edit product", de: "Produkt bearbeiten" })
+            ? msg(lang, { ar: "منتج جديد", en: "New product" })
+            : msg(lang, { ar: "تحرير المنتج", en: "Edit product" })
         }
         description={msg(lang, {
           ar: "محرر منظم للمحتوى والتعبئة والصور.",
           en: "Structured editor for content, packaging and imagery.",
-          de: "Strukturierter Editor für Inhalte, Verpackung und Bilder.",
         })}
         action={
           <button className="button button-secondary" type="button">
-            {msg(lang, { ar: "معاينة", en: "Preview", de: "Vorschau" })}
+            {msg(lang, { ar: "معاينة", en: "Preview" })}
           </button>
         }
       />
@@ -294,13 +281,12 @@ function ProductEditor({ lang, isNew = false }: { lang: Lang; isNew?: boolean })
               msg(lang, {
                 ar: "لم تُحفظ التغييرات؛ CMS غير متصل.",
                 en: "Changes were not saved; the CMS is disconnected.",
-                de: "Änderungen wurden nicht gespeichert; das CMS ist nicht verbunden.",
               }),
             );
           }}
         >
           <div className="translation-tabs" role="tablist">
-            {(["ar", "en", "de"] as Lang[]).map((code) => (
+            {(["ar", "en"] as Lang[]).map((code) => (
               <button
                 key={code}
                 type="button"
@@ -309,17 +295,17 @@ function ProductEditor({ lang, isNew = false }: { lang: Lang; isNew?: boolean })
                 className={tab === code ? "active" : ""}
                 onClick={() => setTab(code)}
               >
-                {code === "ar" ? "العربية" : code === "en" ? "English" : "Deutsch"}
+                {code === "ar" ? "العربية" : "English"}
               </button>
             ))}
           </div>
           <TextField
-            label={msg(lang, { ar: "اسم المنتج", en: "Product name", de: "Produktname" })}
+            label={msg(lang, { ar: "اسم المنتج", en: "Product name" })}
             placeholder="—"
             required
           />
           <TextAreaField
-            label={msg(lang, { ar: "الوصف", en: "Description", de: "Beschreibung" })}
+            label={msg(lang, { ar: "الوصف", en: "Description" })}
             rows={5}
             placeholder="—"
             required
@@ -328,19 +314,18 @@ function ProductEditor({ lang, isNew = false }: { lang: Lang; isNew?: boolean })
             label={msg(lang, {
               ar: "المكونات المعتمدة (اختياري)",
               en: "Approved ingredients (optional)",
-              de: "Freigegebene Zutaten (optional)",
             })}
             rows={3}
             placeholder="—"
           />
           <div className="form-grid">
-            <TextField label={msg(lang, { ar: "العلامة", en: "Brand", de: "Marke" })} />
-            <SelectField label={msg(lang, { ar: "الفئة", en: "Category", de: "Kategorie" })}>
+            <TextField label={msg(lang, { ar: "العلامة", en: "Brand" })} />
+            <SelectField label={msg(lang, { ar: "الفئة", en: "Category" })}>
               <option>—</option>
             </SelectField>
           </div>
           <fieldset className="editor-fieldset">
-            <legend>{msg(lang, { ar: "الاستخدامات", en: "Uses", de: "Verwendungen" })}</legend>
+            <legend>{msg(lang, { ar: "الاستخدامات", en: "Uses" })}</legend>
             <div className="checkbox-grid">
               {["Cooking", "Frying", "Traditional sweets", "Baking", "Food industry"].map((use) => (
                 <label key={use}>
@@ -355,26 +340,23 @@ function ProductEditor({ lang, isNew = false }: { lang: Lang; isNew?: boolean })
                 {msg(lang, {
                   ar: "خيارات التعبئة",
                   en: "Package variants",
-                  de: "Verpackungsvarianten",
                 })}
               </h2>
               <button type="button" className="text-link">
-                + {msg(lang, { ar: "إضافة خيار", en: "Add variant", de: "Variante hinzufügen" })}
+                + {msg(lang, { ar: "إضافة خيار", en: "Add variant" })}
               </button>
             </div>
             <div className="form-grid">
               <TextField
-                label={msg(lang, { ar: "القيمة الرقمية", en: "Numeric value", de: "Zahlenwert" })}
+                label={msg(lang, { ar: "القيمة الرقمية", en: "Numeric value" })}
                 type="number"
               />
-              <SelectField label={msg(lang, { ar: "الوحدة", en: "Unit", de: "Einheit" })}>
+              <SelectField label={msg(lang, { ar: "الوحدة", en: "Unit" })}>
                 <option>g</option>
                 <option>kg</option>
                 <option>L</option>
               </SelectField>
-              <SelectField
-                label={msg(lang, { ar: "نوع التغليف", en: "Packaging type", de: "Verpackungsart" })}
-              >
+              <SelectField label={msg(lang, { ar: "نوع التغليف", en: "Packaging type" })}>
                 <option>tin</option>
                 <option>drum</option>
                 <option>carton</option>
@@ -387,20 +369,17 @@ function ProductEditor({ lang, isNew = false }: { lang: Lang; isNew?: boolean })
               {msg(lang, {
                 ar: "الصور والنص البديل",
                 en: "Images and alt text",
-                de: "Bilder und Alternativtexte",
               })}
             </h2>
             <input type="file" accept="image/*" />
-            <TextField
-              label={msg(lang, { ar: "النص البديل", en: "Alt text", de: "Alternativtext" })}
-            />
+            <TextField label={msg(lang, { ar: "النص البديل", en: "Alt text" })} />
           </section>
           <div className="page-actions">
             <button className="button button-primary" type="submit">
-              {msg(lang, { ar: "حفظ المسودة", en: "Save draft", de: "Entwurf speichern" })}
+              {msg(lang, { ar: "حفظ المسودة", en: "Save draft" })}
             </button>
             <button className="button button-secondary" type="button">
-              {msg(lang, { ar: "نشر", en: "Publish", de: "Veröffentlichen" })}
+              {msg(lang, { ar: "نشر", en: "Publish" })}
             </button>
           </div>
           {notice && (
@@ -414,7 +393,6 @@ function ProductEditor({ lang, isNew = false }: { lang: Lang; isNew?: boolean })
             label={msg(lang, {
               ar: "حالة النشر",
               en: "Publication status",
-              de: "Veröffentlichungsstatus",
             })}
           >
             <option>draft</option>
@@ -426,14 +404,12 @@ function ProductEditor({ lang, isNew = false }: { lang: Lang; isNew?: boolean })
             {msg(lang, {
               ar: "أرشفة المنتج…",
               en: "Archive product…",
-              de: "Produkt archivieren …",
             })}
           </button>
           <p>
             {msg(lang, {
               ar: "الحذف المباشر غير متاح للمنتجات المرتبطة بالاستفسارات.",
               en: "Direct deletion is unavailable for products referenced by inquiries.",
-              de: "Produkte mit Anfragebezug können nicht direkt gelöscht werden.",
             })}
           </p>
         </aside>
@@ -445,8 +421,8 @@ function ProductEditor({ lang, isNew = false }: { lang: Lang; isNew?: boolean })
 function TaxonomyPage({ lang, kind }: { lang: Lang; kind: "categories" | "uses" }) {
   const title =
     kind === "categories"
-      ? msg(lang, { ar: "الفئات", en: "Categories", de: "Kategorien" })
-      : msg(lang, { ar: "الاستخدامات", en: "Uses", de: "Verwendungen" });
+      ? msg(lang, { ar: "الفئات", en: "Categories" })
+      : msg(lang, { ar: "الاستخدامات", en: "Uses" });
   return (
     <>
       <PageHeading
@@ -454,11 +430,10 @@ function TaxonomyPage({ lang, kind }: { lang: Lang; kind: "categories" | "uses" 
         description={msg(lang, {
           ar: "أسماء مترجمة وعلاقات مع المنتجات.",
           en: "Localized names and product relationships.",
-          de: "Lokalisierte Namen und Produktbeziehungen.",
         })}
         action={
           <button className="button button-primary">
-            + {msg(lang, { ar: "إضافة", en: "Add", de: "Hinzufügen" })}
+            + {msg(lang, { ar: "إضافة", en: "Add" })}
           </button>
         }
       />
@@ -468,17 +443,15 @@ function TaxonomyPage({ lang, kind }: { lang: Lang; kind: "categories" | "uses" 
         <form className="workspace-form compact-form">
           <TextField label={`${title} — العربية`} />
           <TextField label={`${title} — English`} />
-          <TextField label={`${title} — Deutsch`} />
           <IntegrationNotice
             lang={lang}
             title={msg(lang, {
               ar: "تحذير العلاقات",
               en: "Relationship warning",
-              de: "Beziehungswarnung",
             })}
           />
           <button className="button button-primary" disabled>
-            {msg(lang, { ar: "حفظ", en: "Save", de: "Speichern" })}
+            {msg(lang, { ar: "حفظ", en: "Save" })}
           </button>
         </form>
       </div>
@@ -490,11 +463,10 @@ function RecipesList({ lang, go }: Omit<Props, "path">) {
   return (
     <>
       <PageHeading
-        title={msg(lang, { ar: "إدارة الوصفات", en: "Recipe management", de: "Rezeptverwaltung" })}
+        title={msg(lang, { ar: "إدارة الوصفات", en: "Recipe management" })}
         description={msg(lang, {
           ar: "الوصفات الأربع الحالية ومحرر النشر.",
           en: "The four current recipes and publication editor.",
-          de: "Die vier aktuellen Rezepte und der Veröffentlichungseditor.",
         })}
         action={
           <AppLink
@@ -502,7 +474,7 @@ function RecipesList({ lang, go }: Omit<Props, "path">) {
             go={go}
             className="button button-primary"
           >
-            {msg(lang, { ar: "وصفة جديدة", en: "New recipe", de: "Neues Rezept" })}
+            {msg(lang, { ar: "وصفة جديدة", en: "New recipe" })}
           </AppLink>
         }
       />
@@ -519,7 +491,7 @@ function RecipesList({ lang, go }: Omit<Props, "path">) {
                 go={go}
                 className="text-link"
               >
-                {msg(lang, { ar: "تحرير", en: "Edit", de: "Bearbeiten" })}
+                {msg(lang, { ar: "تحرير", en: "Edit" })}
               </AppLink>
             </div>
           </article>
@@ -535,25 +507,21 @@ function RecipeEditor({ lang, isNew = false }: { lang: Lang; isNew?: boolean }) 
       <PageHeading
         title={
           isNew
-            ? msg(lang, { ar: "وصفة جديدة", en: "New recipe", de: "Neues Rezept" })
-            : msg(lang, { ar: "تحرير الوصفة", en: "Edit recipe", de: "Rezept bearbeiten" })
+            ? msg(lang, { ar: "وصفة جديدة", en: "New recipe" })
+            : msg(lang, { ar: "تحرير الوصفة", en: "Edit recipe" })
         }
         description={msg(lang, {
           ar: "مكونات وخطوات منظمة دون اختلاق تغذية أو حصص.",
           en: "Structured ingredients and steps without invented nutrition or servings.",
-          de: "Strukturierte Zutaten und Schritte ohne erfundene Nährwerte oder Portionen.",
         })}
       />
       <form className="workspace-form">
         <TranslationTabs lang={lang} />
-        <TextField label={msg(lang, { ar: "العنوان", en: "Title", de: "Titel" })} />
-        <TextAreaField
-          label={msg(lang, { ar: "الوصف", en: "Description", de: "Beschreibung" })}
-          rows={3}
-        />
+        <TextField label={msg(lang, { ar: "العنوان", en: "Title" })} />
+        <TextAreaField label={msg(lang, { ar: "الوصف", en: "Description" })} rows={3} />
         <section className="repeatable-editor">
           <div>
-            <h2>{msg(lang, { ar: "المكونات", en: "Ingredients", de: "Zutaten" })}</h2>
+            <h2>{msg(lang, { ar: "المكونات", en: "Ingredients" })}</h2>
             <button className="text-link" type="button">
               + Add ingredient
             </button>
@@ -566,9 +534,7 @@ function RecipeEditor({ lang, isNew = false }: { lang: Lang; isNew?: boolean }) 
         </section>
         <section className="repeatable-editor">
           <div>
-            <h2>
-              {msg(lang, { ar: "الخطوات المرتبة", en: "Ordered steps", de: "Geordnete Schritte" })}
-            </h2>
+            <h2>{msg(lang, { ar: "الخطوات المرتبة", en: "Ordered steps" })}</h2>
             <button className="text-link" type="button">
               + Add step
             </button>
@@ -576,16 +542,13 @@ function RecipeEditor({ lang, isNew = false }: { lang: Lang; isNew?: boolean }) 
           <TextAreaField label="1" rows={3} />
         </section>
         <div className="form-grid">
-          <TextField
-            label={msg(lang, { ar: "الوقت المعروف", en: "Known time", de: "Bekannte Zeit" })}
-          />
+          <TextField label={msg(lang, { ar: "الوقت المعروف", en: "Known time" })} />
           <TextField label="Temperature °C" type="number" />
         </div>
         <SelectField
           label={msg(lang, {
             ar: "المنتجات المرتبطة",
             en: "Related products",
-            de: "Zugehörige Produkte",
           })}
           multiple
         >
@@ -622,11 +585,10 @@ function ContentPage({ lang }: { lang: Lang }) {
   return (
     <>
       <PageHeading
-        title={msg(lang, { ar: "محتوى الصفحات", en: "Page content", de: "Seiteninhalte" })}
+        title={msg(lang, { ar: "محتوى الصفحات", en: "Page content" })}
         description={msg(lang, {
           ar: "حقول منظمة للأقسام المعتمدة، دون HTML أو JavaScript قابل للتنفيذ.",
           en: "Structured fields for approved sections, without executable HTML or JavaScript.",
-          de: "Strukturierte Felder für freigegebene Abschnitte, ohne ausführbares HTML oder JavaScript.",
         })}
       />
       <div className="split-admin-view">
@@ -667,18 +629,16 @@ function MediaPage({ lang }: { lang: Lang }) {
   return (
     <>
       <PageHeading
-        title={msg(lang, { ar: "مكتبة الوسائط", en: "Media library", de: "Medienbibliothek" })}
+        title={msg(lang, { ar: "مكتبة الوسائط", en: "Media library" })}
         description={msg(lang, {
           ar: "عرض الأصول العامة الحالية ومعاينة ملفات محلية مؤقتة.",
           en: "Review current public assets and preview transient local files.",
-          de: "Vorhandene öffentliche Assets prüfen und lokale Dateien vorübergehend ansehen.",
         })}
         action={
           <label className="button button-primary">
             {msg(lang, {
               ar: "اختر ملفًا محليًا",
               en: "Choose local file",
-              de: "Lokale Datei auswählen",
             })}
             <input type="file" accept="image/*" hidden />
           </label>
@@ -689,7 +649,6 @@ function MediaPage({ lang }: { lang: Lang }) {
         title={msg(lang, {
           ar: "الاختيار لا يعني الرفع",
           en: "Selection is not an upload",
-          de: "Auswahl ist kein Upload",
         })}
       />
       <div className="media-grid">
@@ -697,10 +656,7 @@ function MediaPage({ lang }: { lang: Lang }) {
           <article key={src}>
             <img src={src} alt="" />
             <code>{src}</code>
-            <TextField
-              label={msg(lang, { ar: "النص البديل", en: "Alt text", de: "Alternativtext" })}
-              placeholder="—"
-            />
+            <TextField label={msg(lang, { ar: "النص البديل", en: "Alt text" })} placeholder="—" />
           </article>
         ))}
       </div>
@@ -716,12 +672,10 @@ function InquiryAdmin({ lang, detail = false }: { lang: Lang; detail?: boolean }
           title={msg(lang, {
             ar: "إدارة الاستفسارات",
             en: "Inquiry management",
-            de: "Anfrageverwaltung",
           })}
           description={msg(lang, {
             ar: "للمبيعات المصرّح لهم.",
             en: "For authorized sales staff.",
-            de: "Für autorisierte Vertriebsmitarbeiter.",
           })}
         />
         <Toolbar lang={lang} type="inquiries" />
@@ -740,11 +694,10 @@ function InquiryAdmin({ lang, detail = false }: { lang: Lang; detail?: boolean }
   return (
     <>
       <PageHeading
-        title={msg(lang, { ar: "تفاصيل الاستفسار", en: "Inquiry details", de: "Anfragedetails" })}
+        title={msg(lang, { ar: "تفاصيل الاستفسار", en: "Inquiry details" })}
         description={msg(lang, {
           ar: "تفاصيل العملاء محمية وتحتاج تحقق صلاحية الخادم.",
           en: "Customer details are private and require server authorization.",
-          de: "Kundendaten sind privat und erfordern eine Serverautorisierung.",
         })}
       />
       <IntegrationNotice lang={lang} />
@@ -798,21 +751,18 @@ function PeoplePage({ lang, employees = false }: { lang: Lang; employees?: boole
             ? msg(lang, {
                 ar: "الموظفون والصلاحيات",
                 en: "Employees and permissions",
-                de: "Mitarbeiter und Berechtigungen",
               })
-            : msg(lang, { ar: "العملاء", en: "Customers", de: "Kunden" })
+            : msg(lang, { ar: "العملاء", en: "Customers" })
         }
         description={
           employees
             ? msg(lang, {
                 ar: "واجهة للمسؤول فقط؛ لا يوجد تسجيل موظفين عام.",
                 en: "Administrator-only interface; there is no public staff registration.",
-                de: "Nur für Administratoren; es gibt keine öffentliche Mitarbeiterregistrierung.",
               })
             : msg(lang, {
                 ar: "سياق الفرد أو الشركة وحالة التحقق والاستفسارات.",
                 en: "Individual/company context, verification and related inquiries.",
-                de: "Privat-/Unternehmenskontext, Bestätigung und zugehörige Anfragen.",
               })
         }
         action={
@@ -859,11 +809,10 @@ function AuditLog({ lang }: { lang: Lang }) {
   return (
     <>
       <PageHeading
-        title={msg(lang, { ar: "سجل التدقيق", en: "Audit log", de: "Audit-Protokoll" })}
+        title={msg(lang, { ar: "سجل التدقيق", en: "Audit log" })}
         description={msg(lang, {
           ar: "سجل خادمي غير قابل للتعديل للمسؤولين.",
           en: "Server-generated, immutable history for administrators.",
-          de: "Serverseitiger, unveränderlicher Verlauf für Administratoren.",
         })}
       />
       <div className="list-toolbar">

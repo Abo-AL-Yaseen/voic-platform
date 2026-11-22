@@ -80,11 +80,7 @@ export default function ProductQuickView({
             </button>
             <p>{t.emailHint}</p>
             <a className="text-link quick-full-link" href={productInquiryHref(product.id, lang)}>
-              {lang === "ar"
-                ? "تواصل بالبريد بدلًا من ذلك"
-                : lang === "de"
-                  ? "Alternativ per E-Mail kontaktieren"
-                  : "Contact by email instead"}
+              {lang === "ar" ? "تواصل بالبريد بدلًا من ذلك" : "Contact by email instead"}
             </a>
             <button
               className="text-link quick-full-link"

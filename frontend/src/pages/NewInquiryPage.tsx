@@ -15,10 +15,10 @@ type Props = {
 };
 
 const text = {
-  title: { ar: "استفسار توريد جديد", en: "New supply inquiry", de: "Neue Lieferanfrage" },
-  products: { ar: "المنتجات", en: "Products", de: "Produkte" },
-  details: { ar: "التفاصيل", en: "Details", de: "Details" },
-  review: { ar: "المراجعة", en: "Review", de: "Prüfen" },
+  title: { ar: "استفسار توريد جديد", en: "New supply inquiry" },
+  products: { ar: "المنتجات", en: "Products" },
+  details: { ar: "التفاصيل", en: "Details" },
+  review: { ar: "المراجعة", en: "Review" },
 } as const;
 
 function itemFromProduct(product: Product): Item {
@@ -79,7 +79,6 @@ export default function NewInquiryPage({
         msg(lang, {
           ar: "اختر منتجًا واحدًا على الأقل.",
           en: "Select at least one product.",
-          de: "Wählen Sie mindestens ein Produkt aus.",
         }),
       );
     if (items.some((item) => !Number.isFinite(Number(item.quantity)) || Number(item.quantity) <= 0))
@@ -87,7 +86,6 @@ export default function NewInquiryPage({
         msg(lang, {
           ar: "أدخل كمية أكبر من صفر لكل منتج.",
           en: "Enter a quantity greater than zero for every product.",
-          de: "Geben Sie für jedes Produkt eine Menge größer als null ein.",
         }),
       );
     setErrors(next);
@@ -100,7 +98,6 @@ export default function NewInquiryPage({
         msg(lang, {
           ar: "الاسم وبلد الوجهة مطلوبان.",
           en: "Name and destination country are required.",
-          de: "Name und Zielland sind erforderlich.",
         }),
       );
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(details.email))
@@ -108,7 +105,6 @@ export default function NewInquiryPage({
         msg(lang, {
           ar: "أدخل بريدًا إلكترونيًا صحيحًا.",
           en: "Enter a valid email address.",
-          de: "Geben Sie eine gültige E-Mail-Adresse ein.",
         }),
       );
     if (details.accountType === "company" && !details.company.trim())
@@ -116,7 +112,6 @@ export default function NewInquiryPage({
         msg(lang, {
           ar: "اسم الشركة مطلوب لحساب الشركة.",
           en: "Company name is required for a company account.",
-          de: "Für ein Unternehmenskonto ist der Unternehmensname erforderlich.",
         }),
       );
     setErrors(next);
@@ -137,21 +132,18 @@ export default function NewInquiryPage({
             label={msg(lang, {
               ar: "مثال بصري فقط",
               en: "Visual example only",
-              de: "Nur visuelles Beispiel",
             })}
           />
           <h1>
             {msg(lang, {
               ar: "تم استلام الاستفسار",
               en: "Inquiry received",
-              de: "Anfrage eingegangen",
             })}
           </h1>
           <p>
             {msg(lang, {
               ar: "تظهر هذه الحالة فقط بعد نجاح استجابة الخادم. لا يوجد مرجع تجريبي أو استفسار محفوظ.",
               en: "This state appears only after a successful server response. No demo reference or saved inquiry exists.",
-              de: "Dieser Zustand erscheint erst nach einer erfolgreichen Serverantwort. Es gibt keine Demo-Referenz und keine gespeicherte Anfrage.",
             })}
           </p>
         </section>
@@ -166,7 +158,6 @@ export default function NewInquiryPage({
           {msg(lang, {
             ar: "طلب تراجعُه الشركة",
             en: "A request reviewed by the company",
-            de: "Eine vom Unternehmen geprüfte Anfrage",
           })}
         </p>
         <h1>{msg(lang, text.title)}</h1>
@@ -174,7 +165,6 @@ export default function NewInquiryPage({
           {msg(lang, {
             ar: "لا توجد أسعار أو عملية شراء تلقائية. تتواصل الشركة معك بعد مراجعة التفاصيل.",
             en: "There are no public prices or automatic purchase. The company contacts you after review.",
-            de: "Es gibt keine öffentlichen Preise und keinen automatischen Kauf. Das Unternehmen meldet sich nach der Prüfung.",
           })}
         </p>
       </header>
@@ -183,7 +173,6 @@ export default function NewInquiryPage({
         aria-label={msg(lang, {
           ar: "خطوات الاستفسار",
           en: "Inquiry steps",
-          de: "Schritte der Anfrage",
         })}
       >
         {[text.products, text.details, text.review].map((label, index) => (
@@ -201,7 +190,6 @@ export default function NewInquiryPage({
         {msg(lang, {
           ar: `الخطوة ${step} من 3`,
           en: `Step ${step} of 3`,
-          de: `Schritt ${step} von 3`,
         })}
       </p>
       {errors.length > 0 && (
@@ -210,7 +198,6 @@ export default function NewInquiryPage({
             {msg(lang, {
               ar: "راجع الخطوة الحالية",
               en: "Review this step",
-              de: "Diesen Schritt prüfen",
             })}
           </strong>
           <ul>
@@ -228,14 +215,12 @@ export default function NewInquiryPage({
                 {msg(lang, {
                   ar: "اختر المنتجات والكميات",
                   en: "Choose products and quantities",
-                  de: "Produkte und Mengen auswählen",
                 })}
               </h2>
               <p>
                 {msg(lang, {
                   ar: "لا يطبق حد المقارنة على الاستفسار.",
                   en: "The comparison limit does not apply to inquiries.",
-                  de: "Die Vergleichsgrenze gilt nicht für Anfragen.",
                 })}
               </p>
             </div>
@@ -271,7 +256,6 @@ export default function NewInquiryPage({
                         {msg(lang, {
                           ar: "أضف للاستفسار",
                           en: "Add to inquiry",
-                          de: "Zur Anfrage hinzufügen",
                         })}
                       </strong>
                     </label>
@@ -282,7 +266,6 @@ export default function NewInquiryPage({
                         label={msg(lang, {
                           ar: "خيار التعبئة",
                           en: "Package option",
-                          de: "Verpackungsoption",
                         })}
                         value={selected.packageOption}
                         onChange={(e) => updateItem(product.id, { packageOption: e.target.value })}
@@ -298,14 +281,13 @@ export default function NewInquiryPage({
                             {msg(lang, {
                               ar: "تواصلوا معي بشأن خيارات التعبئة",
                               en: "Contact me about packaging options",
-                              de: "Bitte kontaktieren Sie mich zu Verpackungsoptionen",
                             })}
                           </option>
                         )}
                       </SelectField>
                       <div className="quantity-row">
                         <TextField
-                          label={msg(lang, { ar: "الكمية", en: "Quantity", de: "Menge" })}
+                          label={msg(lang, { ar: "الكمية", en: "Quantity" })}
                           type="number"
                           min="1"
                           step="1"
@@ -313,19 +295,13 @@ export default function NewInquiryPage({
                           onChange={(e) => updateItem(product.id, { quantity: e.target.value })}
                         />
                         <SelectField
-                          label={msg(lang, { ar: "الوحدة", en: "Unit", de: "Einheit" })}
+                          label={msg(lang, { ar: "الوحدة", en: "Unit" })}
                           value={selected.unit}
                           onChange={(e) => updateItem(product.id, { unit: e.target.value })}
                         >
-                          <option value="pack">
-                            {msg(lang, { ar: "عبوة", en: "pack", de: "Packung" })}
-                          </option>
-                          <option value="carton">
-                            {msg(lang, { ar: "كرتون", en: "carton", de: "Karton" })}
-                          </option>
-                          <option value="pallet">
-                            {msg(lang, { ar: "منصة", en: "pallet", de: "Palette" })}
-                          </option>
+                          <option value="pack">{msg(lang, { ar: "عبوة", en: "pack" })}</option>
+                          <option value="carton">{msg(lang, { ar: "كرتون", en: "carton" })}</option>
+                          <option value="pallet">{msg(lang, { ar: "منصة", en: "pallet" })}</option>
                         </SelectField>
                       </div>
                     </div>
@@ -342,45 +318,40 @@ export default function NewInquiryPage({
             {msg(lang, {
               ar: "بيانات التواصل والوجهة",
               en: "Contact and destination",
-              de: "Kontakt und Ziel",
             })}
           </h2>
           <div className="form-grid">
             <SelectField
-              label={msg(lang, { ar: "نوع العميل", en: "Customer type", de: "Kundentyp" })}
+              label={msg(lang, { ar: "نوع العميل", en: "Customer type" })}
               value={details.accountType}
               onChange={(e) => setDetails({ ...details, accountType: e.target.value })}
             >
-              <option value="individual">
-                {msg(lang, { ar: "فرد", en: "Individual", de: "Privatperson" })}
-              </option>
-              <option value="company">
-                {msg(lang, { ar: "شركة", en: "Company", de: "Unternehmen" })}
-              </option>
+              <option value="individual">{msg(lang, { ar: "فرد", en: "Individual" })}</option>
+              <option value="company">{msg(lang, { ar: "شركة", en: "Company" })}</option>
             </SelectField>
             <TextField
-              label={msg(lang, { ar: "الاسم الكامل", en: "Full name", de: "Vollständiger Name" })}
+              label={msg(lang, { ar: "الاسم الكامل", en: "Full name" })}
               value={details.name}
               onChange={(e) => setDetails({ ...details, name: e.target.value })}
               required
             />
             {details.accountType === "company" && (
               <TextField
-                label={msg(lang, { ar: "اسم الشركة", en: "Company name", de: "Unternehmensname" })}
+                label={msg(lang, { ar: "اسم الشركة", en: "Company name" })}
                 value={details.company}
                 onChange={(e) => setDetails({ ...details, company: e.target.value })}
                 required
               />
             )}
             <TextField
-              label={msg(lang, { ar: "البريد الإلكتروني", en: "Email", de: "E-Mail" })}
+              label={msg(lang, { ar: "البريد الإلكتروني", en: "Email" })}
               type="email"
               value={details.email}
               onChange={(e) => setDetails({ ...details, email: e.target.value })}
               required
             />
             <TextField
-              label={msg(lang, { ar: "بلد الوجهة", en: "Destination country", de: "Zielland" })}
+              label={msg(lang, { ar: "بلد الوجهة", en: "Destination country" })}
               value={details.destination}
               onChange={(e) => setDetails({ ...details, destination: e.target.value })}
               required
@@ -389,7 +360,6 @@ export default function NewInquiryPage({
               label={msg(lang, {
                 ar: "الهاتف (اختياري)",
                 en: "Phone (optional)",
-                de: "Telefon (optional)",
               })}
               type="tel"
               value={details.phone}
@@ -400,7 +370,6 @@ export default function NewInquiryPage({
             label={msg(lang, {
               ar: "ملاحظات (اختياري)",
               en: "Notes (optional)",
-              de: "Hinweise (optional)",
             })}
             rows={5}
             value={details.notes}
@@ -411,13 +380,11 @@ export default function NewInquiryPage({
             title={msg(lang, {
               ar: "بيانات مؤقتة في هذه الصفحة",
               en: "Temporary data on this page",
-              de: "Temporäre Daten auf dieser Seite",
             })}
           >
             {msg(lang, {
               ar: "لا تُحفظ هذه البيانات في المتصفح أو على خادم. ستحتاج إلى تسجيل الدخول والتحقق قبل الإرسال.",
               en: "These details are not saved in the browser or on a server. Sign-in and verification are required before submission.",
-              de: "Diese Angaben werden weder im Browser noch auf einem Server gespeichert. Vor dem Absenden sind Anmeldung und Bestätigung erforderlich.",
             })}
           </IntegrationNotice>
         </section>
@@ -425,11 +392,9 @@ export default function NewInquiryPage({
       {step === 3 && (
         <section className="flow-panel review-panel">
           <div className="flow-panel-heading">
-            <h2>
-              {msg(lang, { ar: "راجع الاستفسار", en: "Review the inquiry", de: "Anfrage prüfen" })}
-            </h2>
+            <h2>{msg(lang, { ar: "راجع الاستفسار", en: "Review the inquiry" })}</h2>
             <button className="text-link" onClick={() => setStep(1)}>
-              {msg(lang, { ar: "تعديل المنتجات", en: "Edit products", de: "Produkte bearbeiten" })}
+              {msg(lang, { ar: "تعديل المنتجات", en: "Edit products" })}
             </button>
           </div>
           <div className="review-items">
@@ -445,16 +410,13 @@ export default function NewInquiryPage({
                         ? msg(lang, {
                             ar: "التواصل بشأن التعبئة",
                             en: "Contact about packaging",
-                            de: "Kontakt zu Verpackung",
                           })
                         : formatPackaging(item.packageOption, lang)}
                     </p>
                   </div>
                   <strong>
                     {item.quantity} ×{" "}
-                    {item.unit === "pack"
-                      ? msg(lang, { ar: "عبوة", en: "pack", de: "Packung" })
-                      : item.unit}
+                    {item.unit === "pack" ? msg(lang, { ar: "عبوة", en: "pack" }) : item.unit}
                   </strong>
                 </article>
               );
@@ -462,17 +424,17 @@ export default function NewInquiryPage({
           </div>
           <div className="review-contact">
             <div>
-              <span>{msg(lang, { ar: "جهة الاتصال", en: "Contact", de: "Kontakt" })}</span>
+              <span>{msg(lang, { ar: "جهة الاتصال", en: "Contact" })}</span>
               <strong>{details.name || "—"}</strong>
               <p>{details.email || "—"}</p>
             </div>
             <div>
-              <span>{msg(lang, { ar: "الوجهة", en: "Destination", de: "Ziel" })}</span>
+              <span>{msg(lang, { ar: "الوجهة", en: "Destination" })}</span>
               <strong>{details.destination || "—"}</strong>
               <p>{details.company || "—"}</p>
             </div>
             <button className="text-link" onClick={() => setStep(2)}>
-              {msg(lang, { ar: "تعديل التفاصيل", en: "Edit details", de: "Details bearbeiten" })}
+              {msg(lang, { ar: "تعديل التفاصيل", en: "Edit details" })}
             </button>
           </div>
           <div className="commercial-note">
@@ -480,14 +442,12 @@ export default function NewInquiryPage({
               {msg(lang, {
                 ar: "ماذا يحدث بعد الإرسال؟",
                 en: "What happens after submission?",
-                de: "Was passiert nach dem Absenden?",
               })}
             </strong>
             <p>
               {msg(lang, {
                 ar: "تراجع الشركة المنتجات والكميات والوجهة وتتواصل معك لتأكيد الأسعار وشروط التوريد. الاستفسار ليس بيعًا مقبولًا تلقائيًا.",
                 en: "The company reviews products, quantities and destination, then contacts you to confirm pricing and supply terms. An inquiry is not an automatically accepted sale.",
-                de: "Das Unternehmen prüft Produkte, Mengen und Zielort und kontaktiert Sie zur Klärung von Preisen und Lieferbedingungen. Eine Anfrage ist kein automatisch angenommener Verkauf.",
               })}
             </p>
           </div>
@@ -496,7 +456,6 @@ export default function NewInquiryPage({
             title={msg(lang, {
               ar: "يلزم تسجيل الدخول والتحقق",
               en: "Sign-in and verification required",
-              de: "Anmeldung und Bestätigung erforderlich",
             })}
           />
           <div className="page-actions">
@@ -511,7 +470,6 @@ export default function NewInquiryPage({
               {msg(lang, {
                 ar: "سجّل الدخول للمتابعة",
                 en: "Sign in to continue",
-                de: "Zum Fortfahren anmelden",
               })}
             </AppLink>
             <AppLink
@@ -522,10 +480,10 @@ export default function NewInquiryPage({
               go={go}
               className="button button-secondary"
             >
-              {msg(lang, { ar: "إنشاء حساب", en: "Create account", de: "Konto erstellen" })}
+              {msg(lang, { ar: "إنشاء حساب", en: "Create account" })}
             </AppLink>
             <button className="button button-primary" disabled onClick={() => setSubmitNotice("")}>
-              {msg(lang, { ar: "إرسال الاستفسار", en: "Submit inquiry", de: "Anfrage absenden" })}
+              {msg(lang, { ar: "إرسال الاستفسار", en: "Submit inquiry" })}
             </button>
           </div>
           {submitNotice && <p role="alert">{submitNotice}</p>}
@@ -540,11 +498,11 @@ export default function NewInquiryPage({
             setErrors([]);
           }}
         >
-          {msg(lang, { ar: "رجوع", en: "Back", de: "Zurück" })}
+          {msg(lang, { ar: "رجوع", en: "Back" })}
         </button>
         {step < 3 && (
           <button className="button button-primary" onClick={next}>
-            {msg(lang, { ar: "متابعة", en: "Continue", de: "Weiter" })}
+            {msg(lang, { ar: "متابعة", en: "Continue" })}
           </button>
         )}
       </div>

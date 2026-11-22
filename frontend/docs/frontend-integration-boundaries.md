@@ -21,5 +21,9 @@ Private React Query entries must use `meta.private = true`, include the user sco
 and be cancelled/removed through `clearPrivateQueries` on logout or account change. Unsafe writes must not
 retry automatically without server-side idempotency.
 
-The German copy is an editorial draft and requires native-language commercial review. The privacy page is
-also a draft; legal bases, exact retention periods, processors and publication approval remain blockers.
+Supported languages are Arabic (default, RTL) and English (LTR) only. Unsupported locale links
+fall back to Arabic. Keep approved Arabic brand names and official Latin spellings in English.
+The privacy page remains a draft; legal bases, exact retention periods, processors and publication
+approval remain blockers. See [the project plan](../../docs/project-plan.md) for the approved
+architecture and business requirements, and [catalog requirements](../../docs/product-catalog.md)
+for the first future public-read integration.

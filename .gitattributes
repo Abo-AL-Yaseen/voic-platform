@@ -1,6 +1,2 @@
-# Preserve official Spec Kit manifest hashes on Windows checkouts.
-/.agents/** text eol=lf
-/.specify/** text eol=lf
-
 # Keep the preserved production-plan snapshot byte-identical across checkouts.
 /docs/reference/VOIC_Production_Plan_AR.md text eol=lf

@@ -38,7 +38,7 @@ test("all approved product and recipe records remain present", async () => {
 
 test("locale and preview routing contracts are explicit", async () => {
   const [app, i18n] = await Promise.all([read("src/App.tsx"), read("src/i18n.ts")]);
-  assert.match(i18n, /export type Lang = "ar" \| "en" \| "de"/);
+  assert.match(i18n, /export type Lang = "ar" \| "en";/);
   assert.match(app, /path === "\/login"/);
   assert.match(app, /path === "\/inquiries\/new"/);
   assert.match(app, /path === "\/privacy"/);

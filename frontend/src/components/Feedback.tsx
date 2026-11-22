@@ -18,7 +18,6 @@ export function IntegrationNotice({
           msg(lang, {
             ar: "التكامل غير متصل بعد",
             en: "Integration is not connected yet",
-            de: "Die Integration ist noch nicht verbunden",
           })}
       </strong>
       <p>
@@ -26,7 +25,6 @@ export function IntegrationNotice({
           msg(lang, {
             ar: "هذه الواجهة جاهزة للربط، لكنها لا ترسل أو تحفظ بيانات دون خدمة خلفية حقيقية.",
             en: "This interface is ready for integration, but it does not send or save data without a real backend.",
-            de: "Diese Oberfläche ist für die Anbindung vorbereitet, sendet oder speichert jedoch ohne echtes Backend keine Daten.",
           })}
       </p>
     </aside>
@@ -102,12 +100,10 @@ export function AccessDenied({ lang }: { lang: Lang }) {
       title={msg(lang, {
         ar: "لا تملك صلاحية الوصول",
         en: "You do not have access",
-        de: "Sie haben keinen Zugriff",
       })}
       description={msg(lang, {
         ar: "يجب أن يقرر الخادم الصلاحيات الفعلية لكل موظف. تواصل مع مسؤول النظام إذا كنت تتوقع هذه الصلاحية.",
         en: "The server must determine each employee's permissions. Contact an administrator if you expect this access.",
-        de: "Der Server muss die Berechtigungen jedes Mitarbeiters bestimmen. Wenden Sie sich an einen Administrator, wenn Sie diesen Zugriff erwarten.",
       })}
     />
   );
@@ -142,7 +138,7 @@ export function ConfirmationDialog({
             {confirmLabel}
           </button>
           <button className="button button-secondary" onClick={onClose}>
-            {msg(lang, { ar: "إلغاء", en: "Cancel", de: "Abbrechen" })}
+            {msg(lang, { ar: "إلغاء", en: "Cancel" })}
           </button>
         </div>
       </div>
