@@ -6,8 +6,19 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
 
 ## Implemented and present
 
-- One platform repository; the existing application lives in `frontend/`. There is no backend,
-  database schema, migration project, or deployed API in this inspected repository.
+- One platform repository: the existing application lives in `frontend/` and the backend
+  foundation lives in `backend/`. No business schema, catalog API or deployed API exists.
+- Approved backend decisions: NestJS + TypeScript, MySQL with InnoDB, TypeORM with migrations.
+  `backend/README.md` documents exact local setup and commands. Business contracts remain open.
+- The backend has validated environment configuration, feature modules for configuration,
+  database and health, `/api/v1/health/live` and `/api/v1/health/ready`, explicit CORS origins,
+  Helmet headers, DTO validation, bounded bodies and sanitized error/log handling. Liveness
+  is independent of the database; readiness initializes TypeORM lazily and checks `SELECT 1`.
+- Schema synchronization, schema dropping and automatic migrations are disabled. Explicit
+  migration commands and disposable database checks exist; there are no business entities or
+  versioned migrations. MySQL Compose uses a named volume and localhost-only port 3308.
+- Shutdown hooks close the connection pool; required configuration fails startup with safe
+  field-level guidance. Actual `.env` credentials, dependencies and build/test output are ignored.
 - React 19, TypeScript, Vite 8, Tailwind CSS v4, and pnpm are already configured. The frontend
   runs locally; its four contract tests and TypeScript check passed at baseline import.
 - Public product, recipe, and page content comes from local source files, notably
@@ -50,9 +61,11 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
 - The reference plan is dated 2026-11-22. Its older `voic-project` inventory reports missing
   `Pages.tsx`, `InquiryForm.tsx`, `recipes.ts`, and `i18n.ts`; those files now exist in this
   baseline. React Query is also installed/prepared now. Use inspected code for current facts.
-- Laravel + PostgreSQL, Sanctum, proposed schema/API paths, infrastructure, and performance
-  targets in that plan are proposals, not approved decisions or implemented capabilities.
-  The approved frontend architecture is independent of the eventual backend stack.
+- Laravel + PostgreSQL and Sanctum in that historical plan are not the approved stack.
+  NestJS/TypeScript + MySQL/InnoDB + TypeORM migrations are approved now. Historical schema/API
+  paths, infrastructure and performance targets remain proposals, not implemented capabilities.
+  The approved frontend architecture remains Services → feature React Query Hooks → Pages,
+  with Utils only when needed.
 - The plan records further product-source conflicts (including Al-Ghazal sizes/units,
   butter-flavor 450 g versus 455 g, Al-Nabatin packaging, and separate Al-Aseel oil/ghee
   identities). These findings remain unresolved. The external PDFs referenced by that plan
@@ -73,10 +86,9 @@ fallback. They contain six stories, 25 requirements, 29 acceptance scenarios and
 Auth, staff CRUD and saved inquiries remain outside this first public-read slice.
 
 The [project plan](project-plan.md) is the source of approved rules and the incremental work
-sequence. Catalog behavioral assumptions still need review; backend/database/environment,
-schema, API contracts, pagination and cache timing remain open technical decisions. No backend,
-migrations, seed/import implementation, API endpoints or product hooks were added by the
-language and tooling maintenance task.
+sequence. Catalog behavioral assumptions still need review; business schema, API contracts,
+pagination and cache timing remain open decisions. The foundation does not implement catalog
+endpoints, seed/import code, product hooks, authentication or inquiry persistence.
 
 ## Latest maintenance verification
 
@@ -91,3 +103,36 @@ On 2026-11-23, from `frontend/`:
 
 These checks validate the maintenance change; they do not claim a live backend, production
 deployment, end-to-end browser coverage, capacity or legal/content approval.
+
+## Backend foundation verification and permanent branch
+
+All VOIC work now uses the permanent `mahmoud` branch. Feature/task branches must not be
+created. Prior branch tips and the current foundation are preserved through ordinary commits,
+without rewriting history; remote preservation is required before deleting old branches.
+
+On 2026-11-23:
+
+- Backend `pnpm.cmd test`: 10 tests passed, covering configuration and real startup failure,
+  health/readiness, retry/concurrency/deadlines, connection cleanup, DTO rejection, safe
+  errors/logging, CORS, malformed bodies and body size limits.
+- Backend `pnpm.cmd typecheck` and `pnpm.cmd build`: passed.
+- Frontend tests (7/7), TypeScript check and production build: passed; no frontend tracked
+  file or dependency was changed by the foundation task.
+- A real local HTTP bootstrap with private environment settings returned liveness 200 and
+  readiness 503 while MySQL was unavailable, then closed its resources.
+- Docker Desktop was initially stopped. After it was started once, unrelated containers
+  were observed running with restart policies; no before-start container snapshot was
+  available, and no project-specific start/stop/restart command targeted those containers.
+- The configured MySQL 9.7.4 image could not be downloaded: Docker Hub manifest requests
+  timed out twice. A separate `voic-foundation-compat-check` project using the cached MySQL
+  8.0.46 image was created with volume `voic-foundation-compat-check_mysql-data` and only
+  `127.0.0.1:3308`. At the last connection attempt it was still initializing/unhealthy;
+  `db:check` failed safely. No database volume was deleted. Existing native MySQL was not
+  reused because a suitable separate VOIC database/user had not been provisioned.
+- Real connection, InnoDB/grant and migration apply/revert checks remain unverified until a
+  suitable MySQL instance is available. Unit/HTTP tests do not substitute for these checks.
+
+The API and migrations are independent of Docker and read their MySQL connection from the
+environment. [The backend guide](../backend/README.md) documents native and optional Docker
+setup, generic disposable database testing, and the optional Compose test helper. This is
+not a production-readiness claim.
