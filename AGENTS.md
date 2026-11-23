@@ -25,8 +25,9 @@ documentation. Work directly with Codex and the ordinary project documentation.
 - Approved backend stack: NestJS + TypeScript, MySQL with InnoDB, and TypeORM migrations.
   Backend setup and API conventions are in `backend/README.md`. Business schemas and catalog
   contracts still require their own decisions; never enable schema synchronization.
-- Keep backend startup and migrations independent of Docker: configure MySQL through
-  environment variables. Document native MySQL and Docker as interchangeable local choices.
+- The chosen local setup is native MySQL Server, managed through MySQL Workbench (a separate
+  client). Configure connections through environment variables. Do not use Docker or modify
+  containers/volumes for this setup; startup and migrations have no Docker dependency.
 - Inspect current code and real API contracts; integrate one feature at a time through
   Services, feature React Query Hooks, and Pages. Add Utils only for actual transformation needs.
 - Preserve explicit error states; never hide a failed real API with silent local-data fallback.
@@ -42,8 +43,8 @@ documentation. Work directly with Codex and the ordinary project documentation.
   if permissions prevent changing it and report the exact required GitHub setting.
 - Do not start, stop, restart or modify unrelated projects' containers, databases or volumes.
   Never delete database volumes. Use a suitable existing MySQL only with a separate VOIC
-  database/user; otherwise use a distinct VOIC Compose project, volume and free localhost port.
-  Do not restart Docker Desktop if that would interrupt unrelated projects.
+  database/user. If provisioning needs administrator credentials, request local entry without
+  exposing passwords in chat or resetting an existing password. Do not operate Docker Desktop.
 - Keep requirements and plans aligned with actual decisions; do not treat a proposed feature
   as authorization to implement it. Record approved decisions in ordinary Markdown under `docs/`.
 - Run relevant established checks and record what was actually tested. Frontend checks are

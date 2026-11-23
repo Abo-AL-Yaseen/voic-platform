@@ -16,7 +16,9 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
   is independent of the database; readiness initializes TypeORM lazily and checks `SELECT 1`.
 - Schema synchronization, schema dropping and automatic migrations are disabled. Explicit
   migration commands and disposable database checks exist; there are no business entities or
-  versioned migrations. MySQL Compose uses a named volume and localhost-only port 3308.
+  versioned migrations. Native MySQL Server, managed through the separate Workbench client,
+  is the chosen local setup as of 2026-11-23. Legacy Compose files are retained but unused;
+  do not operate Docker or containers/volumes for this setup.
 - Shutdown hooks close the connection pool; required configuration fails startup with safe
   field-level guidance. Actual `.env` credentials, dependencies and build/test output are ignored.
 - React 19, TypeScript, Vite 8, Tailwind CSS v4, and pnpm are already configured. The frontend
@@ -114,7 +116,7 @@ local and remote `main`, `chore/spec-kit-setup` and `001-public-product-catalog`
 references were deleted, along with the local `feat/backend-foundation` reference. Their
 commits remain in the permanent branch's history; no force push or history rewrite occurred.
 
-On 2026-11-23:
+Historical foundation checks on 2026-11-23, before successful native provisioning:
 
 - Backend `pnpm.cmd test`: 10 tests passed, covering configuration and real startup failure,
   health/readiness, retry/concurrency/deadlines, connection cleanup, DTO rejection, safe
@@ -137,6 +139,46 @@ On 2026-11-23:
   suitable MySQL instance is available. Unit/HTTP tests do not substitute for these checks.
 
 The API and migrations are independent of Docker and read their MySQL connection from the
-environment. [The backend guide](../backend/README.md) documents native and optional Docker
-setup, generic disposable database testing, and the optional Compose test helper. This is
-not a production-readiness claim.
+environment. The latest local decision supersedes the Docker attempt above: use native MySQL
+Server and Workbench only. [The backend guide](../backend/README.md) documents local
+administrator entry, isolated native provisioning and disposable database verification.
+Historical Docker resources are untouched. This is not a production-readiness claim.
+
+## Native MySQL setup verified (2026-11-23)
+
+- Chosen setup: native MySQL Server on Windows, managed with the separate Workbench client.
+  Service `MySQL80` is running; SQL now confirms MySQL 8.0.44 on `127.0.0.1:3306`, matching
+  the installed server/Workbench versions. The existing listener was observed on `::`;
+  no global server, listener or firewall setting was changed.
+- The user ran `node scripts/setup-native-mysql.mjs` locally with the hidden administrator
+  prompt and confirmed successful provisioning and the full verification run. Development
+  uses the separate `voic_development` database and `voic_app@localhost`, with utf8mb4,
+  `utf8mb4_unicode_ci` and InnoDB. Its grants cover only the literal VOIC database, without
+  grant option or global privileges. Administrator credentials were not sent to chat or saved.
+- The ignored `backend/.env` now targets native port 3306. Actual credentials remain local
+  and ignored. The helper preserved the existing VOIC application password and unrelated
+  settings; no unrelated database/user was altered. No Docker command or container/volume
+  operation was performed by this native task.
+- The user's successful disposable test covered a real MySQL connection, InnoDB, restricted
+  grants, actual migration commands, fixture apply/idempotence/revert, HTTP health 200 and
+  pool cleanup. The helper uses a fresh random `voic_test_<16 hex>` database and dedicated
+  user, then removes only those test resources. No migration/DDL test ran on development.
+  No business tables, catalog API, authentication or frontend integration were implemented.
+- After the user's confirmation, the agent independently reran `pnpm.cmd db:check`: passed
+  against native MySQL. `node scripts/check-native-readiness.mjs` also passed: SQL version
+  8.0.44/port 3306, utf8mb4/InnoDB, database-only grants and actual NestJS liveness/readiness
+  HTTP 200 using an ephemeral localhost API port. The probe closed its connection pool.
+- `synchronize`, `dropSchema` and `migrationsRun` remain false. Both new scripts passed
+  `node --check`; setup also refused non-interactive execution. Initial pre-provisioning
+  access-denied/503 checks are superseded by the successful connection and readiness above.
+- Backend tests passed 10/10 on rerun; typecheck and build passed. The first test run passed
+  9/10 because the existing invalid-startup subprocess test exceeded its 30-second deadline;
+  the unchanged test passed on rerun. No timeout was increased. No dependencies were
+  installed/upgraded, no frontend files changed and frontend checks were not rerun for this
+  native tooling task. Staged changes were reviewed for actual local secrets and unintended
+  files before commit; private `.env` files and generated output remain excluded.
+
+Native local setup and its verification are complete. Future disposable checks can use
+`node scripts/setup-native-mysql.mjs --test-only` with local administrator entry; do not rerun
+initial provisioning over existing development resources. These are local foundation checks,
+not production deployment, restoration, security certification or capacity verification.
