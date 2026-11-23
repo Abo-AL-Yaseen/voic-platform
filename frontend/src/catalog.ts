@@ -23,6 +23,7 @@ export type Product = {
   useLabels?: Record<string, string>;
   sizeLabels?: Record<string, string>;
   packagingLabels?: Record<string, string>;
+  packageOptions?: { id: string; label: string }[];
   id: string;
   slug: string;
   name: string;

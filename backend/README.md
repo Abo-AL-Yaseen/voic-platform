@@ -3,7 +3,10 @@
 This is a local development backend, not a production deployment. The public product
 catalog now uses explicit TypeORM entities/migrations and native MySQL, integrated with the
 existing frontend. Customer authentication/accounts now use server-side sessions; staff
-business writes and inquiry submission remain disconnected. See [authentication](../docs/authentication.md)
+business writes remain disconnected. Customer supply inquiries now use owned drafts,
+atomic idempotent submission, account tracking and a durable notification outbox; see
+[customer inquiries](../docs/customer-inquiries.md) for schema, contracts, commands and manual tests.
+See [authentication](../docs/authentication.md)
 for endpoints, CSRF, mail capture, SMTP settings and security/deployment limits.
 Arabic and English are the only product languages. Project rules: [project plan](../docs/project-plan.md).
 Schema, publication rules, API contracts, import and checks: [catalog implementation](../docs/catalog-implementation.md).
@@ -132,7 +135,7 @@ pnpm.cmd start
 
 For development, use `pnpm.cmd build:watch` in one terminal and `pnpm.cmd start:dev` in another;
 the latter watches compiled JS after its initial build. Public product reads are wired through
-feature hooks; authentication and inquiry submission remain outside this integration.
+feature hooks; customer authentication and inquiries also use the same HTTP boundary.
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:3000/api/v1/health/live
@@ -177,7 +180,8 @@ on Unix. Graceful shutdown requires the process manager to deliver supported sig
 
 ## Explicit migrations
 
-The catalog has four entities and one explicit migration, `PublicCatalog1795435200000`.
+The catalog, customer authentication and inquiries have eleven entities and three explicit
+migrations, ending with `CustomerInquiries1795521600000`.
 `synchronize`, `dropSchema` and `migrationsRun` are all false. Startup never applies migrations.
 `voic_migrations` records operator-run migrations. Inspect the target before applying changes;
 never test rollback on development. Full DDL/import behavior is in [the catalog guide](../docs/catalog-implementation.md).
@@ -251,8 +255,8 @@ TLS, a secret manager and rotation, a separate least-privilege runtime user vers
 user, restricted network/firewall rules, trusted proxy and request limits, rate limits,
 availability targets, monitoring/alerts and redacted operational logs, backups and tested
 restore/rollback, dependency review, real load/security tests, and approved content/privacy.
-Authentication, CSRF for future sessions, email verification, ownership enforcement, staff
-MFA/permissions and transactional/idempotent inquiries remain separate features. No deployment,
+Customer sessions, CSRF, email verification, ownership and idempotent inquiries are implemented
+locally. Staff business workflows/MFA remain separate features. No deployment,
 security certification or capacity claim is made by these local checks.
 
 ## Historical foundation verification (2026-11-23, before native setup)

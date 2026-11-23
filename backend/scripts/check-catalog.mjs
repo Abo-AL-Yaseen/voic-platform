@@ -34,7 +34,7 @@ try {
   );
   assert.equal(Number(before.n), 0, "Disposable database must start empty");
   stage = "migration and repeatable import";
-  assert.equal((await source.runMigrations()).length, 2);
+  assert.equal((await source.runMigrations()).length, 3);
   assert.equal((await source.runMigrations()).length, 0);
   assert.deepEqual(await seedCatalog(source), { inserted: 11, skipped: 0 });
   assert.deepEqual(await seedCatalog(source), { inserted: 0, skipped: 11 });
@@ -210,11 +210,12 @@ try {
   stage = "rollback and restoration on disposable database";
   await source.undoLastMigration();
   await source.undoLastMigration();
+  await source.undoLastMigration();
   const [remaining] = await source.query(
     "SELECT COUNT(*) AS n FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name LIKE 'catalog%'",
   );
   assert.equal(Number(remaining.n), 0);
-  assert.equal((await source.runMigrations()).length, 2);
+  assert.equal((await source.runMigrations()).length, 3);
   await seedCatalog(source);
   assert.deepEqual(await snapshot(), originalSnapshot);
   const restored = await source

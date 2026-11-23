@@ -3,6 +3,7 @@ import type { DataSourceOptions } from "typeorm";
 import type { Environment } from "../config/environment.js";
 import { catalogEntities } from "../catalog/catalog.entities.js";
 import { authEntities } from "../auth/auth.entities.js";
+import { inquiryEntities } from "../inquiries/inquiry.entities.js";
 
 export function databaseOptions(env: Environment): DataSourceOptions {
   return {
@@ -17,7 +18,7 @@ export function databaseOptions(env: Environment): DataSourceOptions {
     synchronize: false,
     dropSchema: false,
     migrationsRun: false,
-    entities: [...catalogEntities, ...authEntities],
+    entities: [...catalogEntities, ...authEntities, ...inquiryEntities],
     migrations: [join(import.meta.dirname, "migrations", "*.js")],
     migrationsTableName: "voic_migrations",
     migrationsTransactionMode: "each",

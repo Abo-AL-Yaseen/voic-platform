@@ -17,6 +17,8 @@ import { AuthService, hashToken, passwordOptions } from "../.tmp/auth-build/auth
 import { AuthRateLimit } from "../.tmp/auth-build/auth/rate-limit.js";
 import { authConfiguration } from "../.tmp/auth-build/auth/auth.config.js";
 import { DatabaseService } from "../.tmp/auth-build/database/database.service.js";
+import { checkInquiries } from "./check-inquiries.mjs";
+import { runInquiryUi } from "../../frontend/e2e/inquiries-flow.mjs";
 import { runAuthUi } from "../../frontend/e2e/auth-flow.mjs";
 
 let source,
@@ -69,6 +71,10 @@ try {
     )
   ).map((r) => r.name);
   const owned = [
+    "inquiry_notifications",
+    "customer_inquiry_history",
+    "customer_inquiry_lines",
+    "customer_inquiries",
     "auth_action_tokens",
     "auth_sessions",
     "auth_users",
@@ -81,10 +87,15 @@ try {
   assert.ok(names.every((n) => owned.includes(n)));
   for (const name of owned) if (names.includes(name)) await source.query(`DROP TABLE \`${name}\``);
   stage = "migrations and catalog preservation";
-  assert.equal((await source.runMigrations()).length, 2);
+  assert.equal((await source.runMigrations()).length, 3);
   assert.equal((await source.runMigrations()).length, 0);
   assert.deepEqual(await seedCatalog(source), { inserted: 11, skipped: 0 });
+  await source.query(
+    "INSERT INTO auth_users (id,email,passwordHash,role,kind,name,company,country,phone,emailVerifiedAt,securityVersion,createdAt) VALUES ('00000000-0000-4000-8000-000000000001','preserved@example.test','test-only','customer','individual','Preserved',NULL,'PS',NULL,NULL,0,UTC_TIMESTAMP())",
+  );
   await source.undoLastMigration();
+  assert.equal(Number((await source.query("SELECT COUNT(*) AS n FROM auth_users"))[0].n), 1);
+  await source.query("DELETE FROM auth_users WHERE id='00000000-0000-4000-8000-000000000001'");
   assert.equal(Number((await source.query("SELECT COUNT(*) AS n FROM catalog_products"))[0].n), 11);
   assert.equal((await source.runMigrations()).length, 1);
   assert.deepEqual(await seedCatalog(source), { inserted: 0, skipped: 11 });
@@ -325,6 +336,11 @@ try {
   for (let i = 0; i < 3; i++)
     await rate.request("/auth/password/forgot", { email: "limited-forgot@example.test" });
   await rate.request("/auth/password/forgot", { email: "limited-forgot@example.test" }, 429);
+  stage = "inquiry ownership concurrency snapshots and notifications";
+  await app.close();
+  app = undefined;
+  base = await openApp();
+  const inquiryResult = await checkInquiries({ app, source, base, front, password, captured });
   stage = "real browser flows and private cache isolation";
   // New app resets only its in-memory limits. The disposable database remains intact.
   await app.close();
@@ -362,6 +378,15 @@ try {
     AuthSession,
     AuthUser,
   });
+  stage = "real inquiry browser flows";
+  const inquiryBrowserResult = await runInquiryUi({
+    front,
+    base,
+    captured,
+    password,
+    source,
+    AuthUser,
+  });
   stage = "public catalog browser regression";
   await new Promise((resolve, reject) => {
     const runner = spawn(
@@ -393,13 +418,16 @@ try {
     JSON.stringify({
       passed: true,
       checkedAt: new Date().toISOString(),
-      scope: "disposable native authentication and real browser verification",
+      scope: "disposable native authentication, customer inquiries and real browser verification",
       browserResult,
+      inquiryResult,
+      inquiryBrowserResult,
       catalogBrowserTests: 9,
     }),
   );
   fs.rmSync(".tmp/auth-failure.json", { force: true });
   fs.rmSync(".tmp/auth-ui-failure.json", { force: true });
+  fs.rmSync(".tmp/inquiry-ui-failure.json", { force: true });
   process.stdout.write(
     "PASS: disposable auth migrations, unique registration, Argon2id, sessions/CSRF/roles/ownership, token expiry/single use, capture email, recovery/password/session revocation, rate limits and real browser flows.\n",
   );

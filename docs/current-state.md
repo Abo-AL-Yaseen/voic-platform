@@ -18,6 +18,8 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
 - Schema synchronization, schema dropping and automatic migrations are disabled. Explicit
   migration commands and disposable database checks exist. Four catalog entities and one
   explicit catalog migration are implemented. The authentication migration adds three account/session/token entities.
+  The customer inquiry migration adds four draft/line/history/notification entities; eleven
+  entities and three explicit migrations are now present.
   Native MySQL Server, managed through the separate Workbench client,
   is the chosen local setup as of 2026-11-23. Legacy Compose files are retained but unused;
   do not operate Docker or containers/volumes for this setup.
@@ -43,27 +45,88 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
 - Customer auth/account screens are connected to real registration, verification, recovery,
   server-side sessions, own-profile editing and password change; [authentication](authentication.md)
   records the implemented contracts and current verification. Staff workspace access has a
-  backend role check. Authenticated inquiry submission, staff business CRUD, MFA, saved
-  inquiries and staff data remain unimplemented.
+  backend role check. Customer inquiries now implement owned drafts, revisioned saves,
+  verified/idempotent submission, snapshots/history, account reads and durable notifications;
+  [the inquiry guide](customer-inquiries.md) records contracts and manual steps. Staff business
+  CRUD, MFA and staff data remain unimplemented.
 - `services/api.ts` and `services/products.ts` connect public catalog reads to `/api/v1`
   through same-origin requests (local Vite proxy to port 3000) or `VITE_API_BASE_URL`.
-  Authentication/account services use that same HTTP boundary. Staff business operations
-  and inquiry submission remain disconnected.
+  Authentication/account and inquiry services use that same HTTP boundary. Staff business
+  operations remain disconnected.
 - Product, auth and account feature hooks use the existing QueryClient. Private data uses
   identity/session scope and cancellation/removal on account transitions; public catalog
-  cache remains intact. Other feature key files alone remain infrastructure.
+  cache remains intact. Inquiry hooks now implement private reads/writes/cache management;
+  other feature key files alone remain infrastructure.
 - The public `InquiryForm.tsx` can prepare a `mailto:` message or copy text for the user.
-  This is not server-side submission, persistence, successful mail delivery, or inquiry tracking.
+  This unrelated general-contact behavior remains; `/inquiries/new` is now a separate real
+  saved-draft/submission journey and does not use mailto. Capture is not external mail delivery.
 - `App.tsx` guards the development preview import and route registration with
   `import.meta.env.MODE !== "production"`. Preview and staff preview bypasses must remain
   excluded from production. Route guards alone would not secure a future server API.
 - There is no verified production deployment, database restoration test, security validation,
   load test, proven capacity, or legal compliance result in this baseline.
 
+## Customer inquiry verification (2026-11-24)
+
+- The user authorized the full customer supply-inquiry journey and both reported UI fixes.
+  Work began clean on `mahmoud`, preserving the accepted catalog/authentication implementation.
+  [The inquiry guide](customer-inquiries.md) documents the actual schema, endpoints, lifecycle,
+  quantity rules, idempotency, notifications, isolated commands and manual test URLs/actions.
+  Staff business CRUD, prices/orders/payments, publication changes and deployment remain excluded.
+- Four additive InnoDB/utf8mb4 tables implement owned revisioned drafts, immutable submitted
+  fields and catalog descriptions, initial visible history, unique owner-scoped submission
+  keys and durable notification intents. Synchronize/dropSchema/automatic migrations stay false.
+  The catalog adds stable public package-option IDs without changing legacy fields or content.
+- Backend `pnpm.cmd test` passed 17/17; frontend `pnpm.cmd test` passed 12/12. Both typechecks
+  and builds passed. Backend compilation used `pnpm.cmd build --outDir .tmp/auth-build`,
+  leaving the user's watched `dist/` untouched. No dependency was installed/upgraded; original
+  assets, fonts/license, recipe associations, product identities and Git LFS attributes are unchanged.
+- The local administrator entered credentials only at the hidden native helper prompt.
+  Final disposable checker evidence is `passed:true` at `2026-11-23T23:33:45.992Z`
+  (2026-11-24 locally), with a matching successful operator result. Tests forced mail capture;
+  no real external email was sent and no administrator/test credential was saved or printed.
+- Real native MySQL tests passed: three migrations apply/repeat; inquiry-only rollback/reapply
+  preserving catalog and an existing auth record; draft create retry/save/reload/ownership;
+  individual/company and verification enforcement; invalid product/package/unit/quantity and
+  owner/role/status/snapshot injection; CSRF; publication/package withdrawal before submit;
+  concurrent edits, duplicate submissions and edit-versus-submit race; compatible retry/lost
+  response resolution and incompatible key/revision rejection; immutable snapshots after catalog
+  edits; real history; customer-specific counts/search/filtering and stable tied-date pagination;
+  outbox failure/retry/capture without duplicate inquiry and bounded exhausted attempts.
+- Real Chrome flows passed in Arabic RTL and English LTR at 390px: four selected products,
+  owned draft creation, known-package/discussion lines, explicit save/reload/contact/review,
+  acknowledged submit and detail/reload, deliberate lost-response recovery, real account lists,
+  loading/error/retry/empty, old-account query cancellation and account switching. Both reported
+  UI fixes passed geometry checks; mobile Arabic account and English/mobile/desktop denial
+  screenshots were inspected. Headings have separate spacing and no decorative border;
+  keyboard/programmatic focus is scoped, and the centered denial card has a working account link.
+  The full accepted authentication browser flows and all nine catalog browser regressions passed.
+  Two initial inquiry browser failures were test waiting assumptions (catalog load and Arabic
+  default-language URL); both were corrected and the complete final reruns passed.
+- After disposable verification, `node scripts/apply-native-inquiries.mjs` applied exactly one
+  development migration, followed by a no-op repeat. Private in-memory fingerprints confirmed
+  every row of all seven existing catalog/auth tables was unchanged; there was no development
+  reset or rollback. Evidence at `2026-11-23T23:31:22.634Z` confirms native MySQL 8.0.44:3306,
+  eleven original products, separate real NestJS liveness/readiness HTTP 200, package options
+  and anonymous inquiry access 401. No test customer/draft was written to development.
+- Only isolated test frontends on 127.0.0.1:8444 and ephemeral test APIs were started/closed.
+  The operator was finished; its ready marker and process disappeared. Final listener inspection
+  showed test port 8444 free and native MySQL still at PID 6616:3306. Previously observed user
+  servers at 3000/8443 were no longer listening at final inspection; no stop command targeted
+  their PIDs and neither was restarted. Start the user's normal servers locally to manually
+  exercise the new routes. No Docker command, container/volume operation or unrelated database
+  operation occurred.
+- Staged review covered 44 relevant source/test/documentation files: zero matches for actual
+  local environment secrets or private-key/GitHub-token patterns, no staged runtime/private
+  environment/capture files, no unintended application assets. Captures, screenshots and
+  non-secret evidence remain ignored. Capture is not SMTP delivery; staff management, shared
+  production rate limits and production operational/content/privacy approval remain future work.
+
 ## Existing documentation and source conflicts
 
 - [Frontend integration boundaries](../frontend/docs/frontend-integration-boundaries.md)
-  describe the missing backend/session/inquiry contracts and private-cache requirements.
+  describe implemented catalog/session/inquiry boundaries, remaining staff contracts and
+  private-cache requirements.
 - [Product data notes](../frontend/docs/product-data-notes.md) preserve unresolved availability,
   sizes, packaging, imagery, ingredient, translation, and export-content questions. Keep these
   notes internal and obtain content approval rather than combining conflicting source claims.
@@ -91,7 +154,8 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
 The public read slice is implemented locally, including listing/filtering/search/sorting and
 pagination, direct detail/quick views, featured products, bounded ID lookup, related products,
 chooser, business sections, recipe references and inquiry product selection. Comparison and
-inquiry selection are independent. Auth, staff CRUD and inquiry submission remain outside scope.
+inquiry selection are independent. This public-read slice did not implement auth or inquiries;
+those now have separate implemented slices. Staff business CRUD remains outside scope.
 
 [The catalog implementation guide](catalog-implementation.md) records schema, contracts,
 publication/translation behavior, non-overwriting development import, native test commands,

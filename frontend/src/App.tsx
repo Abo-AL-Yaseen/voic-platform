@@ -207,6 +207,7 @@ export default function App() {
       const heading = document.querySelector<HTMLElement>("main h1");
       if (heading && href.split("?")[0] !== "/") {
         heading.tabIndex = -1;
+        heading.classList.add("route-heading");
         heading.focus({ preventScroll: true });
       }
     });
@@ -312,7 +313,7 @@ export default function App() {
         ) : path === "/account/security" ? (
           <SecurityPage lang={lang} go={go} />
         ) : path === "/account/inquiries" ? (
-          <InquiryListPage lang={lang} go={go} />
+          <InquiryListPage lang={lang} go={go} search={url.search} />
         ) : path.startsWith("/account/inquiries/") ? (
           <InquiryDetailPage lang={lang} go={go} inquiryId={path.split("/").at(-1)} />
         ) : (

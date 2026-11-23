@@ -17,6 +17,9 @@ export const queryClient = new QueryClient({
   },
 });
 
+// Mutation responses may seed a detail before its query component mounts.
+queryClient.setQueryDefaults(["inquiries", "customer"], { meta: { private: true } });
+
 export async function clearPrivateQueries(userScope?: string) {
   await queryClient.cancelQueries({ predicate: (query) => query.meta?.private === true });
   for (const mutation of queryClient.getMutationCache().getAll()) {

@@ -45,6 +45,7 @@ test("auth configuration fails closed in production and rejects untrusted URL co
       SMTP_HOST: "smtp.example",
       SMTP_PORT: "465",
       SMTP_SECURE: "true",
+      INQUIRY_COMPANY_EMAIL: "inquiries@voic.example",
     },
   );
   assert.equal(cfg.production, true);

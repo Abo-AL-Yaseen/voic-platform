@@ -174,8 +174,9 @@ node -e "require('node:fs').writeFileSync('backend/.tmp/auth-operator-command.js
 node -e "require('node:fs').writeFileSync('backend/.tmp/auth-operator-command.json',JSON.stringify({action:'finish'}))"
 ```
 
-The checker builds isolated code, tests migrations/apply/idempotence/auth-only rollback and
-catalog preservation, real HTTP security/account flows, local capture mail and real Chrome
+The checker builds isolated code, tests migrations/apply/idempotence and rollback of the
+latest inquiry migration while preserving catalog/accounts, real HTTP security/account and
+inquiry flows, local capture mail and real Chrome
 UI flows on a separate ephemeral API port and localhost frontend port 8444. It closes its
 browser, API and frontend children. Existing port 3000/8443 servers and MySQL are not stopped.
 Ignored, non-secret results are in `auth-verification.json`/`auth-operator-result.json`.

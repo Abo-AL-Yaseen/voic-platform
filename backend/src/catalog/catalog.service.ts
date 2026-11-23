@@ -43,6 +43,7 @@ export type PublicProduct = {
   ingredientsEn?: string;
   sizeLabels: Record<string, string>;
   packagingLabels: Record<string, string>;
+  packageOptions: { id: string; label: string }[];
 };
 
 @Injectable()
@@ -110,6 +111,17 @@ export class CatalogService {
             useLabels: Object.fromEntries(useKeys.map((id) => [id, term("usage", id)![lang]])),
             uses: displayUses.map((id) => term("usage", id)!.ar),
             sizes: [...new Set(pack.map((p) => p.sizeAr))],
+            packageOptions: pack
+              .filter((p) => p.amount !== null && p.unit !== null)
+              .map((p) => ({
+                id: p.id,
+                label: [
+                  lang === "ar" ? p.sizeAr : p.sizeEn,
+                  p.packagingPublished ? (lang === "ar" ? p.packagingAr : p.packagingEn) : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · "),
+              })),
             sizeLabels: Object.fromEntries(
               pack.map((p) => [p.sizeAr, lang === "ar" ? p.sizeAr : p.sizeEn]),
             ),
@@ -148,6 +160,7 @@ export class CatalogService {
             product.description = "";
             product.descriptionEn = "";
             product.sizes = [];
+            product.packageOptions = [];
             product.useKeys = [];
             product.uses = [];
             product.useLabels = {};

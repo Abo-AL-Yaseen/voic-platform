@@ -22,10 +22,12 @@ if (Object.keys(process.env).some((key) => key.startsWith("DB_") || key === "NOD
 }
 
 const catalogTest = process.argv.slice(2).join(" ") === "--catalog-test";
-const authTest = process.argv.slice(2).join(" ") === "--auth-test";
+const authTest = ["--auth-test", "--inquiries-test"].includes(process.argv.slice(2).join(" "));
 const testOnly = authTest || catalogTest || process.argv.slice(2).join(" ") === "--test-only";
 if (process.argv.length > 2 && !testOnly) {
-  process.stderr.write("Only --test-only, --catalog-test or --auth-test is supported.\n");
+  process.stderr.write(
+    "Only --test-only, --catalog-test, --auth-test or --inquiries-test is supported.\n",
+  );
   process.exit(1);
 }
 const original = fs.readFileSync(".env", "utf8");

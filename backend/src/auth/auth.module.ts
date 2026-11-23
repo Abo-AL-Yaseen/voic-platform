@@ -120,6 +120,13 @@ export const permissions: Record<string, readonly string[]> = {
       useFactory: (env: Environment) => authConfiguration(env),
     },
   ],
-  exports: [AuthService, AuthBoundary, VerifiedCustomerGuard],
+  exports: [
+    AuthService,
+    AuthBoundary,
+    VerifiedCustomerGuard,
+    MailService,
+    AuthRateLimit,
+    AUTH_CONFIG,
+  ],
 })
 export class AuthModule {}

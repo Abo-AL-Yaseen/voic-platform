@@ -7,6 +7,7 @@ const errors: Record<number, [string, string]> = {
   403: ["FORBIDDEN", "The request is not allowed."],
   404: ["NOT_FOUND", "The resource was not found."],
   405: ["METHOD_NOT_ALLOWED", "The method is not allowed."],
+  409: ["CONFLICT", "The record changed; reload before continuing."],
   413: ["PAYLOAD_TOO_LARGE", "The request body is too large."],
   415: ["UNSUPPORTED_MEDIA_TYPE", "The content type is not supported."],
   429: ["TOO_MANY_REQUESTS", "Too many requests."],
@@ -33,15 +34,23 @@ export class ApiErrorFilter implements ExceptionFilter {
       "INTERNAL_ERROR",
       "The request could not be completed.",
     ];
-    if (statusCode === 400 && exception instanceof HttpException) {
+    if ([400, 409, 403].includes(statusCode) && exception instanceof HttpException) {
       const detail = exception.getResponse();
       if (
         typeof detail === "object" &&
         detail &&
         "code" in detail &&
-        ["TOKEN_INVALID", "TOKEN_EXPIRED", "TOKEN_USED", "INVALID_CURRENT_PASSWORD"].includes(
-          String(detail.code),
-        )
+        [
+          "TOKEN_INVALID",
+          "TOKEN_EXPIRED",
+          "TOKEN_USED",
+          "INVALID_CURRENT_PASSWORD",
+          "INQUIRY_UNAVAILABLE",
+          "INQUIRY_FIELDS",
+          "INQUIRY_CONFLICT",
+          "IDEMPOTENCY_CONFLICT",
+          "EMAIL_UNVERIFIED",
+        ].includes(String(detail.code))
       )
         code = String(detail.code);
     }

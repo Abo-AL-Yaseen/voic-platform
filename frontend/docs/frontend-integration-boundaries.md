@@ -3,19 +3,22 @@
 Authentication and customer account screens now use the real session/account API; their
 contracts, CSRF, private-cache behavior and local email setup are in
 [authentication](../../docs/authentication.md). Staff workspace access is server-authorized,
-while staff business features and inquiry submission remain disconnected frontend designs.
+while staff business features remain disconnected frontend designs. Customer inquiry drafts,
+submission, counts/list/detail and notification states now use real owner-checked endpoints;
+[the inquiry guide](../../docs/customer-inquiries.md) records their contracts and verification.
 Public product reads, including product selection inside the inquiry UI and email forms, now
 use the real catalog API through Services and feature React Query hooks. They do not
-call invented endpoints, store credentials, assign roles, or create records.
+call invented endpoints, store credentials or assign roles. Explicit customer draft/save/submit
+actions create the documented inquiry records.
 
 Before integrating remaining business features, the backend contract must define:
 
 - Staff MFA (customer sessions, CSRF, registration, verification and recovery are implemented).
 - Server-provisioned employee permissions (`administrator`, `sales`, `content_editor`) with authorization
   enforced on every protected operation.
-- User-scoped inquiry reads and ownership checks.
-- Valid product/package relationships and positive quantity validation.
-- Transactional inquiry persistence, idempotency keys and notification retry behavior.
+- Inquiry reads/ownership, package validation, transactional submission/idempotency and
+  durable notification retries are implemented. Remaining staff lifecycle transitions need
+  their own server contracts and authorization.
 - Customer-visible messages separated from internal staff notes.
 - Publication workflows for products, recipes, categories, uses, media and page content.
 - For features beyond catalog: pagination, filtering, locale, sorting, error and cancellation contracts.

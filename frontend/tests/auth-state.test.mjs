@@ -15,6 +15,50 @@ async function load(file) {
 }
 const { safeInternalPath } = await load("utils/navigation.ts");
 const { queryClient, clearPrivateQueries } = await load("services/queryClient.ts");
+const { inquiryKeys } = await load("hooks/inquiries/keys.ts");
+const { inquiryPayload } = await load("utils/inquiryPayload.ts");
+test("private inquiry scope includes identity/session and each server filter; payload excludes snapshots", () => {
+  const filters = { q: "", status: "", sort: "desc", page: 1, pageSize: 10 };
+  const key = JSON.stringify(inquiryKeys.customerList("customer-a", 1, filters));
+  for (const patch of [
+    { q: "VOIC-1" },
+    { status: "draft" },
+    { sort: "asc" },
+    { page: 2 },
+    { pageSize: 20 },
+  ])
+    assert.notEqual(
+      JSON.stringify(inquiryKeys.customerList("customer-a", 1, { ...filters, ...patch })),
+      key,
+    );
+  assert.notEqual(JSON.stringify(inquiryKeys.customerList("customer-b", 1, filters)), key);
+  assert.notEqual(JSON.stringify(inquiryKeys.customerList("customer-a", 2, filters)), key);
+  const p = inquiryPayload(
+    1,
+    "ar",
+    {
+      kind: "individual",
+      name: "Test",
+      company: "Former company",
+      destination: "PS",
+      phone: "",
+      notes: "",
+    },
+    [
+      {
+        productId: "ghazal",
+        packageId: null,
+        quantity: null,
+        unit: "kg",
+        requirements: "Discuss packaging",
+        snapshot: { name: "client fake" },
+      },
+    ],
+  );
+  assert.equal(p.fields.company, "");
+  assert.equal(p.items[0].unit, null);
+  assert.ok(!("snapshot" in p.items[0]));
+});
 test("auth return destinations reject foreign origins/loops and preserve only public selection", () => {
   for (const value of [
     "//attacker.invalid",
@@ -35,6 +79,16 @@ test("logout cancellation prevents a late private response restoring old data an
   queryClient.setQueryData(["products", "public"], [{ id: "ghazal" }]);
   queryClient.setQueryDefaults(["account", "old-user"], { meta: { private: true } });
   queryClient.setQueryData(["account", "old-user", "profile"], { name: "private" });
+  // A write may seed inquiry detail before any useQuery has established its metadata.
+  queryClient.setQueryData(["inquiries", "customer", "old-user", 2, "detail", "id"], {
+    notes: "private draft",
+  });
+  assert.equal(
+    queryClient
+      .getQueryCache()
+      .find({ queryKey: ["inquiries", "customer", "old-user", 2, "detail", "id"] }).meta.private,
+    true,
+  );
   let resolve,
     aborted = false;
   const response = queryClient

@@ -49,11 +49,19 @@ export function authConfiguration(env: Environment, input = process.env) {
   // Capture files can only live beneath the ignored backend .tmp directory.
   const captureName = input.MAIL_CAPTURE_NAME || "mail";
   if (!/^[a-zA-Z0-9_-]{1,60}$/.test(captureName)) return fail();
+  const inquiryInbox =
+    input.INQUIRY_COMPANY_EMAIL || (mode === "capture" ? "inquiries@voic.test" : "");
+  if (
+    !/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(inquiryInbox) ||
+    inquiryInbox.length > 254
+  )
+    return fail();
   return {
     appUrl: app.origin,
     mode,
     from,
     captureDir: `.tmp/${captureName}`,
+    inquiryInbox,
     smtpHost: input.SMTP_HOST,
     smtpPort,
     smtpSecure: input.SMTP_SECURE === "true",
@@ -77,15 +85,22 @@ export function safeReturnPath(value: unknown): string {
     const url = new URL(value, "https://local.invalid");
     if (
       url.origin !== "https://local.invalid" ||
-      !/^\/(?:account(?:\/(?:profile|security|inquiries))?|inquiries\/new|products(?:\/[a-z0-9-]+)?|find-your-product|staff(?:\/[a-z0-9/-]+)?)$/.test(
+      !/^\/(?:account(?:\/(?:profile|security|inquiries(?:\/[a-f0-9-]{36})?))?|inquiries\/new|products(?:\/[a-z0-9-]+)?|find-your-product|staff(?:\/[a-z0-9/-]+)?)$/.test(
         url.pathname,
       )
     )
       return "/account";
     const p = new URLSearchParams();
-    for (const key of ["products", "compare", "product", "lang"]) {
+    for (const key of ["products", "compare", "product", "lang", "draft"]) {
       const v = url.searchParams.get(key);
-      if (v && (key === "lang" ? /^(ar|en)$/.test(v) : /^[a-z0-9,-]{1,1500}$/.test(v)))
+      if (
+        v &&
+        (key === "lang"
+          ? /^(ar|en)$/.test(v)
+          : key === "draft"
+            ? /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(v)
+            : /^[a-z0-9,-]{1,1500}$/.test(v))
+      )
         p.set(key, v);
     }
     return url.pathname + (p.size ? `?${p}` : "");

@@ -73,11 +73,11 @@ export class AuthService {
     if (password) q.addSelect("u.passwordHash");
     return q;
   }
-  async boundary(req: AuthRequest) {
+  async boundary(req: AuthRequest, allowQuery = false) {
     await this.ready();
     const ip = req.socket.remoteAddress || "unknown";
     this.limits.take("all", ip, 1000);
-    if (Object.keys(req.query).length) throw new BadRequestException();
+    if (!allowQuery && Object.keys(req.query).length) throw new BadRequestException();
     const raw = req.headers.cookie
       ?.split(";")
       .map((c) => c.trim())
@@ -341,7 +341,7 @@ export class AuthService {
       return publicUser(Object.assign(user, fields));
     });
   }
-  private async lockCurrent(manager: EntityManager, req: AuthRequest, id: string) {
+  async lockCurrent(manager: EntityManager, req: AuthRequest, id: string) {
     const user = await this.userQuery(manager, id, true).setLock("pessimistic_write").getOne();
     const session = await manager.findOneBy(AuthSession, {
       tokenHash: req.auth!.session.tokenHash,

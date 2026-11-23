@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import AppLink from "../components/AppLink";
-import { IntegrationNotice, StatusBadge } from "../components/Feedback";
-import { PasswordField, SelectField, TextAreaField, TextField } from "../components/FormFields";
-import { AccountLayout, Pagination } from "../components/WorkspaceLayouts";
+import { StatusBadge } from "../components/Feedback";
+import { PasswordField, SelectField, TextField } from "../components/FormFields";
+import { AccountLayout } from "../components/WorkspaceLayouts";
 import { msg, withLang, type Lang } from "../i18n";
 import { useAuth, useLogout, usePasswordChange, authFailure } from "../hooks/auth/queries";
 import { useProfile, useSaveProfile } from "../hooks/account/queries";
+import { InquiryCounts } from "./InquiryAccountPages";
 import type { ProfileInput, User } from "../services/auth";
 
 type Props = {
@@ -100,25 +101,8 @@ export function AccountOverviewPage({ lang, go }: Props) {
             </AppLink>
           )}
         </section>
-        <section>
-          <span>{text(lang, "استفسارات التوريد", "Supply inquiries")}</span>
-          <strong>—</strong>
-          <p>
-            {text(
-              lang,
-              "إرسال وحفظ الاستفسارات غير متصلين بعد.",
-              "Inquiry submission and saved inquiries are not connected yet.",
-            )}
-          </p>
-        </section>
+        <InquiryCounts lang={lang} go={go} />
       </div>
-      <IntegrationNotice lang={lang}>
-        {text(
-          lang,
-          "الحساب متصل. إرسال الاستفسارات ومتابعتها لم يُربطا بعد.",
-          "Your account is connected. Inquiry submission and tracking are not connected yet.",
-        )}
-      </IntegrationNotice>
     </AccountLayout>
   );
 }
@@ -339,131 +323,4 @@ export function SecurityPage({ lang, go }: Props) {
     </AccountLayout>
   );
 }
-export function InquiryListPage({ lang, go }: Props) {
-  return (
-    <AccountLayout lang={lang} go={go} active="/account/inquiries">
-      <PreviewHeader
-        lang={lang}
-        title={msg(lang, { ar: "استفساراتي", en: "My inquiries" })}
-        description={msg(lang, {
-          ar: "متابعة استفسارات التوريد المحفوظة للحساب.",
-          en: "Track supply inquiries saved to the account.",
-        })}
-      />
-      <div className="list-toolbar">
-        <TextField
-          label={msg(lang, { ar: "ابحث بالمرجع", en: "Search reference" })}
-          type="search"
-          placeholder="—"
-        />
-        <SelectField label={msg(lang, { ar: "الحالة", en: "Status" })}>
-          <option>{msg(lang, { ar: "كل الحالات", en: "All statuses" })}</option>
-          <option>submitted</option>
-          <option>under_review</option>
-          <option>awaiting_customer</option>
-          <option>responded</option>
-          <option>closed</option>
-          <option>cancelled</option>
-        </SelectField>
-        <SelectField label={msg(lang, { ar: "ترتيب التاريخ", en: "Date order" })}>
-          <option>{msg(lang, { ar: "الأحدث أولًا", en: "Newest first" })}</option>
-          <option>{msg(lang, { ar: "الأقدم أولًا", en: "Oldest first" })}</option>
-        </SelectField>
-      </div>
-      <IntegrationNotice lang={lang} />
-      <div
-        className="responsive-table"
-        role="region"
-        aria-label={msg(lang, { ar: "قائمة الاستفسارات", en: "Inquiry list" })}
-        tabIndex={0}
-      >
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>{msg(lang, { ar: "المرجع", en: "Reference" })}</th>
-              <th>{msg(lang, { ar: "المنتجات", en: "Products" })}</th>
-              <th>{msg(lang, { ar: "الوجهة", en: "Destination" })}</th>
-              <th>{msg(lang, { ar: "الحالة", en: "Status" })}</th>
-              <th>{msg(lang, { ar: "التاريخ", en: "Date" })}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colSpan={5}>
-                {msg(lang, {
-                  ar: "لا توجد بيانات محمّلة. هذه ليست نتيجة صفر مؤكدة.",
-                  en: "No data is loaded. This is not a confirmed zero result.",
-                })}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <Pagination lang={lang} />
-    </AccountLayout>
-  );
-}
-
-export function InquiryDetailPage({ lang, go, inquiryId }: Props) {
-  return (
-    <AccountLayout lang={lang} go={go} active="/account/inquiries">
-      <PreviewHeader
-        lang={lang}
-        title={msg(lang, { ar: "تفاصيل الاستفسار", en: "Inquiry details" })}
-        description={msg(lang, {
-          ar: "يُحمّل السجل الحقيقي حسب المرجع وملكية الحساب.",
-          en: "The real record is loaded by reference and account ownership.",
-        })}
-      />
-      <IntegrationNotice
-        lang={lang}
-        title={
-          inquiryId
-            ? msg(lang, {
-                ar: "لا يمكن تحميل هذا الاستفسار",
-                en: "This inquiry cannot be loaded",
-              })
-            : undefined
-        }
-      >
-        {msg(lang, {
-          ar: "لم يتم اختلاق سجل لهذا المعرّف. يلزم API يتحقق من الملكية.",
-          en: "No record was fabricated for this identifier. An ownership-enforcing API is required.",
-        })}
-      </IntegrationNotice>
-      <div className="detail-placeholder-grid">
-        {[
-          "Reference / status",
-          "Products / packages / quantities",
-          "Destination / submitted details",
-          "Status history",
-          "Customer-visible messages",
-        ].map((label) => (
-          <section key={label}>
-            <h2>{label}</h2>
-            <p>—</p>
-          </section>
-        ))}
-      </div>
-      <form className="workspace-form">
-        <TextAreaField
-          label={msg(lang, {
-            ar: "رد بمعلومات إضافية",
-            en: "Reply with additional information",
-          })}
-          rows={5}
-          placeholder="—"
-        />
-        <button className="button button-primary" type="button" disabled>
-          {msg(lang, { ar: "إرسال الرد", en: "Send reply" })}
-        </button>
-        <button className="text-link danger-link" type="button" disabled>
-          {msg(lang, {
-            ar: "طلب إلغاء الاستفسار",
-            en: "Request cancellation",
-          })}
-        </button>
-      </form>
-    </AccountLayout>
-  );
-}
+export { InquiryListPage, InquiryDetailPage } from "./InquiryAccountPages";

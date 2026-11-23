@@ -52,16 +52,31 @@ export default function SessionGate({
     );
   if (staff ? user.role === "customer" : user.role !== "customer")
     return (
-      <main className="section-pad">
-        <h1>
-          {msg(lang, {
-            ar: "لا تملك صلاحية الوصول لهذه المساحة",
-            en: "You do not have access to this workspace",
-          })}
-        </h1>
-        <AppLink go={go} href={withLang(user.role === "customer" ? "/account" : "/staff", lang)}>
-          {msg(lang, { ar: "مساحتي", en: "My workspace" })}
-        </AppLink>
+      <main className="access-page access-denied section-pad" aria-labelledby="access-denied-title">
+        <section className="access-denied-card">
+          <p className="eyebrow">VOIC</p>
+          <h1 id="access-denied-title">
+            {msg(lang, {
+              ar: "لا تملك صلاحية الوصول لهذه المساحة",
+              en: "You do not have access to this workspace",
+            })}
+          </h1>
+          <p>
+            {msg(lang, {
+              ar: "هذه المساحة مخصصة لصلاحيات أخرى. يمكنك متابعة بياناتك واستفساراتك من حسابك.",
+              en: "This workspace requires a different role. You can continue to your own account and inquiries.",
+            })}
+          </p>
+          <AppLink
+            className="button button-primary"
+            go={go}
+            href={withLang(user.role === "customer" ? "/account" : "/staff", lang)}
+          >
+            {user.role === "customer"
+              ? msg(lang, { ar: "العودة إلى حسابي", en: "Return to my account" })
+              : msg(lang, { ar: "العودة إلى مساحتي", en: "Return to my workspace" })}
+          </AppLink>
+        </section>
       </main>
     );
   return <div key={`${user.id}:${auth.epoch}`}>{children}</div>;

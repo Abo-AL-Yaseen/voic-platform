@@ -1,15 +1,15 @@
-import { packageLabel } from "../utils/productLabels";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AppLink from "../components/AppLink";
-import { IntegrationNotice, StatusBadge } from "../components/Feedback";
+import SessionGate from "../components/SessionGate";
 import { SelectField, TextAreaField, TextField } from "../components/FormFields";
-import { type Product } from "../catalog";
-import { useAllProducts, useSelectedProducts, visibleData } from "../hooks/products/queries";
-import CatalogStatus, { ProductTranslation } from "../components/CatalogStatus";
-import { categoryLabel, msg, productName, withLang, type Lang } from "../i18n";
+import { useAllProducts } from "../hooks/products/queries";
+import CatalogStatus from "../components/CatalogStatus";
+import { msg, productName, withLang, type Lang } from "../i18n";
 import { useAuth } from "../hooks/auth/queries";
+import { useInquiry, useInquiryWrite, inquiryFailure } from "../hooks/inquiries/queries";
+import type { Inquiry, InquiryFields, InquiryItem } from "../services/inquiries";
+import { inquiryPayload } from "../utils/inquiryPayload";
 
-type Item = { productId: string; packageOption: string; quantity: string; unit: string };
 type Props = {
   lang: Lang;
   go: (href: string) => void;
@@ -17,559 +17,747 @@ type Props = {
   initialStep?: 1 | 2 | 3;
   previewSuccess?: boolean;
 };
-
-const text = {
-  title: { ar: "استفسار توريد جديد", en: "New supply inquiry" },
-  products: { ar: "المنتجات", en: "Products" },
-  details: { ar: "التفاصيل", en: "Details" },
-  review: { ar: "المراجعة", en: "Review" },
-} as const;
-
-function itemFromProduct(product: Product): Item {
-  return {
-    productId: product.id,
-    packageOption: product.packaging?.[0] || product.sizes[0] || "contact",
-    quantity: "1",
-    unit: product.sizes.some((size) => size.includes("لتر")) ? "pack" : "pack",
-  };
+const t = (lang: Lang, ar: string, en: string) => msg(lang, { ar, en });
+const idsFrom = (search: string) =>
+  [
+    ...new Set(
+      (new URLSearchParams(search).get("products") || "")
+        .split(",")
+        .filter((id) => /^[a-z0-9-]{1,64}$/.test(id)),
+    ),
+  ].slice(0, 30);
+const blank = (productId: string): InquiryItem => ({
+  productId,
+  packageId: null,
+  quantity: null,
+  unit: null,
+  requirements: "",
+});
+export default function NewInquiryPage({ lang, go, search = "" }: Props) {
+  const auth = useAuth(),
+    draft = new URLSearchParams(search).get("draft") || "";
+  if (draft)
+    return (
+      <SessionGate lang={lang} go={go}>
+        <OwnedDraft lang={lang} go={go} search={search} id={draft} />
+      </SessionGate>
+    );
+  return (
+    <Selection
+      key={`${auth.session?.user?.id || "public"}:${auth.epoch}`}
+      lang={lang}
+      go={go}
+      search={search}
+    />
+  );
 }
-
-export default function NewInquiryPage({
+function Heading({ lang }: { lang: Lang }) {
+  return (
+    <header className="flow-heading">
+      <p className="eyebrow">VOIC</p>
+      <h1>{t(lang, "استفسار توريد جديد", "New supply inquiry")}</h1>
+      <p>
+        {t(
+          lang,
+          "طلب تراجعه الشركة، وليس طلب شراء مقبولًا. لا حجز للمخزون أو ضمان للتوريد.",
+          "A request for company review, not an accepted order. No stock reservation or guaranteed fulfillment.",
+        )}
+      </p>
+    </header>
+  );
+}
+function Selection({ lang, go, search = "" }: Props) {
+  const auth = useAuth(),
+    user = auth.session?.user,
+    catalog = useAllProducts({ locale: lang }),
+    write = useInquiryWrite();
+  const [ids, setIds] = useState(() => idsFrom(search)),
+    [key] = useState(() => crypto.randomUUID());
+  const returnTo = `/inquiries/new?products=${ids.join(",")}`;
+  return (
+    <main className="inquiry-flow section-pad">
+      <Heading lang={lang} />
+      <section className="flow-panel">
+        <h2>{t(lang, "اختر المنتجات", "Choose products")}</h2>
+        <p>
+          {t(
+            lang,
+            "حتى 30 منتجًا؛ حد المقارنة مستقل. الاختيار هنا عام ولا يُرسل كطلب.",
+            "Up to 30 products, independently of comparison. This public selection is not a submission.",
+          )}
+        </p>
+        <CatalogStatus query={catalog} lang={lang} empty={catalog.data?.length === 0} />
+        {ids
+          .filter((id) => catalog.data && !catalog.data.some((p) => p.id === id))
+          .map((id) => (
+            <p key={id}>
+              {id} — {t(lang, "غير متاح", "Unavailable")}{" "}
+              <button onClick={() => setIds(ids.filter((x) => x !== id))}>
+                {t(lang, "إزالة", "Remove")}
+              </button>
+            </p>
+          ))}
+        <div className="inquiry-product-grid">
+          {catalog.data?.map((p) => (
+            <article
+              className={`inquiry-product ${ids.includes(p.id) ? "selected" : ""}`}
+              key={p.id}
+            >
+              {p.image && <img src={p.image} alt="" />}
+              <div>
+                <h3>{productName(p, lang)}</h3>
+                <label className="check-option">
+                  <input
+                    type="checkbox"
+                    checked={ids.includes(p.id)}
+                    disabled={
+                      p.translationAvailable === false || (!ids.includes(p.id) && ids.length >= 30)
+                    }
+                    onChange={() =>
+                      setIds(ids.includes(p.id) ? ids.filter((x) => x !== p.id) : [...ids, p.id])
+                    }
+                  />
+                  {t(lang, "أضف للاستفسار", "Add to inquiry")}
+                </label>
+              </div>
+            </article>
+          ))}
+        </div>
+        <p role="status">
+          {ids.length} {t(lang, "منتج مختار", "selected products")}
+        </p>
+        {auth.pending ? (
+          <p role="status">{t(lang, "جارٍ التحقق من الجلسة…", "Checking session…")}</p>
+        ) : auth.error ? (
+          <p role="alert">
+            {t(lang, "تعذّر التحقق من الجلسة.", "Session check failed.")}{" "}
+            <button onClick={auth.retry}>{t(lang, "إعادة المحاولة", "Retry")}</button>
+          </p>
+        ) : user ? (
+          user.role === "customer" ? (
+            <button
+              className="button button-primary"
+              disabled={!ids.length || write.isPending}
+              onClick={async () => {
+                try {
+                  const d = await write.mutateAsync({ type: "create", creationKey: key, lang });
+                  go(withLang(`/inquiries/new?draft=${d.id}&products=${ids.join(",")}`, lang));
+                } catch {}
+              }}
+            >
+              {write.isPending
+                ? t(lang, "جارٍ إنشاء المسودة…", "Creating draft…")
+                : t(lang, "إنشاء مسودة والمتابعة", "Create draft and continue")}
+            </button>
+          ) : (
+            <p>
+              {t(
+                lang,
+                "الاستفسارات متاحة لحسابات العملاء فقط.",
+                "Inquiries are available to customer accounts only.",
+              )}
+            </p>
+          )
+        ) : (
+          <div className="page-actions">
+            {["login", "register"].map((route) => (
+              <AppLink
+                key={route}
+                className="button button-primary"
+                go={go}
+                href={withLang(`/${route}?returnTo=${encodeURIComponent(returnTo)}`, lang)}
+              >
+                {route === "login"
+                  ? t(lang, "سجّل الدخول للمتابعة", "Sign in to continue")
+                  : t(lang, "إنشاء حساب", "Create account")}
+              </AppLink>
+            ))}
+          </div>
+        )}
+        {write.error && <p role="alert">{inquiryFailure(write.error, lang)}</p>}
+        <AppLink
+          className="text-link"
+          go={go}
+          href={withLang("/account/inquiries?status=draft", lang)}
+        >
+          {t(lang, "متابعة مسودة محفوظة", "Continue a saved draft")}
+        </AppLink>
+      </section>
+    </main>
+  );
+}
+function OwnedDraft({ lang, go, search, id }: Props & { id: string }) {
+  const query = useInquiry(id);
+  if (query.isPending)
+    return (
+      <main className="inquiry-flow section-pad" role="status">
+        {t(lang, "جارٍ تحميل المسودة…", "Loading draft…")}
+      </main>
+    );
+  if (query.error || !query.data)
+    return (
+      <main className="inquiry-flow section-pad" role="alert">
+        <p>{inquiryFailure(query.error, lang)}</p>
+        <button onClick={() => query.refetch()}>{t(lang, "إعادة المحاولة", "Retry")}</button>
+      </main>
+    );
+  if (query.data.status === "submitted")
+    return (
+      <main className="inquiry-flow section-pad">
+        <h1>{t(lang, "الاستفسار محفوظ ومرسل", "Inquiry saved and submitted")}</h1>
+        <p>{query.data.reference}</p>
+        <AppLink
+          className="button button-primary"
+          go={go}
+          href={withLang(`/account/inquiries/${id}`, lang)}
+        >
+          {t(lang, "عرض الاستفسار", "View inquiry")}
+        </AppLink>
+      </main>
+    );
+  return (
+    <DraftEditor
+      key={id}
+      initial={query.data}
+      lang={lang}
+      go={go}
+      search={search}
+      reload={() => query.refetch()}
+    />
+  );
+}
+function DraftEditor({
+  initial,
   lang,
   go,
   search = "",
-  initialStep = 1,
-  previewSuccess = false,
-}: Props) {
-  const auth = useAuth();
-  const initialIds = useMemo(
-    () => [
-      ...new Set((new URLSearchParams(search).get("products") || "").split(",").filter(Boolean)),
-    ],
-    [search],
+  reload,
+}: Props & { initial: Inquiry; reload: () => unknown }) {
+  const auth = useAuth(),
+    catalog = useAllProducts({ locale: lang }),
+    write = useInquiryWrite();
+  const [record, setRecord] = useState(initial),
+    [fields, setFields] = useState<InquiryFields>(initial.fields);
+  const [items, setItems] = useState<InquiryItem[]>(() =>
+    initial.items.length ? initial.items : initial.revision === 1 ? idsFrom(search).map(blank) : [],
   );
-  const [step, setStep] = useState<1 | 2 | 3>(initialStep);
-  const [items, setItems] = useState<Item[]>(() =>
-    initialIds.map((id) => ({ productId: id, packageOption: "", quantity: "1", unit: "pack" })),
-  );
-  const catalogQuery = useAllProducts({ locale: lang });
-  const selectedQueries = useSelectedProducts(
-    items.map((item) => item.productId),
-    lang,
-  );
-  const products = catalogQuery.data ?? [];
+  const [step, setStep] = useState(1),
+    [error, setError] = useState(""),
+    [notice, setNotice] = useState(""),
+    [uncertain, setUncertain] = useState(false);
+  const [submitKey, setSubmitKey] = useState(() => crypto.randomUUID());
+  const heading = useRef<HTMLHeadingElement>(null);
+  const products = catalog.data || [];
   useEffect(() => {
-    if (!catalogQuery.data) return;
-    setItems((current) =>
-      current.map((item) => {
-        const product = catalogQuery.data.find((p) => p.id === item.productId);
-        return product && !item.packageOption
-          ? { ...item, packageOption: itemFromProduct(product).packageOption }
-          : item;
-      }),
-    );
-  }, [catalogQuery.data]);
-  const [details, setDetails] = useState({
-    accountType: "company",
-    name: "",
-    company: "",
-    email: "",
-    destination: "",
-    phone: "",
-    notes: "",
-  });
-  const [errors, setErrors] = useState<string[]>([]);
-  const [submitNotice, setSubmitNotice] = useState("");
-
-  const toggle = (product: Product) => {
-    setItems((current) =>
-      current.some((item) => item.productId === product.id)
-        ? current.filter((item) => item.productId !== product.id)
-        : [...current, itemFromProduct(product)],
-    );
-    setErrors([]);
+    heading.current?.focus({ preventScroll: true });
+  }, [step]);
+  useEffect(() => {
+    setStep(1);
+  }, [lang]);
+  // Explicit reload resolves conflicts without silently overwriting unsaved local edits.
+  const refresh = () => {
+    go(withLang(`/account/inquiries/${record.id}`, lang));
   };
-  const updateItem = (productId: string, patch: Partial<Item>) =>
-    setItems((current) =>
-      current.map((item) => (item.productId === productId ? { ...item, ...patch } : item)),
-    );
-  const validateProducts = () => {
-    const next = [];
-    if (selectedQueries.some((q) => !visibleData(q) || q.isError))
-      next.push(
-        msg(lang, {
-          ar: "تحقق من المنتجات المختارة أو أزل غير المتاح قبل المتابعة.",
-          en: "Resolve selected products or remove unavailable items before continuing.",
-        }),
+  const set = (key: keyof InquiryFields, value: string) => setFields({ ...fields, [key]: value });
+  const update = (id: string, patch: Partial<InquiryItem>) =>
+    setItems(items.map((x) => (x.productId === id ? { ...x, ...patch } : x)));
+  const validate = () => {
+    if (catalog.isPending || catalog.isError)
+      return t(
+        lang,
+        "انتظر تحميل المنتجات أو أعد المحاولة قبل الحفظ.",
+        "Wait for products to load or retry before saving.",
       );
-    if (!items.length)
-      next.push(
-        msg(lang, {
-          ar: "اختر منتجًا واحدًا على الأقل.",
-          en: "Select at least one product.",
-        }),
+    if (
+      !items.length ||
+      items.some(
+        (x) => !products.some((p) => p.id === x.productId && p.translationAvailable !== false),
+      )
+    )
+      return t(
+        lang,
+        "اختر منتجات متاحة أو أزل غير المتاح.",
+        "Select available products or remove unavailable ones.",
       );
-    if (items.some((item) => !Number.isFinite(Number(item.quantity)) || Number(item.quantity) <= 0))
-      next.push(
-        msg(lang, {
-          ar: "أدخل كمية أكبر من صفر لكل منتج.",
-          en: "Enter a quantity greater than zero for every product.",
-        }),
+    if (
+      items.some((x) =>
+        x.packageId
+          ? !Number.isInteger(x.quantity) || x.quantity! < 1 || x.quantity! > 100000
+          : x.quantity != null
+            ? x.quantity <= 0 || x.quantity > 1000000 || !["kg", "L"].includes(x.unit || "")
+            : !x.requirements.trim(),
+      )
+    )
+      return t(
+        lang,
+        "لكل منتج: أدخل عدد عبوات صحيحًا، أو كمية ووحدة، أو متطلبات التعبئة.",
+        "For each product enter a whole package count, an amount with unit, or packaging requirements.",
       );
-    setErrors(next);
-    return !next.length;
+    return "";
   };
-  const validateDetails = () => {
-    const next = [];
-    if (!details.name.trim() || !details.destination.trim())
-      next.push(
-        msg(lang, {
-          ar: "الاسم وبلد الوجهة مطلوبان.",
-          en: "Name and destination country are required.",
-        }),
+  const save = async (next: boolean) => {
+    if (write.isPending) return;
+    if (
+      next &&
+      step === 2 &&
+      (!fields.name.trim() ||
+        !fields.destination.trim() ||
+        (fields.kind === "company" && !fields.company.trim()))
+    ) {
+      setError(
+        t(
+          lang,
+          "أدخل الاسم والوجهة واسم الشركة عند اختيار شركة.",
+          "Enter name, destination and company name for a company request.",
+        ),
       );
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(details.email))
-      next.push(
-        msg(lang, {
-          ar: "أدخل بريدًا إلكترونيًا صحيحًا.",
-          en: "Enter a valid email address.",
-        }),
-      );
-    if (details.accountType === "company" && !details.company.trim())
-      next.push(
-        msg(lang, {
-          ar: "اسم الشركة مطلوب لحساب الشركة.",
-          en: "Company name is required for a company account.",
-        }),
-      );
-    setErrors(next);
-    return !next.length;
+      return;
+    }
+    const problem = validate();
+    if (problem) {
+      setError(problem);
+      return;
+    }
+    setError("");
+    setNotice("");
+    try {
+      const result = await write.mutateAsync({
+        type: "save",
+        id: record.id,
+        body: inquiryPayload(record.revision, lang, fields, items),
+      });
+      setRecord(result);
+      setSubmitKey(crypto.randomUUID());
+      setNotice(t(lang, "حُفظت المسودة.", "Draft saved."));
+      if (next) setStep(Math.min(3, step + 1));
+    } catch {}
   };
-  const next = () => {
-    if (step === 1 && validateProducts()) setStep(2);
-    else if (step === 2 && validateDetails()) setStep(3);
-  };
-  const selectedIds = items.map((item) => item.productId).join(",");
-
-  if (previewSuccess) {
-    return (
-      <main className="inquiry-flow section-pad">
-        <section className="shared-state success-state">
-          <StatusBadge
-            status="success"
-            label={msg(lang, {
-              ar: "مثال بصري فقط",
-              en: "Visual example only",
-            })}
-          />
-          <h1>
-            {msg(lang, {
-              ar: "تم استلام الاستفسار",
-              en: "Inquiry received",
-            })}
-          </h1>
-          <p>
-            {msg(lang, {
-              ar: "تظهر هذه الحالة فقط بعد نجاح استجابة الخادم. لا يوجد مرجع تجريبي أو استفسار محفوظ.",
-              en: "This state appears only after a successful server response. No demo reference or saved inquiry exists.",
-            })}
-          </p>
-        </section>
-      </main>
-    );
-  }
-
+  const pending = write.isPending;
   return (
     <main className="inquiry-flow section-pad">
-      <header className="flow-heading">
-        <p className="eyebrow">
-          {msg(lang, {
-            ar: "طلب تراجعُه الشركة",
-            en: "A request reviewed by the company",
-          })}
-        </p>
-        <h1>{msg(lang, text.title)}</h1>
-        <p>
-          {msg(lang, {
-            ar: "لا توجد أسعار أو عملية شراء تلقائية. تتواصل الشركة معك بعد مراجعة التفاصيل.",
-            en: "There are no public prices or automatic purchase. The company contacts you after review.",
-          })}
-        </p>
-      </header>
-      <ol
-        className="flow-steps"
-        aria-label={msg(lang, {
-          ar: "خطوات الاستفسار",
-          en: "Inquiry steps",
-        })}
-      >
-        {[text.products, text.details, text.review].map((label, index) => (
+      <Heading lang={lang} />
+      <ol className="flow-steps">
+        {[
+          t(lang, "المنتجات", "Products"),
+          t(lang, "التفاصيل", "Details"),
+          t(lang, "المراجعة", "Review"),
+        ].map((s, index) => (
           <li
-            key={label.en}
-            className={step === index + 1 ? "active" : step > index + 1 ? "complete" : ""}
+            className={step === index + 1 ? "active" : ""}
             aria-current={step === index + 1 ? "step" : undefined}
+            key={s}
           >
             <span>{index + 1}</span>
-            <strong>{msg(lang, label)}</strong>
+            <strong>{s}</strong>
           </li>
         ))}
       </ol>
-      <p className="sr-announcement" aria-live="polite">
-        {msg(lang, {
-          ar: `الخطوة ${step} من 3`,
-          en: `Step ${step} of 3`,
-        })}
-      </p>
-      {errors.length > 0 && (
-        <div className="error-summary" role="alert">
-          <strong>
-            {msg(lang, {
-              ar: "راجع الخطوة الحالية",
-              en: "Review this step",
-            })}
-          </strong>
-          <ul>
-            {errors.map((error) => (
-              <li key={error}>{error}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {step === 1 && (
-        <section className="flow-panel">
-          <div className="flow-panel-heading">
-            <div>
-              <h2>
-                {msg(lang, {
-                  ar: "اختر المنتجات والكميات",
-                  en: "Choose products and quantities",
-                })}
-              </h2>
-              <p>
-                {msg(lang, {
-                  ar: "لا يطبق حد المقارنة على الاستفسار.",
-                  en: "The comparison limit does not apply to inquiries.",
-                })}
-              </p>
-            </div>
-            <StatusBadge
-              status={items.length ? "success" : "neutral"}
-              label={`${items.length} ${msg(lang, text.products)}`}
-            />
-          </div>
-          <CatalogStatus query={catalogQuery} lang={lang} empty={catalogQuery.data?.length === 0} />
-          {items.map((item, index) => (
-            <div key={item.productId}>
-              <CatalogStatus query={selectedQueries[index]} lang={lang} />
-              {(!visibleData(selectedQueries[index]) || selectedQueries[index].isError) && (
-                <button
-                  className="text-link"
-                  onClick={() =>
-                    setItems((current) => current.filter((i) => i.productId !== item.productId))
-                  }
-                >
-                  {msg(lang, { ar: "إزالة", en: "Remove" })} {item.productId}
-                </button>
-              )}
-            </div>
-          ))}
-          <div className="inquiry-product-grid">
-            {products.map((product) => {
-              const selected = items.find((item) => item.productId === product.id);
-              const options = product.packaging || product.sizes;
-              return (
-                <ProductTranslation key={product.id} product={product} lang={lang}>
-                  <article className={`inquiry-product ${selected ? "selected" : ""}`}>
-                    {product.image ? (
-                      <img src={product.image} alt="" />
-                    ) : (
-                      <div className="missing-product-image">—</div>
-                    )}
-                    <div>
-                      <span>{categoryLabel(product, lang)}</span>
-                      <h3>{productName(product, lang)}</h3>
-                      <label className="check-option">
-                        <input
-                          type="checkbox"
-                          checked={!!selected}
-                          onChange={() => toggle(product)}
-                        />
-                        <strong>
-                          {msg(lang, {
-                            ar: "أضف للاستفسار",
-                            en: "Add to inquiry",
-                          })}
-                        </strong>
-                      </label>
-                    </div>
-                    {selected && (
-                      <div className="inquiry-item-editor">
-                        <SelectField
-                          label={msg(lang, {
-                            ar: "خيار التعبئة",
-                            en: "Package option",
-                          })}
-                          value={selected.packageOption}
-                          onChange={(e) =>
-                            updateItem(product.id, { packageOption: e.target.value })
-                          }
-                        >
-                          {options.length ? (
-                            options.map((option) => (
-                              <option key={option} value={option}>
-                                {packageLabel(product, option, lang)}
-                              </option>
-                            ))
-                          ) : (
-                            <option value="contact">
-                              {msg(lang, {
-                                ar: "تواصلوا معي بشأن خيارات التعبئة",
-                                en: "Contact me about packaging options",
-                              })}
-                            </option>
-                          )}
-                        </SelectField>
-                        <div className="quantity-row">
-                          <TextField
-                            label={msg(lang, { ar: "الكمية", en: "Quantity" })}
-                            type="number"
-                            min="1"
-                            step="1"
-                            value={selected.quantity}
-                            onChange={(e) => updateItem(product.id, { quantity: e.target.value })}
-                          />
-                          <SelectField
-                            label={msg(lang, { ar: "الوحدة", en: "Unit" })}
-                            value={selected.unit}
-                            onChange={(e) => updateItem(product.id, { unit: e.target.value })}
-                          >
-                            <option value="pack">{msg(lang, { ar: "عبوة", en: "pack" })}</option>
-                            <option value="carton">
-                              {msg(lang, { ar: "كرتون", en: "carton" })}
-                            </option>
-                            <option value="pallet">
-                              {msg(lang, { ar: "منصة", en: "pallet" })}
-                            </option>
-                          </SelectField>
-                        </div>
-                      </div>
-                    )}
-                  </article>
-                </ProductTranslation>
-              );
-            })}
-          </div>
-        </section>
-      )}
-      {step === 2 && (
-        <section className="flow-panel">
-          <h2>
-            {msg(lang, {
-              ar: "بيانات التواصل والوجهة",
-              en: "Contact and destination",
-            })}
-          </h2>
-          <div className="form-grid">
-            <SelectField
-              label={msg(lang, { ar: "نوع العميل", en: "Customer type" })}
-              value={details.accountType}
-              onChange={(e) => setDetails({ ...details, accountType: e.target.value })}
+      <CatalogStatus query={catalog} lang={lang} />
+      <form
+        className="flow-panel"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (step < 3) void save(true);
+        }}
+      >
+        <h2 ref={heading} tabIndex={-1} className="route-heading">
+          {step === 1
+            ? t(lang, "المنتجات والكميات", "Products and quantities")
+            : step === 2
+              ? t(lang, "التواصل والوجهة", "Contact and destination")
+              : t(lang, "راجع الاستفسار", "Review inquiry")}
+        </h2>
+        {(error || write.error) && (
+          <div className="error-summary" role="alert">
+            {error || inquiryFailure(write.error, lang)}{" "}
+            <button
+              type="button"
+              onClick={() => {
+                void catalog.refetch();
+              }}
             >
-              <option value="individual">{msg(lang, { ar: "فرد", en: "Individual" })}</option>
-              <option value="company">{msg(lang, { ar: "شركة", en: "Company" })}</option>
-            </SelectField>
-            <TextField
-              label={msg(lang, { ar: "الاسم الكامل", en: "Full name" })}
-              value={details.name}
-              onChange={(e) => setDetails({ ...details, name: e.target.value })}
-              required
-            />
-            {details.accountType === "company" && (
-              <TextField
-                label={msg(lang, { ar: "اسم الشركة", en: "Company name" })}
-                value={details.company}
-                onChange={(e) => setDetails({ ...details, company: e.target.value })}
-                required
-              />
-            )}
-            <TextField
-              label={msg(lang, { ar: "البريد الإلكتروني", en: "Email" })}
-              type="email"
-              value={details.email}
-              onChange={(e) => setDetails({ ...details, email: e.target.value })}
-              required
-            />
-            <TextField
-              label={msg(lang, { ar: "بلد الوجهة", en: "Destination country" })}
-              value={details.destination}
-              onChange={(e) => setDetails({ ...details, destination: e.target.value })}
-              required
-            />
-            <TextField
-              label={msg(lang, {
-                ar: "الهاتف (اختياري)",
-                en: "Phone (optional)",
-              })}
-              type="tel"
-              value={details.phone}
-              onChange={(e) => setDetails({ ...details, phone: e.target.value })}
-            />
-          </div>
-          <TextAreaField
-            label={msg(lang, {
-              ar: "ملاحظات (اختياري)",
-              en: "Notes (optional)",
-            })}
-            rows={5}
-            value={details.notes}
-            onChange={(e) => setDetails({ ...details, notes: e.target.value })}
-          />
-          <IntegrationNotice
-            lang={lang}
-            title={msg(lang, {
-              ar: "بيانات مؤقتة في هذه الصفحة",
-              en: "Temporary data on this page",
-            })}
-          >
-            {msg(lang, {
-              ar: "لا تُحفظ هذه البيانات في المتصفح أو على خادم. ستحتاج إلى تسجيل الدخول والتحقق قبل الإرسال.",
-              en: "These details are not saved in the browser or on a server. Sign-in and verification are required before submission.",
-            })}
-          </IntegrationNotice>
-        </section>
-      )}
-      {step === 3 && (
-        <section className="flow-panel review-panel">
-          <div className="flow-panel-heading">
-            <h2>{msg(lang, { ar: "راجع الاستفسار", en: "Review the inquiry" })}</h2>
-            <button className="text-link" onClick={() => setStep(1)}>
-              {msg(lang, { ar: "تعديل المنتجات", en: "Edit products" })}
+              {t(lang, "تحديث الخيارات", "Reload options")}
+            </button>
+            <button type="button" onClick={refresh}>
+              {t(lang, "تحقق من السجل المحفوظ", "Check saved record")}
             </button>
           </div>
-          <div className="review-items">
-            {items.map((item, index) => {
-              const product = visibleData(selectedQueries[index]);
-              if (!product)
-                return (
-                  <div key={item.productId}>
-                    <CatalogStatus query={selectedQueries[index]} lang={lang} />
-                  </div>
-                );
-              return (
-                <article key={item.productId}>
-                  <img src={product.image || ""} alt="" />
-                  <div>
-                    <h3>{productName(product, lang)}</h3>
-                    <p>
-                      {item.packageOption === "contact"
-                        ? msg(lang, {
-                            ar: "التواصل بشأن التعبئة",
-                            en: "Contact about packaging",
-                          })
-                        : packageLabel(product, item.packageOption, lang)}
-                    </p>
-                  </div>
-                  <strong>
-                    {item.quantity} ×{" "}
-                    {item.unit === "pack" ? msg(lang, { ar: "عبوة", en: "pack" }) : item.unit}
-                  </strong>
-                </article>
-              );
-            })}
-          </div>
-          <div className="review-contact">
-            <div>
-              <span>{msg(lang, { ar: "جهة الاتصال", en: "Contact" })}</span>
-              <strong>{details.name || "—"}</strong>
-              <p>{details.email || "—"}</p>
-            </div>
-            <div>
-              <span>{msg(lang, { ar: "الوجهة", en: "Destination" })}</span>
-              <strong>{details.destination || "—"}</strong>
-              <p>{details.company || "—"}</p>
-            </div>
-            <button className="text-link" onClick={() => setStep(2)}>
-              {msg(lang, { ar: "تعديل التفاصيل", en: "Edit details" })}
-            </button>
-          </div>
-          <div className="commercial-note">
-            <strong>
-              {msg(lang, {
-                ar: "ماذا يحدث بعد الإرسال؟",
-                en: "What happens after submission?",
-              })}
-            </strong>
-            <p>
-              {msg(lang, {
-                ar: "تراجع الشركة المنتجات والكميات والوجهة وتتواصل معك لتأكيد الأسعار وشروط التوريد. الاستفسار ليس بيعًا مقبولًا تلقائيًا.",
-                en: "The company reviews products, quantities and destination, then contacts you to confirm pricing and supply terms. An inquiry is not an automatically accepted sale.",
-              })}
-            </p>
-          </div>
-          <IntegrationNotice
-            lang={lang}
-            title={
-              auth.session?.user?.emailVerified
-                ? msg(lang, { ar: "تم التحقق من الحساب", en: "Account verified" })
-                : msg(lang, {
-                    ar: "يلزم تسجيل الدخول والتحقق",
-                    en: "Sign-in and verification required",
-                  })
-            }
-          >
-            {msg(lang, {
-              ar: "الحسابات متصلة، لكن إرسال وحفظ استفسارات التوريد غير متصلين بعد.",
-              en: "Accounts are connected, but supply inquiry submission and storage are not connected yet.",
-            })}
-          </IntegrationNotice>
-          <div className="page-actions">
-            <AppLink
-              href={withLang(
-                `${auth.session?.user ? "/verify-email" : "/login"}?returnTo=${encodeURIComponent(`/inquiries/new?products=${selectedIds}`)}`,
-                lang,
-              )}
-              go={go}
-              className="button button-primary"
-            >
-              {msg(lang, {
-                ar: "سجّل الدخول للمتابعة",
-                en: "Sign in to continue",
-              })}
-            </AppLink>
-            <AppLink
-              href={withLang(
-                `/register?returnTo=${encodeURIComponent(`/inquiries/new?products=${selectedIds}`)}`,
-                lang,
-              )}
-              go={go}
-              className="button button-secondary"
-            >
-              {msg(lang, { ar: "إنشاء حساب", en: "Create account" })}
-            </AppLink>
-            <button className="button button-primary" disabled onClick={() => setSubmitNotice("")}>
-              {msg(lang, { ar: "إرسال الاستفسار", en: "Submit inquiry" })}
-            </button>
-          </div>
-          {submitNotice && <p role="alert">{submitNotice}</p>}
-        </section>
-      )}
-      <div className="flow-controls">
-        <button
-          className="button button-secondary"
-          disabled={step === 1}
-          onClick={() => {
-            setStep((step - 1) as 1 | 2);
-            setErrors([]);
-          }}
-        >
-          {msg(lang, { ar: "رجوع", en: "Back" })}
-        </button>
-        {step < 3 && (
-          <button className="button button-primary" onClick={next}>
-            {msg(lang, { ar: "متابعة", en: "Continue" })}
-          </button>
         )}
-      </div>
+        <p role="status" aria-live="polite">
+          {pending ? t(lang, "جارٍ الحفظ…", "Saving…") : notice}
+        </p>
+        <fieldset disabled={pending || uncertain} className="inquiry-fields">
+          {step === 1 && (
+            <>
+              <div className="inquiry-line-list">
+                {items.map((item) => {
+                  const p = products.find((x) => x.id === item.productId),
+                    options = p?.packageOptions || [];
+                  return (
+                    <article className="workspace-section" key={item.productId}>
+                      <h3>{p ? productName(p, lang) : item.productId}</h3>
+                      {!p && (
+                        <p role="alert">
+                          {t(
+                            lang,
+                            "هذا المنتج غير متاح. أزله أو أعد تحميل الخيارات.",
+                            "This product is unavailable. Remove it or reload options.",
+                          )}
+                        </p>
+                      )}
+                      <button
+                        type="button"
+                        className="text-link"
+                        onClick={() => setItems(items.filter((x) => x !== item))}
+                      >
+                        {t(lang, "إزالة المنتج", "Remove product")}
+                      </button>
+                      <SelectField
+                        label={t(lang, "خيار التعبئة", "Package option")}
+                        value={item.packageId || ""}
+                        onChange={(e) =>
+                          update(item.productId, {
+                            packageId: e.target.value || null,
+                            quantity: e.target.value ? 1 : null,
+                            unit: e.target.value ? "packages" : null,
+                          })
+                        }
+                      >
+                        <option value="">
+                          {t(lang, "مناقشة التعبئة مع المبيعات", "Discuss packaging with sales")}
+                        </option>
+                        {item.packageId && !options.some((o) => o.id === item.packageId) && (
+                          <option value={item.packageId}>
+                            {t(
+                              lang,
+                              "الخيار المحفوظ غير متاح — اختر مجددًا",
+                              "Saved option unavailable — choose again",
+                            )}
+                          </option>
+                        )}
+                        {options.map((o) => (
+                          <option key={o.id} value={o.id}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </SelectField>
+                      <div className="quantity-row">
+                        <TextField
+                          label={
+                            item.packageId
+                              ? t(lang, "عدد العبوات", "Number of packages")
+                              : t(
+                                  lang,
+                                  "الكمية المطلوبة (اختياري مع المتطلبات)",
+                                  "Requested amount (optional with requirements)",
+                                )
+                          }
+                          type="number"
+                          min={item.packageId ? 1 : 0.001}
+                          max={item.packageId ? 100000 : 1000000}
+                          step={item.packageId ? 1 : 0.001}
+                          required={!!item.packageId}
+                          error={
+                            error &&
+                            item.packageId &&
+                            (!Number.isInteger(item.quantity) ||
+                              item.quantity! < 1 ||
+                              item.quantity! > 100000)
+                              ? t(
+                                  lang,
+                                  "أدخل عددًا صحيحًا من 1 إلى 100000 عبوة.",
+                                  "Enter a whole count from 1 to 100000 packages.",
+                                )
+                              : undefined
+                          }
+                          value={item.quantity ?? ""}
+                          onChange={(e) =>
+                            update(item.productId, {
+                              quantity: e.target.value === "" ? null : Number(e.target.value),
+                              unit: item.packageId
+                                ? "packages"
+                                : e.target.value
+                                  ? item.unit || "kg"
+                                  : null,
+                            })
+                          }
+                        />
+                        {item.packageId ? (
+                          <p>{t(lang, "الوحدة: عبوة", "Unit: package")}</p>
+                        ) : (
+                          <SelectField
+                            label={t(lang, "الوحدة", "Unit")}
+                            value={item.unit || "kg"}
+                            onChange={(e) =>
+                              update(item.productId, {
+                                unit: e.target.value as "kg" | "L",
+                              })
+                            }
+                          >
+                            <option value="kg">{t(lang, "كيلوغرام", "kg")}</option>
+                            <option value="L">{t(lang, "لتر", "L")}</option>
+                          </SelectField>
+                        )}
+                      </div>
+                      <TextAreaField
+                        label={t(lang, "متطلبات التعبئة", "Packaging requirements")}
+                        maxLength={1000}
+                        required={!item.packageId && item.quantity == null}
+                        error={
+                          error &&
+                          !item.packageId &&
+                          item.quantity == null &&
+                          !item.requirements.trim()
+                            ? t(
+                                lang,
+                                "اكتب متطلبات التعبئة أو أدخل كمية ووحدة.",
+                                "Describe packaging requirements or enter an amount and unit.",
+                              )
+                            : undefined
+                        }
+                        value={item.requirements}
+                        onChange={(e) => update(item.productId, { requirements: e.target.value })}
+                      />
+                    </article>
+                  );
+                })}
+              </div>
+              <SelectField
+                label={t(lang, "إضافة منتج", "Add product")}
+                value=""
+                disabled={items.length >= 30}
+                onChange={(e) => {
+                  if (e.target.value) setItems([...items, blank(e.target.value)]);
+                }}
+              >
+                <option value="">{t(lang, "اختر منتجًا", "Choose product")}</option>
+                {products
+                  .filter(
+                    (p) =>
+                      !items.some((x) => x.productId === p.id) && p.translationAvailable !== false,
+                  )
+                  .map((p) => (
+                    <option value={p.id} key={p.id}>
+                      {productName(p, lang)}
+                    </option>
+                  ))}
+              </SelectField>
+            </>
+          )}
+          {step === 2 && (
+            <div className="form-grid">
+              <SelectField
+                label={t(lang, "نوع العميل", "Customer type")}
+                value={fields.kind}
+                onChange={(e) => set("kind", e.target.value)}
+              >
+                <option value="individual">{t(lang, "فرد", "Individual")}</option>
+                <option value="company">{t(lang, "شركة", "Company")}</option>
+              </SelectField>
+              <TextField
+                label={t(lang, "الاسم الكامل", "Full name")}
+                required
+                maxLength={100}
+                value={fields.name}
+                onChange={(e) => set("name", e.target.value)}
+              />
+              {fields.kind === "company" && (
+                <TextField
+                  label={t(lang, "اسم الشركة", "Company name")}
+                  required
+                  maxLength={150}
+                  value={fields.company}
+                  onChange={(e) => set("company", e.target.value)}
+                />
+              )}
+              <TextField
+                label={t(lang, "بلد ومدينة الوجهة", "Destination country and city")}
+                required
+                maxLength={200}
+                value={fields.destination}
+                onChange={(e) => set("destination", e.target.value)}
+              />
+              <TextField
+                label={t(lang, "البريد الإلكتروني للحساب", "Account email")}
+                value={record.contactEmail}
+                disabled
+              />
+              <TextField
+                label={t(lang, "الهاتف (اختياري)", "Phone (optional)")}
+                maxLength={40}
+                value={fields.phone}
+                onChange={(e) => set("phone", e.target.value)}
+              />
+              <TextAreaField
+                label={t(lang, "ملاحظات (اختياري)", "Notes (optional)")}
+                maxLength={3000}
+                value={fields.notes}
+                onChange={(e) => set("notes", e.target.value)}
+              />
+            </div>
+          )}
+          {step === 3 && (
+            <>
+              <div className="review-items">
+                {record.items.map((item) => {
+                  const p = products.find((p) => p.id === item.productId);
+                  return (
+                    <article key={item.productId}>
+                      <div>
+                        <h3>{p ? productName(p, lang) : item.productId}</h3>
+                        <p>
+                          {item.packageId
+                            ? p?.packageOptions?.find((o) => o.id === item.packageId)?.label ||
+                              t(
+                                lang,
+                                "العبوة غير متاحة — ارجع للمنتجات واختر مجددًا.",
+                                "Package unavailable — return to products and choose again.",
+                              )
+                            : t(lang, "مناقشة التعبئة مع المبيعات", "Discuss packaging with sales")}
+                        </p>
+                        <p>{item.requirements}</p>
+                      </div>
+                      <strong>
+                        {item.quantity}{" "}
+                        {item.unit === "packages"
+                          ? t(lang, "عبوة", "packages")
+                          : item.unit === "L"
+                            ? t(lang, "لتر", "L")
+                            : item.unit === "kg"
+                              ? t(lang, "كيلوغرام", "kg")
+                              : ""}
+                      </strong>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="review-contact">
+                <p>
+                  {record.fields.name}
+                  <br />
+                  {record.fields.company}
+                  <br />
+                  {record.contactEmail}
+                  <br />
+                  {record.fields.phone}
+                </p>
+                <p>
+                  {record.fields.destination}
+                  <br />
+                  {record.fields.notes}
+                </p>
+              </div>
+              <p className="commercial-note">
+                {t(
+                  lang,
+                  "تراجع الشركة طلبك وتتواصل معك بشأن شروط التوريد. هذا استفسار تجاري وليس طلب شراء مقبولًا.",
+                  "The company will review your request and contact you about supply terms. This commercial inquiry is not an accepted order.",
+                )}
+              </p>
+            </>
+          )}
+        </fieldset>
+        <div className="flow-controls">
+          <button
+            type="button"
+            className="button button-secondary"
+            disabled={step === 1 || pending || uncertain}
+            onClick={() => {
+              setStep(step - 1);
+              setError("");
+              write.reset();
+            }}
+          >
+            {t(lang, "رجوع", "Back")}
+          </button>
+          {step < 3 && (
+            <>
+              <button
+                type="button"
+                className="button button-secondary"
+                disabled={pending || uncertain}
+                onClick={() => void save(false)}
+              >
+                {t(lang, "حفظ المسودة", "Save draft")}
+              </button>
+              <button className="button button-primary" disabled={pending || uncertain}>
+                {t(lang, "حفظ ومتابعة", "Save and continue")}
+              </button>
+            </>
+          )}
+        </div>
+      </form>
+      {step === 3 && (
+        <section className="flow-panel">
+          {!auth.session?.user?.emailVerified ? (
+            <AppLink
+              className="button button-primary"
+              go={go}
+              href={withLang(
+                `/verify-email?returnTo=${encodeURIComponent(`/inquiries/new?draft=${record.id}`)}`,
+                lang,
+              )}
+            >
+              {t(lang, "أكد البريد للمتابعة", "Verify email to continue")}
+            </AppLink>
+          ) : (
+            <button
+              className="button button-primary"
+              disabled={pending || uncertain || catalog.isPending || catalog.isError}
+              onClick={async () => {
+                if (pending || uncertain) return;
+                setError("");
+                try {
+                  const result = await write.mutateAsync({
+                    type: "submit",
+                    id: record.id,
+                    key: submitKey,
+                    revision: record.revision,
+                  });
+                  go(withLang(`/account/inquiries/${result.id}?submitted=1`, lang));
+                } catch {
+                  setUncertain(true);
+                }
+              }}
+            >
+              {pending
+                ? t(lang, "جارٍ الإرسال…", "Submitting…")
+                : t(lang, "إرسال الاستفسار", "Submit inquiry")}
+            </button>
+          )}
+          {uncertain && (
+            <div role="alert">
+              <p>
+                {t(
+                  lang,
+                  "لم تتأكد نتيجة الإرسال. تحقق من السجل أولًا؛ إذا بقي مسودة يمكنك إعادة المحاولة بالمفتاح نفسه.",
+                  "Submission result is uncertain. Check the saved record first; if still a draft you can retry with the same key.",
+                )}
+              </p>
+              <button
+                className="button button-secondary"
+                onClick={async () => {
+                  const q = (await reload()) as { data?: Inquiry; error?: unknown };
+                  if (q.data?.status === "submitted")
+                    go(withLang(`/account/inquiries/${record.id}`, lang));
+                  else if (q.data && q.data.revision === record.revision) {
+                    setUncertain(false);
+                    setNotice(
+                      t(
+                        lang,
+                        "ما زالت مسودة. يمكنك إعادة الإرسال.",
+                        "Still a draft. You can retry submission.",
+                      ),
+                    );
+                  } else refresh();
+                }}
+              >
+                {t(lang, "تحقق من نتيجة الإرسال", "Check submission result")}
+              </button>
+            </div>
+          )}
+        </section>
+      )}
     </main>
   );
 }

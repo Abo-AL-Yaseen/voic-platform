@@ -343,8 +343,41 @@
   gap: 30px;
   margin-bottom: 34px;
   padding-bottom: 25px;
-  border-bottom: 1px solid #dddfcc;
+  border-bottom: 0;
 }
+.workspace-page-heading > div {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.workspace-page-heading .eyebrow,
+.workspace-page-heading h1,
+.workspace-page-heading p {
+  margin: 0;
+  position: static;
+  overflow-wrap: anywhere;
+}
+.workspace-page-heading h1 { line-height: 1.5; }
+.route-heading:focus:not(:focus-visible) { outline: none; }
+.route-heading:focus-visible { outline: 2px dashed #78845d; outline-offset: 7px; border-radius: 4px; }
+.access-denied-card {
+  display: grid;
+  gap: 24px;
+  justify-items: start;
+  width: min(100%, 760px);
+  padding: clamp(24px, 5vw, 52px);
+  border-radius: 18px;
+  background: #fffdf4;
+  box-shadow: 0 8px 36px #4b5b3512;
+}
+.access-denied-card h1, .access-denied-card p { margin: 0; }
+.inquiry-fields { border: 0; padding: 0; margin: 24px 0; min-width: 0; }
+.inquiry-line-list { display: grid; gap: 20px; }
+.inquiry-detail-line { padding: 20px 0; border-bottom: 1px solid #dddfcc; overflow-wrap: anywhere; }
+.inquiry-detail-fields { display: grid; gap: 18px; }
+.inquiry-detail-fields dt { color: #727463; margin-bottom: 6px; }
+.inquiry-detail-fields dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.workspace-content > .list-toolbar { margin-top: 28px; }
 .workspace-page-heading h1 {
   font-size: clamp(30px, 3vw, 43px);
 }
