@@ -11,6 +11,7 @@ export function configureHttp(app: NestExpressApplication, env: Environment): vo
   app.getHttpAdapter().getInstance().disable("x-powered-by");
   app.use((_request: express.Request, response: express.Response, next: express.NextFunction) => {
     response.setHeader("X-Request-Id", randomUUID());
+    response.setHeader("Cache-Control", "no-store");
     next();
   });
   app.use(helmet({ strictTransportSecurity: env.nodeEnv === "production" ? undefined : false }));

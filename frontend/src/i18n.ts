@@ -80,7 +80,7 @@ export function productDescription(product: Product, lang: Lang) {
 }
 
 export function categoryLabel(product: Product, lang: Lang) {
-  return categories[product.categoryKey][lang === "ar" ? 0 : 1];
+  return product.categoryLabel ?? categories[product.categoryKey]?.[lang === "ar" ? 0 : 1] ?? "";
 }
 
 export function useLabel(key: UseKey, lang: Lang) {

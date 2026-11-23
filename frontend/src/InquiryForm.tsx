@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
-import { products } from "./catalog";
+import type { Product } from "./catalog";
+import { useAllProducts, useSelectedProducts, visibleData } from "./hooks/products/queries";
+import CatalogStatus, { ProductTranslation } from "./components/CatalogStatus";
 import { msg, productName, type Lang } from "./i18n";
 
-export function productInquiryHref(productId: string, lang: Lang) {
-  const product = products.find((item) => item.id === productId);
-  if (!product) return "mailto:info@voic.ps";
+export function productInquiryHref(product: Product, lang: Lang) {
   const name = productName(product, lang);
   const subject = lang === "ar" ? `استفسار تجاري عن ${name}` : `Commercial inquiry about ${name}`;
   const body =
@@ -57,6 +57,7 @@ export function buildInquiryMessage(
     quantityUnit: string;
     notes: string;
   },
+  products: Product[],
 ) {
   const selected = values.productIds
     .map((id) => products.find((product) => product.id === id))
@@ -108,7 +109,7 @@ export default function InquiryForm({
     businessType: "",
     topic: initialTopic,
     productIds:
-      initialProductIds?.filter((id) => products.some((product) => product.id === id)) ||
+      (initialProductIds ? [...new Set(initialProductIds)] : undefined) ||
       (initialProductId ? [initialProductId] : ([] as string[])),
     sizeNeed: "",
     quantity: "",
@@ -117,7 +118,18 @@ export default function InquiryForm({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
-  const message = useMemo(() => buildInquiryMessage(lang, values), [lang, values]);
+  const catalogQuery = useAllProducts({ locale: lang });
+  const selectedQueries = useSelectedProducts(values.productIds, lang);
+  const selectedProducts = selectedQueries.flatMap((q) => {
+    const p = visibleData(q);
+    return p ? [p] : [];
+  });
+  const products = catalogQuery.data ?? [];
+  const selectionReady = selectedQueries.every((q) => visibleData(q) && !q.isError);
+  const message = useMemo(
+    () => buildInquiryMessage(lang, values, selectedProducts),
+    [lang, values, selectedProducts],
+  );
   const set = (key: keyof typeof values, value: string | string[]) => {
     setValues((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: "" }));
@@ -133,6 +145,7 @@ export default function InquiryForm({
   };
   const validate = () => {
     const next: Record<string, string> = {};
+    if (!selectionReady) return false;
     const required = msg(lang, {
       ar: "هذا الحقل مطلوب",
       en: "This field is required",
@@ -279,16 +292,30 @@ export default function InquiryForm({
       </div>
       <fieldset className="product-picks">
         <legend>{msg(lang, { ar: "المنتجات", en: "Products" })}</legend>
+        <CatalogStatus query={catalogQuery} lang={lang} empty={catalogQuery.data?.length === 0} />
+        {values.productIds.map((id, index) => (
+          <div key={id}>
+            <CatalogStatus query={selectedQueries[index]} lang={lang} />
+            <button type="button" className="text-link" onClick={() => toggleProduct(id)}>
+              {msg(lang, { ar: "إزالة", en: "Remove" })}{" "}
+              {visibleData(selectedQueries[index])
+                ? productName(visibleData(selectedQueries[index])!, lang) || id
+                : id}
+            </button>
+          </div>
+        ))}
         <div>
           {products.map((product) => (
-            <label key={product.id}>
-              <input
-                type="checkbox"
-                checked={values.productIds.includes(product.id)}
-                onChange={() => toggleProduct(product.id)}
-              />
-              <span>{productName(product, lang)}</span>
-            </label>
+            <ProductTranslation key={product.id} product={product} lang={lang}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={values.productIds.includes(product.id)}
+                  onChange={() => toggleProduct(product.id)}
+                />
+                <span>{productName(product, lang)}</span>
+              </label>
+            </ProductTranslation>
           ))}
         </div>
         {errors.topic && mode === "business" && (
@@ -315,13 +342,18 @@ export default function InquiryForm({
         />
       </label>
       <div className="inquiry-form-actions">
-        <button className="button button-primary" type="submit">
+        <button className="button button-primary" type="submit" disabled={!selectionReady}>
           {msg(lang, {
             ar: "جهّز رسالة الاستفسار",
             en: "Prepare inquiry email",
           })}
         </button>
-        <button className="button button-secondary" type="button" onClick={copyMessage}>
+        <button
+          className="button button-secondary"
+          type="button"
+          onClick={copyMessage}
+          disabled={!selectionReady}
+        >
           {msg(lang, { ar: "انسخ نص الرسالة", en: "Copy message" })}
         </button>
       </div>

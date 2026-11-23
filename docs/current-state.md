@@ -7,24 +7,27 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
 ## Implemented and present
 
 - One platform repository: the existing application lives in `frontend/` and the backend
-  foundation lives in `backend/`. No business schema, catalog API or deployed API exists.
+  and public catalog live in `backend/`. The catalog is connected locally; no deployed API exists.
 - Approved backend decisions: NestJS + TypeScript, MySQL with InnoDB, TypeORM with migrations.
-  `backend/README.md` documents exact local setup and commands. Business contracts remain open.
+  `backend/README.md` documents local setup; [catalog implementation](catalog-implementation.md)
+  records the implemented public contract and schema. Other business contracts remain open.
 - The backend has validated environment configuration, feature modules for configuration,
   database and health, `/api/v1/health/live` and `/api/v1/health/ready`, explicit CORS origins,
   Helmet headers, DTO validation, bounded bodies and sanitized error/log handling. Liveness
   is independent of the database; readiness initializes TypeORM lazily and checks `SELECT 1`.
 - Schema synchronization, schema dropping and automatic migrations are disabled. Explicit
-  migration commands and disposable database checks exist; there are no business entities or
-  versioned migrations. Native MySQL Server, managed through the separate Workbench client,
+  migration commands and disposable database checks exist. Four catalog entities and one
+  explicit catalog migration are implemented. Native MySQL Server, managed through the separate Workbench client,
   is the chosen local setup as of 2026-11-23. Legacy Compose files are retained but unused;
   do not operate Docker or containers/volumes for this setup.
 - Shutdown hooks close the connection pool; required configuration fails startup with safe
   field-level guidance. Actual `.env` credentials, dependencies and build/test output are ignored.
 - React 19, TypeScript, Vite 8, Tailwind CSS v4, and pnpm are already configured. The frontend
   runs locally; its four contract tests and TypeScript check passed at baseline import.
-- Public product, recipe, and page content comes from local source files, notably
-  `frontend/src/catalog.ts`, `recipes.ts`, `Pages.tsx`, and `i18n.ts`, with local assets/fonts.
+- Public product reads use native MySQL through NestJS, Services and product React Query
+  hooks across all public consumers. Recipes and other page content remain local, with
+  original assets/fonts. The old product records are explicit backend seed input; only
+  disconnected staff previews retain a separate local fixture.
 - Supported interfaces are Arabic (default, RTL) and English (LTR) only. Unsupported locale
   links fall back to Arabic without changing the product route or other query parameters.
   Brand names retain approved Arabic names and official Latin spellings. Commercial and
@@ -38,10 +41,11 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
 
 - Auth, account, authenticated inquiry, and staff screens are frontend designs, without live
   registration, verification, sessions, authorization, saved inquiries, or staff data.
-- `services/api.ts` is a typed HTTP boundary with no configured live base URL or feature
-  integration. A generic `fetch` helper is not proof of a working backend.
-- `services/queryClient.ts`, `QueryClientProvider` in `main.tsx`, and feature `keys.ts` files
-  prepare React Query infrastructure. Feature query/mutation integrations are not present.
+- `services/api.ts` and `services/products.ts` connect public catalog reads to `/api/v1`
+  through same-origin requests (local Vite proxy to port 3000) or `VITE_API_BASE_URL`.
+  They do not connect authentication, staff operations or inquiry submission.
+- Product feature hooks and complete request-scoped query keys use the existing QueryClient.
+  Other feature key files remain infrastructure, not evidence of their integration.
 - The public `InquiryForm.tsx` can prepare a `mailto:` message or copy text for the user.
   This is not server-side submission, persistence, successful mail delivery, or inquiry tracking.
 - `App.tsx` guards the development preview import and route registration with
@@ -76,21 +80,18 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
   including open customer registration, email verification, the inquiry/RFQ flow and staff
   permissions. Older proposals do not override these rules.
 
-## Proposed first bounded feature
+## Implemented public catalog slice
 
-**Public product catalog backed by a real database/API and integrated through Services and
-React Query Hooks.**
+The public read slice is implemented locally, including listing/filtering/search/sorting and
+pagination, direct detail/quick views, featured products, bounded ID lookup, related products,
+chooser, business sections, recipe references and inquiry product selection. Comparison and
+inquiry selection are independent. Auth, staff CRUD and inquiry submission remain outside scope.
 
-The detailed [catalog requirements](product-catalog.md) preserve the existing UI and public
-flows, and define loading/error/empty states, independent selection and comparison across
-paginated results, related products and recipes, publication boundaries, and no silent local
-fallback. They contain six stories, 25 requirements, 29 acceptance scenarios and eight outcomes.
-Auth, staff CRUD and saved inquiries remain outside this first public-read slice.
-
-The [project plan](project-plan.md) is the source of approved rules and the incremental work
-sequence. Catalog behavioral assumptions still need review; business schema, API contracts,
-pagination and cache timing remain open decisions. The foundation does not implement catalog
-endpoints, seed/import code, product hooks, authentication or inquiry persistence.
+[The catalog implementation guide](catalog-implementation.md) records schema, contracts,
+publication/translation behavior, non-overwriting development import, native test commands,
+query/cache policy and limits. Current content is a development baseline, not company approval
+for production publication. The production gate excludes that baseline. Ingredient source
+values remain stored but unpublished. Research notes do not enter public data or search.
 
 ## Latest maintenance verification
 
@@ -144,7 +145,7 @@ Server and Workbench only. [The backend guide](../backend/README.md) documents l
 administrator entry, isolated native provisioning and disposable database verification.
 Historical Docker resources are untouched. This is not a production-readiness claim.
 
-## Native MySQL setup verified (2026-11-23)
+## Historical native foundation verified (2026-11-23, before catalog)
 
 - Chosen setup: native MySQL Server on Windows, managed with the separate Workbench client.
   Service `MySQL80` is running; SQL now confirms MySQL 8.0.44 on `127.0.0.1:3306`, matching
@@ -178,7 +179,56 @@ Historical Docker resources are untouched. This is not a production-readiness cl
   native tooling task. Staged changes were reviewed for actual local secrets and unintended
   files before commit; private `.env` files and generated output remain excluded.
 
-Native local setup and its verification are complete. Future disposable checks can use
-`node scripts/setup-native-mysql.mjs --test-only` with local administrator entry; do not rerun
+Native foundation setup and its verification were complete at that stage. Current catalog
+disposable checks use `node scripts/setup-native-mysql.mjs --catalog-test` with local administrator entry; do not rerun
 initial provisioning over existing development resources. These are local foundation checks,
 not production deployment, restoration, security certification or capacity verification.
+
+## Public catalog implementation verification (2026-11-23)
+
+- The user explicitly authorized this public read implementation, including routine schema
+  and contract decisions, within the existing permanent `mahmoud` branch. The working tree
+  was clean at task start. No other branch, Docker operation or deployment was used.
+- Before applying catalog changes, a read-only native query confirmed `voic_development`
+  contained no tables. Explicit `migration:run` applied one catalog migration; the first
+  development import inserted all 11 original records. A later import inserted zero and
+  preserved all 11. A direct comparison with the previous committed frontend catalog proved
+  that the seed snapshot preserves every original record/value, including unknown arrays,
+  image references, IDs/slugs and original ordering. Original assets, fonts/license, LFS
+  attributes, recipe records/associations and approved routes were not changed.
+- Backend tests passed 11/11; typecheck and build passed. Frontend tests passed 9/9;
+  typecheck and production build passed. The obsolete tests requiring public runtime arrays
+  were replaced with seed compatibility, scope/key and public-source-boundary checks.
+- Playwright/installed Chrome passed nine browser tests using the running real native API:
+  all 11 direct detail links and quick views in both languages; combined/legacy filters,
+  Arabic normalization, deterministic three-page traversal, validation and safe projection;
+  homepage featured order; chooser matches from the whole catalog; business/recipe/contact
+  products; comparison/inquiry independence across pages and filtering; maximum comparison
+  size; removal feedback and independent retry for unavailable/failing selected products;
+  loading, failure/recovery, empty/not-found distinction; late response isolation; locale
+  page reset with selection preservation; mobile RTL/LTR, keyboard modal focus and no page
+  horizontal overflow at 390 pixels. Timing/failure/withdrawal scenarios use test-only HTTP
+  interception, not development database edits. The final full nine-test run passed after
+  correcting initial test locators and adding per-selection feedback in the comparison bar.
+- A separate read-only check against real MySQL verified the production approval gate
+  excludes all development-baseline records. Existing ingredient values are stored with
+  publication disabled; API read checks confirmed they and internal metadata are omitted.
+- The new disposable native checker covers migration apply/idempotence/rollback/restoration,
+  seed repeatability and editorial preservation, real HTTP filtering/publication/translation
+  restrictions and safe database failure/recovery. Syntax and refusal of non-disposable
+  targets passed. The user ran `node scripts/setup-native-mysql.mjs --catalog-test` locally
+  with hidden administrator entry and confirmed success. Its ignored, non-secret evidence
+  records `passed: true` at `2026-11-23T21:43:15.974Z`; the agent inspected that evidence.
+  This verifies the new catalog migration, repeatable import/editorial preservation,
+  publication and missing-translation restrictions, stable ties, failure/recovery, rollback
+  and baseline restoration against a separate disposable native database. The helper removes
+  only the random database/user created by that invocation. No catalog rollback or
+  destructive verification was run on development; no administrator secret was saved.
+- After the disposable run, `pnpm.cmd db:check` and the native readiness probe passed again:
+  MySQL 8.0.44:3306, utf8mb4/InnoDB, database-only grants, NestJS liveness/readiness HTTP 200.
+  Final staged review covered 50 files: no actual local credentials, private environment
+  files, runtime results or unintended original asset changes. GitHub's default branch is
+  `mahmoud`; local and remote tips matched before the implementation commit.
+
+Catalog verification is complete locally. Actual credentials and generated verification
+evidence remain ignored. Production content approval and deployment remain outside this task.

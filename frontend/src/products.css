@@ -481,6 +481,18 @@
 .comparison-table td {
   background: white;
 }
+.catalog-feedback {
+  padding: 16px;
+  margin-block: 12px;
+  color: #4b5b35;
+  background: #f1f0df;
+  border: 1px solid #dddfcc;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+.catalog-feedback button, .catalog-feedback a { margin-block-start: 8px; }
+.catalog-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; margin-block: 28px; }
+.catalog-results, .comparison-selected > div { min-width: 0; }
 @media (max-width: 1100px) {
   .catalog-layout {
     grid-template-columns: 200px minmax(0, 1fr);

@@ -14,6 +14,6 @@ import { databaseOptions } from "./options.js";
     },
     DatabaseService,
   ],
-  exports: [DatabaseService],
+  exports: [DatabaseService, DATABASE_SOURCE],
 })
 export class DatabaseModule {}

@@ -12,7 +12,9 @@ async function loadSourceModule(path) {
 }
 
 const i18n = await loadSourceModule("i18n.ts");
-const { products } = await loadSourceModule("catalog.ts");
+const products = JSON.parse(
+  await readFile(new URL("../../backend/data/catalog-baseline.json", import.meta.url), "utf8"),
+);
 
 test("only Arabic and English are selectable and unsupported links use Arabic RTL", () => {
   assert.deepEqual(Object.keys(i18n.localeName), ["ar", "en"]);

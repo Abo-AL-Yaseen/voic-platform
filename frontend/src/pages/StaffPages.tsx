@@ -3,7 +3,8 @@ import AppLink from "../components/AppLink";
 import { EmptyState, IntegrationNotice, StatusBadge } from "../components/Feedback";
 import { SelectField, TextAreaField, TextField } from "../components/FormFields";
 import { Pagination, StaffLayout, TranslationTabs } from "../components/WorkspaceLayouts";
-import { assets, products } from "../catalog";
+import { assets } from "../catalog";
+import { products } from "../dev/staff-catalog";
 import { msg, productName, withLang, type Lang } from "../i18n";
 import { recipes } from "../recipes";
 
@@ -191,8 +192,8 @@ function ProductsList({ lang, go }: Omit<Props, "path">) {
           en: "Product management",
         })}
         description={msg(lang, {
-          ar: "المنتجات الحالية محفوظة محليًا للعرض العام.",
-          en: "Current products remain local for the public catalog.",
+          ar: "تحرير الموظفين معاينة غير متصلة؛ المنتجات العامة تُقرأ من API.",
+          en: "Staff editing is a disconnected preview; public products use the API.",
         })}
         action={
           <AppLink

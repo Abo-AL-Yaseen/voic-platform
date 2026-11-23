@@ -5,12 +5,20 @@ import test from "node:test";
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("featured products retain the approved order", async () => {
-  const catalog = await read("src/catalog.ts");
-  assert.match(catalog, /const featuredIds = \["ghazal-butter", "nabateen", "kawakeb", "ghazal"\]/);
+  const baseline = JSON.parse(
+    await readFile(new URL("../../backend/data/catalog-baseline.json", import.meta.url), "utf8"),
+  );
+  assert.deepEqual(
+    baseline.slice(0, 4).map((p) => p.id),
+    ["ghazal-butter", "nabateen", "kawakeb", "ghazal"],
+  );
 });
 
 test("all approved product and recipe records remain present", async () => {
-  const [catalog, recipes] = await Promise.all([read("src/catalog.ts"), read("src/recipes.ts")]);
+  const [catalog, recipes] = await Promise.all([
+    readFile(new URL("../../backend/data/catalog-baseline.json", import.meta.url), "utf8"),
+    read("src/recipes.ts"),
+  ]);
   for (const id of [
     "ghazal-butter",
     "nabateen",
@@ -24,7 +32,7 @@ test("all approved product and recipe records remain present", async () => {
     "reem-sunflower-oil",
     "sun-gold-sunflower-oil",
   ]) {
-    assert.match(catalog, new RegExp(`id: "${id}"`));
+    assert.ok(JSON.parse(catalog).some((p) => p.id === id && p.slug === id));
   }
   for (const slug of [
     "semolina-maamoul",

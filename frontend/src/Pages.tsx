@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
-import { products, type Product, type UseKey } from "./catalog";
+import { sizeLabel, packageLabel, productUseLabel } from "./utils/productLabels";
+import { useEffect, useState } from "react";
+import { type Product, type UseKey } from "./catalog";
 import {
   categoryLabel,
   arrow,
-  formatPackaging,
   formatSize,
   pick,
   productDescription,
@@ -16,7 +16,17 @@ import {
 } from "./i18n";
 import InquiryForm, { productInquiryHref } from "./InquiryForm";
 import Modal from "./Modal";
-import ProductQuickView from "./ProductQuickView";
+import RemoteQuickView from "./components/RemoteQuickView";
+import CatalogStatus, { ProductTranslation } from "./components/CatalogStatus";
+import {
+  useProduct,
+  useRelatedProducts,
+  useAllProducts,
+  useProductLookup,
+  useProductFilters,
+  useSelectedProducts,
+  visibleData,
+} from "./hooks/products/queries";
 import { recipes, type Recipe } from "./recipes";
 
 type PageProps = { lang: Lang; go: (href: string) => void; search?: string };
@@ -115,62 +125,62 @@ function ProductMiniCard({
   inquirySelected?: boolean;
 }) {
   return (
-    <article className="product-card catalog-card mini-product-card">
-      <ProductImage product={product} lang={lang} />
-      <span className="product-type">{categoryLabel(product, lang)}</span>
-      <h3>{productName(product, lang)}</h3>
-      <span className="product-english-name" dir={lang === "ar" ? "ltr" : "rtl"}>
-        {secondaryProductName(product, lang)}
-      </span>
-      <p>{reason || productDescription(product, lang)}</p>
-      {product.sizes.length > 0 && (
-        <strong className="sizes">
-          {product.sizes.map((size) => formatSize(size, lang)).join(" • ")}
-        </strong>
-      )}
-      <div className="mini-card-actions">
-        {onQuick && (
-          <button className="button button-secondary" onClick={onQuick}>
-            {ui[lang].details}
+    <ProductTranslation product={product} lang={lang}>
+      <article className="product-card catalog-card mini-product-card">
+        <ProductImage product={product} lang={lang} />
+        <span className="product-type">{categoryLabel(product, lang)}</span>
+        <h3>{productName(product, lang)}</h3>
+        <span className="product-english-name" dir={lang === "ar" ? "ltr" : "rtl"}>
+          {secondaryProductName(product, lang)}
+        </span>
+        <p>{reason || productDescription(product, lang)}</p>
+        {product.sizes.length > 0 && (
+          <strong className="sizes">
+            {product.sizes.map((size) => sizeLabel(product, size, lang)).join(" • ")}
+          </strong>
+        )}
+        <div className="mini-card-actions">
+          {onQuick && (
+            <button className="button button-secondary" onClick={onQuick}>
+              {ui[lang].details}
+            </button>
+          )}
+          <PageLink
+            href={withLang(`/products/${product.slug}`, lang)}
+            go={go}
+            className="text-link"
+          >
+            {ui[lang].fullProduct} {arrow(lang)}
+          </PageLink>
+        </div>
+        {selectable && (
+          <label className="check-option compare-option">
+            <input type="checkbox" checked={selected} onChange={onSelect} />
+            <span>{ui[lang].compare}</span>
+          </label>
+        )}
+        {onInquiry && (
+          <button
+            className={`inquiry-select-button ${inquirySelected ? "is-selected" : ""}`}
+            aria-pressed={inquirySelected}
+            onClick={onInquiry}
+          >
+            {inquirySelected
+              ? pick(lang, "تمت الإضافة للاستفسار", "Added to inquiry")
+              : pick(lang, "أضف لاستفسار توريد", "Add to inquiry")}
           </button>
         )}
-        <PageLink href={withLang(`/products/${product.slug}`, lang)} go={go} className="text-link">
-          {ui[lang].fullProduct} {arrow(lang)}
-        </PageLink>
-      </div>
-      {selectable && (
-        <label className="check-option compare-option">
-          <input type="checkbox" checked={selected} onChange={onSelect} />
-          <span>{ui[lang].compare}</span>
-        </label>
-      )}
-      {onInquiry && (
-        <button
-          className={`inquiry-select-button ${inquirySelected ? "is-selected" : ""}`}
-          aria-pressed={inquirySelected}
-          onClick={onInquiry}
-        >
-          {inquirySelected
-            ? pick(lang, "تمت الإضافة للاستفسار", "Added to inquiry")
-            : pick(lang, "أضف لاستفسار توريد", "Add to inquiry")}
-        </button>
-      )}
-    </article>
+      </article>
+    </ProductTranslation>
   );
 }
 
 export function ProductDetailPage({ product, lang, go }: PageProps & { product: Product }) {
-  const related = products
-    .filter(
-      (item) =>
-        item.id !== product.id &&
-        (item.categoryKey === product.categoryKey ||
-          item.useKeys.some((use) => product.useKeys.includes(use))),
-    )
-    .slice(0, 3);
+  const relatedQuery = useRelatedProducts(product.id, lang);
+  const related = relatedQuery.data?.items ?? [];
   const relatedRecipes = recipes.filter((recipe) => recipe.productIds.includes(product.id));
   return (
-    <main className="page-shell product-page section-pad">
+    <main id="main-content" className="page-shell product-page section-pad">
       <Breadcrumb
         lang={lang}
         go={go}
@@ -195,7 +205,7 @@ export function ProductDetailPage({ product, lang, go }: PageProps & { product: 
               <h2>{pick(lang, "الاستخدامات", "Uses")}</h2>
               <ul className="product-use-list">
                 {product.useKeys.map((use) => (
-                  <li key={use}>{useLabel(use, lang)}</li>
+                  <li key={use}>{productUseLabel(product, use, lang)}</li>
                 ))}
               </ul>
             </div>
@@ -205,7 +215,7 @@ export function ProductDetailPage({ product, lang, go }: PageProps & { product: 
               <h2>{pick(lang, "الأحجام وخيارات التعبئة", "Sizes and packaging")}</h2>
               <p>
                 {(product.packaging || product.sizes)
-                  .map((value) => formatPackaging(value, lang))
+                  .map((value) => packageLabel(product, value, lang))
                   .join(" • ")}
               </p>
             </div>
@@ -225,7 +235,7 @@ export function ProductDetailPage({ product, lang, go }: PageProps & { product: 
               {ui[lang].inquiry}
             </PageLink>
             <small>{ui[lang].emailHint}</small>
-            <a className="text-link" href={productInquiryHref(product.id, lang)}>
+            <a className="text-link" href={productInquiryHref(product, lang)}>
               {pick(lang, "تواصل بالبريد بدلًا من ذلك", "Contact by email instead")}
             </a>
           </div>
@@ -255,12 +265,48 @@ export function ProductDetailPage({ product, lang, go }: PageProps & { product: 
         <div className="page-section-heading">
           <h2>{pick(lang, "منتجات قريبة", "Related products")}</h2>
         </div>
+        <CatalogStatus
+          query={relatedQuery}
+          lang={lang}
+          empty={relatedQuery.data?.items.length === 0}
+        />
         <div className="three-grid">
           {related.map((item) => (
             <ProductMiniCard key={item.id} product={item} lang={lang} go={go} />
           ))}
         </div>
       </section>
+    </main>
+  );
+}
+
+export function ProductRoutePage({ id, lang, go, search }: PageProps & { id: string }) {
+  const query = useProduct(id, lang),
+    product = visibleData(query);
+  useEffect(() => {
+    if (product) document.title = `${productName(product, lang) || ui[lang].products} | VOIC`;
+    else if (query.isError)
+      document.title = `${pick(lang, "المنتج غير متاح", "Product unavailable")} | VOIC`;
+  }, [product, lang, query.isError]);
+  if (product?.translationAvailable !== false && product)
+    return (
+      <>
+        <CatalogStatus query={query} lang={lang} />
+        <ProductDetailPage product={product} lang={lang} go={go} search={search} />
+      </>
+    );
+  return (
+    <main className="page-shell section-pad">
+      <h1>{ui[lang].products}</h1>
+      <CatalogStatus query={query} lang={lang} />
+      {product && (
+        <ProductTranslation product={product} lang={lang}>
+          {null}
+        </ProductTranslation>
+      )}
+      <PageLink href={withLang("/products", lang)} go={go}>
+        {ui[lang].products}
+      </PageLink>
     </main>
   );
 }
@@ -272,11 +318,22 @@ export function ChooserPage({ lang, go }: PageProps) {
   const [audience, setAudience] = useState<"home" | "business" | "">("");
   const [use, setUse] = useState<UseKey | "">("");
   const [size, setSize] = useState("");
-  const [quick, setQuick] = useState<Product | null>(null);
+  const [quick, setQuick] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [inquirySelected, setInquirySelected] = useState<string[]>([]);
   const [notice, setNotice] = useState("");
-  const useMatches = products.filter((product) => use && product.useKeys.includes(use));
+  const chooserQuery = useAllProducts({ locale: lang, use: use ? [use] : undefined });
+  const filtersQuery = useProductFilters(lang);
+  const selectionQueries = useSelectedProducts(
+    [...new Set([...selected, ...inquirySelected])],
+    lang,
+  );
+  const useMatches = use ? (chooserQuery.data ?? []) : [];
+  const chooserUseLabel = (key: UseKey) =>
+    filtersQuery.data?.recommendationUses.find((c) => c.value === key)?.label ??
+    useLabel(key, lang);
+  const chooserSizeLabel = (value: string) =>
+    useMatches.find((p) => p.sizes.includes(value))?.sizeLabels?.[value] ?? formatSize(value, lang);
   const availableSizes = [...new Set(useMatches.flatMap((product) => product.sizes))].sort(
     (a, b) => Number.parseFloat(a) - Number.parseFloat(b),
   );
@@ -286,13 +343,16 @@ export function ChooserPage({ lang, go }: PageProps) {
       : [];
   const chooseUse = (value: UseKey) => {
     setUse(value);
-    if (size && size !== "none") {
-      const nextSizes = products
-        .filter((product) => product.useKeys.includes(value))
-        .flatMap((product) => product.sizes);
-      if (!nextSizes.includes(size)) setSize("");
-    }
   };
+  useEffect(() => {
+    if (
+      chooserQuery.data &&
+      size &&
+      size !== "none" &&
+      !chooserQuery.data.some((p) => p.sizes.includes(size))
+    )
+      setSize("");
+  }, [chooserQuery.data, size]);
   const toggleCompare = (id: string) => {
     if (selected.includes(id)) setSelected(selected.filter((item) => item !== id));
     else if (selected.length === 3)
@@ -339,6 +399,8 @@ export function ChooserPage({ lang, go }: PageProps) {
           <i style={{ width: `${Math.min(step, 3) * 33.333}%` }} />
         </div>
       </div>
+      <CatalogStatus query={chooserQuery} lang={lang} />
+      <CatalogStatus query={filtersQuery} lang={lang} />
       {step < 4 && (
         <section className="chooser-panel">
           {step === 1 && (
@@ -367,16 +429,20 @@ export function ChooserPage({ lang, go }: PageProps) {
             <>
               <h2>{pick(lang, "شو الاستخدام الأساسي؟", "What is the main use?")}</h2>
               <div className="choice-grid">
-                {chooserUses.map((item) => (
-                  <button
-                    key={item}
-                    className={`choice-button ${use === item ? "is-selected" : ""}`}
-                    aria-pressed={use === item}
-                    onClick={() => chooseUse(item)}
-                  >
-                    <strong>{useLabel(item, lang)}</strong>
-                  </button>
-                ))}
+                {chooserUses
+                  .filter((key) =>
+                    filtersQuery.data?.recommendationUses.some((c) => c.value === key),
+                  )
+                  .map((item) => (
+                    <button
+                      key={item}
+                      className={`choice-button ${use === item ? "is-selected" : ""}`}
+                      aria-pressed={use === item}
+                      onClick={() => chooseUse(item)}
+                    >
+                      <strong>{chooserUseLabel(item)}</strong>
+                    </button>
+                  ))}
               </div>
             </>
           )}
@@ -392,7 +458,7 @@ export function ChooserPage({ lang, go }: PageProps) {
                       aria-pressed={size === item}
                       onClick={() => setSize(item)}
                     >
-                      <strong>{formatSize(item, lang)}</strong>
+                      <strong>{chooserSizeLabel(item)}</strong>
                     </button>
                   ))}
                   <button
@@ -430,7 +496,7 @@ export function ChooserPage({ lang, go }: PageProps) {
           </div>
         </section>
       )}
-      {step === 4 && (
+      {step === 4 && chooserQuery.data && (
         <section className="chooser-results">
           <div className="page-section-heading split-heading">
             <div>
@@ -462,7 +528,7 @@ export function ChooserPage({ lang, go }: PageProps) {
                   product={product}
                   lang={lang}
                   go={go}
-                  onQuick={() => setQuick(product)}
+                  onQuick={() => setQuick(product.id)}
                   selectable
                   selected={selected.includes(product.id)}
                   onSelect={() => toggleCompare(product.id)}
@@ -476,8 +542,8 @@ export function ChooserPage({ lang, go }: PageProps) {
                   inquirySelected={inquirySelected.includes(product.id)}
                   reason={pick(
                     lang,
-                    `مناسب لـ${useLabel(use as UseKey, lang)}${size !== "none" ? `، وبحجم ${size} الذي اخترته` : ""}.`,
-                    `Matches your ${useLabel(use as UseKey, lang).toLowerCase()} use${size !== "none" ? ` and selected ${formatSize(size, lang)} size` : ""}.`,
+                    `مناسب لـ${chooserUseLabel(use as UseKey)}${size !== "none" ? `، وبحجم ${size} الذي اخترته` : ""}.`,
+                    `Matches your ${chooserUseLabel(use as UseKey).toLowerCase()} use${size !== "none" ? ` and selected ${chooserSizeLabel(size)} size` : ""}.`,
                   )}
                 />
               ))}
@@ -559,9 +625,24 @@ export function ChooserPage({ lang, go }: PageProps) {
           )}
         </section>
       )}
-      {quick && (
-        <ProductQuickView product={quick} lang={lang} onClose={() => setQuick(null)} go={go} />
-      )}
+      {[...new Set([...selected, ...inquirySelected])].map((id, index) => (
+        <div key={id}>
+          <CatalogStatus query={selectionQueries[index]} lang={lang} />
+          <button
+            className="text-link"
+            onClick={() => {
+              setSelected((v) => v.filter((x) => x !== id));
+              setInquirySelected((v) => v.filter((x) => x !== id));
+            }}
+          >
+            {pick(lang, "إزالة", "Remove")}{" "}
+            {visibleData(selectionQueries[index])
+              ? productName(visibleData(selectionQueries[index])!, lang) || id
+              : id}
+          </button>
+        </div>
+      ))}
+      {quick && <RemoteQuickView id={quick} lang={lang} onClose={() => setQuick(null)} go={go} />}
     </main>
   );
 }
@@ -573,6 +654,7 @@ export function BusinessPage({ lang, go, search = "" }: PageProps) {
     ...(params.get("products")?.split(",") || []),
   ];
   const professionalIds = ["kawakeb", "nabateen", "balqa", "mumtaz", "aseel", "kawkab-soybean-oil"];
+  const professionalQuery = useProductLookup(professionalIds, lang);
   return (
     <main className="page-shell business-page">
       <section className="business-page-hero section-pad">
@@ -631,26 +713,32 @@ export function BusinessPage({ lang, go, search = "" }: PageProps) {
           <h2>{pick(lang, "خيارات للتحضير والتوريد", "Options for preparation and supply")}</h2>
         </div>
         <div className="professional-list">
-          {professionalIds.map((id) => {
-            const product = products.find((item) => item.id === id)!;
+          <CatalogStatus
+            query={professionalQuery}
+            lang={lang}
+            empty={professionalQuery.data?.items.length === 0}
+          />
+          {professionalQuery.data?.items.map((product) => {
+            const id = product.id;
             return (
-              <PageLink
-                key={id}
-                href={withLang(`/products/${product.slug}`, lang)}
-                go={go}
-                className="professional-row"
-              >
-                <ProductImage product={product} lang={lang} />
-                <div>
-                  <strong>{productName(product, lang)}</strong>
-                  <span>
-                    {(product.packaging || product.sizes)
-                      .map((value) => formatPackaging(value, lang))
-                      .join(" • ")}
-                  </span>
-                </div>
-                <b>{arrow(lang)}</b>
-              </PageLink>
+              <ProductTranslation key={id} product={product} lang={lang}>
+                <PageLink
+                  href={withLang(`/products/${product.slug}`, lang)}
+                  go={go}
+                  className="professional-row"
+                >
+                  <ProductImage product={product} lang={lang} />
+                  <div>
+                    <strong>{productName(product, lang)}</strong>
+                    <span>
+                      {(product.packaging || product.sizes)
+                        .map((value) => packageLabel(product, value, lang))
+                        .join(" • ")}
+                    </span>
+                  </div>
+                  <b>{arrow(lang)}</b>
+                </PageLink>
+              </ProductTranslation>
             );
           })}
         </div>
@@ -930,6 +1018,8 @@ export function RecipesPage({ lang, go }: PageProps) {
       `${recipe.titleAr} ${recipe.titleEn} ${recipe.descriptionAr} ${recipe.descriptionEn}`.toLowerCase();
     return text.includes(query.toLowerCase()) && (!category || recipe.category === category);
   });
+  const linkedQuery = useProductLookup([...new Set(recipes.flatMap((r) => r.productIds))], lang);
+  const products = linkedQuery.data?.items ?? [];
   return (
     <main className="page-shell recipes-page section-pad">
       <Breadcrumb lang={lang} go={go} items={[{ label: ui[lang].recipes }]} />
@@ -965,6 +1055,7 @@ export function RecipesPage({ lang, go }: PageProps) {
           </select>
         </label>
       </div>
+      <CatalogStatus query={linkedQuery} lang={lang} />
       <div className="recipe-grid">
         {visible.map((recipe) => {
           const linked = recipe.productIds
@@ -1033,9 +1124,8 @@ export function RecipeDetailPage({ recipe, lang, go }: PageProps & { recipe: Rec
   const related = recipes
     .filter((item) => item.slug !== recipe.slug && item.category === recipe.category)
     .slice(0, 3);
-  const linkedProducts = recipe.productIds
-    .map((id) => products.find((product) => product.id === id))
-    .filter(Boolean) as Product[];
+  const linkedQuery = useProductLookup(recipe.productIds, lang);
+  const linkedProducts = linkedQuery.data?.items ?? [];
   return (
     <main className="page-shell recipe-detail-page">
       <div className="section-pad">
@@ -1119,6 +1209,7 @@ export function RecipeDetailPage({ recipe, lang, go }: PageProps & { recipe: Rec
           </ol>
         </section>
       </div>
+      <CatalogStatus query={linkedQuery} lang={lang} empty={linkedQuery.data?.items.length === 0} />
       {linkedProducts.length > 0 ? (
         <section className="section-pad recipe-products">
           <div className="page-section-heading">

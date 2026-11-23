@@ -16,7 +16,8 @@
     "migration:revert": "pnpm build && node dist/database/manage.js revert",
     "migration:create": "typeorm migration:create",
     "test:database": "pnpm build && node scripts/check-database.mjs",
-    "test:compose": "pnpm build && node scripts/check-compose.mjs"
+    "test:compose": "pnpm build && node scripts/check-compose.mjs",
+    "catalog:seed": "pnpm build && node dist/catalog/seed-command.js"
   },
   "dependencies": {
     "@nestjs/common": "12.6.0",

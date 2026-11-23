@@ -1,12 +1,12 @@
+import { packageLabel, productUseLabel } from "./utils/productLabels";
+import type { ReactNode } from "react";
 import type { Product } from "./catalog";
 import {
   categoryLabel,
-  formatPackaging,
   productDescription,
   productName,
   secondaryProductName,
   ui,
-  useLabel,
   withLang,
   pick,
   arrow,
@@ -20,15 +20,18 @@ export default function ProductQuickView({
   lang,
   onClose,
   go,
+  feedback,
 }: {
   product: Product;
   lang: Lang;
   onClose: () => void;
   go: (href: string) => void;
+  feedback?: ReactNode;
 }) {
   const t = ui[lang];
   return (
     <Modal title={productName(product, lang)} onClose={onClose} lang={lang}>
+      {feedback}
       <div className="product-detail">
         {product.image ? (
           <img src={product.image} alt={productName(product, lang)} />
@@ -53,7 +56,7 @@ export default function ProductQuickView({
               <h3>{pick(lang, "الاستخدامات", "Uses")}</h3>
               <ul className="product-use-list">
                 {product.useKeys.map((use) => (
-                  <li key={use}>{useLabel(use, lang)}</li>
+                  <li key={use}>{productUseLabel(product, use, lang)}</li>
                 ))}
               </ul>
             </>
@@ -63,7 +66,7 @@ export default function ProductQuickView({
               <h3>{pick(lang, "الأحجام وخيارات التعبئة", "Sizes and packaging")}</h3>
               <p>
                 {(product.packaging || product.sizes)
-                  .map((value) => formatPackaging(value, lang))
+                  .map((value) => packageLabel(product, value, lang))
                   .join(" • ")}
               </p>
             </>
@@ -79,7 +82,7 @@ export default function ProductQuickView({
               {t.inquiry}
             </button>
             <p>{t.emailHint}</p>
-            <a className="text-link quick-full-link" href={productInquiryHref(product.id, lang)}>
+            <a className="text-link quick-full-link" href={productInquiryHref(product, lang)}>
               {lang === "ar" ? "تواصل بالبريد بدلًا من ذلك" : "Contact by email instead"}
             </a>
             <button

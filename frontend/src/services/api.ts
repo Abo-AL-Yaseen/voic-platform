@@ -14,8 +14,8 @@ export type ApiRequestOptions = Omit<RequestInit, "body"> & {
 };
 
 /**
- * Integration boundary for the future VOIC API.
- * No endpoint is configured and this client is not called by disconnected screens.
+ * Shared HTTP boundary. Public catalog consumers use this client; disconnected
+ * account, inquiry submission and staff screens do not call invented endpoints.
  */
 export async function apiRequest<T>(
   baseUrl: string,

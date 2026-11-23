@@ -1,9 +1,12 @@
-import { useMemo, useState } from "react";
+import { packageLabel } from "../utils/productLabels";
+import { useEffect, useMemo, useState } from "react";
 import AppLink from "../components/AppLink";
 import { IntegrationNotice, StatusBadge } from "../components/Feedback";
 import { SelectField, TextAreaField, TextField } from "../components/FormFields";
-import { products, type Product } from "../catalog";
-import { categoryLabel, formatPackaging, msg, productName, withLang, type Lang } from "../i18n";
+import { type Product } from "../catalog";
+import { useAllProducts, useSelectedProducts, visibleData } from "../hooks/products/queries";
+import CatalogStatus, { ProductTranslation } from "../components/CatalogStatus";
+import { categoryLabel, msg, productName, withLang, type Lang } from "../i18n";
 
 type Item = { productId: string; packageOption: string; quantity: string; unit: string };
 type Props = {
@@ -38,16 +41,32 @@ export default function NewInquiryPage({
   previewSuccess = false,
 }: Props) {
   const initialIds = useMemo(
-    () =>
-      [
-        ...new Set((new URLSearchParams(search).get("products") || "").split(",").filter(Boolean)),
-      ].filter((id) => products.some((product) => product.id === id)),
+    () => [
+      ...new Set((new URLSearchParams(search).get("products") || "").split(",").filter(Boolean)),
+    ],
     [search],
   );
   const [step, setStep] = useState<1 | 2 | 3>(initialStep);
   const [items, setItems] = useState<Item[]>(() =>
-    initialIds.map((id) => itemFromProduct(products.find((product) => product.id === id)!)),
+    initialIds.map((id) => ({ productId: id, packageOption: "", quantity: "1", unit: "pack" })),
   );
+  const catalogQuery = useAllProducts({ locale: lang });
+  const selectedQueries = useSelectedProducts(
+    items.map((item) => item.productId),
+    lang,
+  );
+  const products = catalogQuery.data ?? [];
+  useEffect(() => {
+    if (!catalogQuery.data) return;
+    setItems((current) =>
+      current.map((item) => {
+        const product = catalogQuery.data.find((p) => p.id === item.productId);
+        return product && !item.packageOption
+          ? { ...item, packageOption: itemFromProduct(product).packageOption }
+          : item;
+      }),
+    );
+  }, [catalogQuery.data]);
   const [details, setDetails] = useState({
     accountType: "company",
     name: "",
@@ -74,6 +93,13 @@ export default function NewInquiryPage({
     );
   const validateProducts = () => {
     const next = [];
+    if (selectedQueries.some((q) => !visibleData(q) || q.isError))
+      next.push(
+        msg(lang, {
+          ar: "تحقق من المنتجات المختارة أو أزل غير المتاح قبل المتابعة.",
+          en: "Resolve selected products or remove unavailable items before continuing.",
+        }),
+      );
     if (!items.length)
       next.push(
         msg(lang, {
@@ -229,84 +255,105 @@ export default function NewInquiryPage({
               label={`${items.length} ${msg(lang, text.products)}`}
             />
           </div>
+          <CatalogStatus query={catalogQuery} lang={lang} empty={catalogQuery.data?.length === 0} />
+          {items.map((item, index) => (
+            <div key={item.productId}>
+              <CatalogStatus query={selectedQueries[index]} lang={lang} />
+              {(!visibleData(selectedQueries[index]) || selectedQueries[index].isError) && (
+                <button
+                  className="text-link"
+                  onClick={() =>
+                    setItems((current) => current.filter((i) => i.productId !== item.productId))
+                  }
+                >
+                  {msg(lang, { ar: "إزالة", en: "Remove" })} {item.productId}
+                </button>
+              )}
+            </div>
+          ))}
           <div className="inquiry-product-grid">
             {products.map((product) => {
               const selected = items.find((item) => item.productId === product.id);
               const options = product.packaging || product.sizes;
               return (
-                <article
-                  key={product.id}
-                  className={`inquiry-product ${selected ? "selected" : ""}`}
-                >
-                  {product.image ? (
-                    <img src={product.image} alt="" />
-                  ) : (
-                    <div className="missing-product-image">—</div>
-                  )}
-                  <div>
-                    <span>{categoryLabel(product, lang)}</span>
-                    <h3>{productName(product, lang)}</h3>
-                    <label className="check-option">
-                      <input
-                        type="checkbox"
-                        checked={!!selected}
-                        onChange={() => toggle(product)}
-                      />
-                      <strong>
-                        {msg(lang, {
-                          ar: "أضف للاستفسار",
-                          en: "Add to inquiry",
-                        })}
-                      </strong>
-                    </label>
-                  </div>
-                  {selected && (
-                    <div className="inquiry-item-editor">
-                      <SelectField
-                        label={msg(lang, {
-                          ar: "خيار التعبئة",
-                          en: "Package option",
-                        })}
-                        value={selected.packageOption}
-                        onChange={(e) => updateItem(product.id, { packageOption: e.target.value })}
-                      >
-                        {options.length ? (
-                          options.map((option) => (
-                            <option key={option} value={option}>
-                              {formatPackaging(option, lang)}
-                            </option>
-                          ))
-                        ) : (
-                          <option value="contact">
-                            {msg(lang, {
-                              ar: "تواصلوا معي بشأن خيارات التعبئة",
-                              en: "Contact me about packaging options",
-                            })}
-                          </option>
-                        )}
-                      </SelectField>
-                      <div className="quantity-row">
-                        <TextField
-                          label={msg(lang, { ar: "الكمية", en: "Quantity" })}
-                          type="number"
-                          min="1"
-                          step="1"
-                          value={selected.quantity}
-                          onChange={(e) => updateItem(product.id, { quantity: e.target.value })}
+                <ProductTranslation key={product.id} product={product} lang={lang}>
+                  <article className={`inquiry-product ${selected ? "selected" : ""}`}>
+                    {product.image ? (
+                      <img src={product.image} alt="" />
+                    ) : (
+                      <div className="missing-product-image">—</div>
+                    )}
+                    <div>
+                      <span>{categoryLabel(product, lang)}</span>
+                      <h3>{productName(product, lang)}</h3>
+                      <label className="check-option">
+                        <input
+                          type="checkbox"
+                          checked={!!selected}
+                          onChange={() => toggle(product)}
                         />
-                        <SelectField
-                          label={msg(lang, { ar: "الوحدة", en: "Unit" })}
-                          value={selected.unit}
-                          onChange={(e) => updateItem(product.id, { unit: e.target.value })}
-                        >
-                          <option value="pack">{msg(lang, { ar: "عبوة", en: "pack" })}</option>
-                          <option value="carton">{msg(lang, { ar: "كرتون", en: "carton" })}</option>
-                          <option value="pallet">{msg(lang, { ar: "منصة", en: "pallet" })}</option>
-                        </SelectField>
-                      </div>
+                        <strong>
+                          {msg(lang, {
+                            ar: "أضف للاستفسار",
+                            en: "Add to inquiry",
+                          })}
+                        </strong>
+                      </label>
                     </div>
-                  )}
-                </article>
+                    {selected && (
+                      <div className="inquiry-item-editor">
+                        <SelectField
+                          label={msg(lang, {
+                            ar: "خيار التعبئة",
+                            en: "Package option",
+                          })}
+                          value={selected.packageOption}
+                          onChange={(e) =>
+                            updateItem(product.id, { packageOption: e.target.value })
+                          }
+                        >
+                          {options.length ? (
+                            options.map((option) => (
+                              <option key={option} value={option}>
+                                {packageLabel(product, option, lang)}
+                              </option>
+                            ))
+                          ) : (
+                            <option value="contact">
+                              {msg(lang, {
+                                ar: "تواصلوا معي بشأن خيارات التعبئة",
+                                en: "Contact me about packaging options",
+                              })}
+                            </option>
+                          )}
+                        </SelectField>
+                        <div className="quantity-row">
+                          <TextField
+                            label={msg(lang, { ar: "الكمية", en: "Quantity" })}
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={selected.quantity}
+                            onChange={(e) => updateItem(product.id, { quantity: e.target.value })}
+                          />
+                          <SelectField
+                            label={msg(lang, { ar: "الوحدة", en: "Unit" })}
+                            value={selected.unit}
+                            onChange={(e) => updateItem(product.id, { unit: e.target.value })}
+                          >
+                            <option value="pack">{msg(lang, { ar: "عبوة", en: "pack" })}</option>
+                            <option value="carton">
+                              {msg(lang, { ar: "كرتون", en: "carton" })}
+                            </option>
+                            <option value="pallet">
+                              {msg(lang, { ar: "منصة", en: "pallet" })}
+                            </option>
+                          </SelectField>
+                        </div>
+                      </div>
+                    )}
+                  </article>
+                </ProductTranslation>
               );
             })}
           </div>
@@ -398,8 +445,14 @@ export default function NewInquiryPage({
             </button>
           </div>
           <div className="review-items">
-            {items.map((item) => {
-              const product = products.find((entry) => entry.id === item.productId)!;
+            {items.map((item, index) => {
+              const product = visibleData(selectedQueries[index]);
+              if (!product)
+                return (
+                  <div key={item.productId}>
+                    <CatalogStatus query={selectedQueries[index]} lang={lang} />
+                  </div>
+                );
               return (
                 <article key={item.productId}>
                   <img src={product.image || ""} alt="" />
@@ -411,7 +464,7 @@ export default function NewInquiryPage({
                             ar: "التواصل بشأن التعبئة",
                             en: "Contact about packaging",
                           })
-                        : formatPackaging(item.packageOption, lang)}
+                        : packageLabel(product, item.packageOption, lang)}
                     </p>
                   </div>
                   <strong>

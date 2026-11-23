@@ -32,6 +32,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      proxy: { "/api/v1": { target: "http://127.0.0.1:3000" } },
       host: process.env.FIGMA_DEV_SERVER_HOST || "0.0.0.0",
       port: parseInt(process.env.PORT || "8443"),
       strictPort: true,

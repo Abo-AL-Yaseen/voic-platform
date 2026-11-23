@@ -1,5 +1,6 @@
+import { sizeLabel } from "./utils/productLabels";
 import { lazy, Suspense, useEffect, useRef, useState, type ComponentType } from "react";
-import { assets, featuredProducts, products, usageCards } from "./catalog";
+import { assets, usageCards } from "./catalog";
 import {
   arrow,
   direction,
@@ -19,11 +20,14 @@ import {
   ChooserPage,
   ContactPage,
   NotFoundPage,
-  ProductDetailPage,
+  ProductRoutePage,
   RecipeDetailPage,
   RecipesPage,
 } from "./Pages";
 import ProductsPage from "./ProductsPage";
+import { useFeaturedProducts } from "./hooks/products/queries";
+import CatalogStatus, { ProductTranslation } from "./components/CatalogStatus";
+import { decodeRouteSegment } from "./utils/productScope";
 import { recipes } from "./recipes";
 import {
   ForgotPasswordPage,
@@ -107,16 +111,9 @@ export default function App() {
     document.documentElement.lang = lang;
     document.documentElement.dir = direction(lang);
     document.querySelector("main")?.setAttribute("id", "main-content");
-    const productSegment = /^\/products\/([^/]+)$/.exec(path)?.[1];
     const recipeSegment = /^\/recipes\/([^/]+)$/.exec(path)?.[1];
     const missingDetail =
-      (productSegment &&
-        !products.some(
-          (item) =>
-            item.slug === decodeURIComponent(productSegment) ||
-            item.id === decodeURIComponent(productSegment),
-        )) ||
-      (recipeSegment && !recipes.some((item) => item.slug === decodeURIComponent(recipeSegment)));
+      recipeSegment && !recipes.some((item) => item.slug === decodeRouteSegment(recipeSegment));
     const routeTitle = missingDetail
       ? pick(lang, "صفحة غير موجودة", "Page not found")
       : path === "/"
@@ -211,7 +208,7 @@ export default function App() {
     if (lang !== "ar") params.set("lang", lang);
     else params.delete("lang");
     const href = `/products${params.size ? `?${params}` : ""}`;
-    window.history.replaceState(null, "", href);
+    window.history.pushState(null, "", href);
     setLocation(href);
   }
 
@@ -219,6 +216,7 @@ export default function App() {
     const next = new URL(window.location.href);
     if (nextLang === "ar") next.searchParams.delete("lang");
     else next.searchParams.set("lang", nextLang);
+    if (path === "/products") next.searchParams.delete("page");
     const href = `${next.pathname}${next.search}${next.hash}`;
     window.history.pushState(null, "", href);
     setLocation(href);
@@ -261,15 +259,13 @@ export default function App() {
       />
     );
   } else if (productMatch) {
-    const product = products.find(
-      (item) =>
-        item.slug === decodeURIComponent(productMatch[1]) ||
-        item.id === decodeURIComponent(productMatch[1]),
-    );
-    page = product ? (
-      <ProductDetailPage product={product} lang={lang} go={go} search={url.search} />
-    ) : (
-      <NotFoundPage lang={lang} go={go} />
+    page = (
+      <ProductRoutePage
+        id={decodeRouteSegment(productMatch[1])}
+        lang={lang}
+        go={go}
+        search={url.search}
+      />
     );
   } else if (path === "/find-your-product") {
     page = <ChooserPage lang={lang} go={go} search={url.search} />;
@@ -282,7 +278,7 @@ export default function App() {
   } else if (path === "/recipes") {
     page = <RecipesPage lang={lang} go={go} search={url.search} />;
   } else if (recipeMatch) {
-    const recipe = recipes.find((item) => item.slug === decodeURIComponent(recipeMatch[1]));
+    const recipe = recipes.find((item) => item.slug === decodeRouteSegment(recipeMatch[1]));
     page = recipe ? (
       <RecipeDetailPage recipe={recipe} lang={lang} go={go} search={url.search} />
     ) : (
@@ -390,6 +386,8 @@ export default function App() {
 }
 
 function HomePage({ lang, go }: { lang: Lang; go: (href: string) => void }) {
+  const featuredQuery = useFeaturedProducts(lang);
+  const featuredProducts = featuredQuery.data?.items ?? [];
   return (
     <main>
       <section className="hero section-pad" id="home">
@@ -504,25 +502,26 @@ function HomePage({ lang, go }: { lang: Lang; go: (href: string) => void }) {
             {pick(lang, "تصفّح كل المنتجات", "Browse all products")} {arrow(lang)}
           </AppLink>
         </div>
+        <CatalogStatus
+          query={featuredQuery}
+          lang={lang}
+          empty={featuredQuery.data?.items.length === 0}
+        />
         <div className="product-grid" id="product-list">
           {featuredProducts.map((product) => (
-            <article className="product-card" key={product.id}>
-              <img src={product.image} alt={productName(product, lang)} />
-              <h3>{productName(product, lang)}</h3>
-              <p>{productDescription(product, lang)}</p>
-              <strong className="sizes">
-                {product.sizes
-                  .map((size) =>
-                    lang === "ar"
-                      ? size
-                      : size.replace("كغم", "kg").replace("غم", "g").replace("لتر", "L"),
-                  )
-                  .join(" • ")}
-              </strong>
-              <AppLink href={withLang(`/products?product=${product.id}`, lang)} go={go}>
-                {pick(lang, "اكتشف المنتج", "Explore product")} {arrow(lang)}
-              </AppLink>
-            </article>
+            <ProductTranslation key={product.id} product={product} lang={lang}>
+              <article className="product-card">
+                <img src={product.image} alt={productName(product, lang)} />
+                <h3>{productName(product, lang)}</h3>
+                <p>{productDescription(product, lang)}</p>
+                <strong className="sizes">
+                  {product.sizes.map((size) => sizeLabel(product, size, lang)).join(" • ")}
+                </strong>
+                <AppLink href={withLang(`/products?product=${product.id}`, lang)} go={go}>
+                  {pick(lang, "اكتشف المنتج", "Explore product")} {arrow(lang)}
+                </AppLink>
+              </article>
+            </ProductTranslation>
           ))}
         </div>
       </section>

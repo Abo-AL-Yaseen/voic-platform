@@ -1,9 +1,10 @@
 # VOIC backend foundation
 
-This is a local development foundation, not a production deployment. The frontend remains
-unchanged and disconnected from product APIs. No business entities, catalog endpoints,
-accounts, sessions or staff permissions are implemented here. Arabic and English remain
-the only product languages. Project rules: [project plan](../docs/project-plan.md).
+This is a local development backend, not a production deployment. The public product
+catalog now uses explicit TypeORM entities/migrations and native MySQL, integrated with the
+existing frontend. Accounts, sessions, staff writes and inquiry submission remain disconnected.
+Arabic and English are the only product languages. Project rules: [project plan](../docs/project-plan.md).
+Schema, publication rules, API contracts, import and checks: [catalog implementation](../docs/catalog-implementation.md).
 All VOIC work stays on the permanent `mahmoud` branch; do not create feature/task branches.
 The application and migrations have **no Docker dependency**. Their MySQL connection uses
 only `DB_*` environment settings. The chosen local setup (2026-11-23) is native MySQL
@@ -97,7 +98,8 @@ The helper connects only to native `127.0.0.1:3306` and:
   creates a random new disposable test database/user, runs
   `check-database.mjs`, and removes only test resources created by this invocation.
 
-No business tables/migrations are added to development. If provisioning partially fails,
+Initial server provisioning does not run catalog migrations; run the explicit commands below.
+If provisioning partially fails,
 new development resources are retained and the helper reports the failed stage without SQL
 or secrets; inspect those named resources in Workbench before any retry. Never drop/reset an
 existing development schema to bypass its collision guard. The temporary test password lives
@@ -127,7 +129,8 @@ pnpm.cmd start
 ```
 
 For development, use `pnpm.cmd build:watch` in one terminal and `pnpm.cmd start:dev` in another;
-the latter watches compiled JS after its initial build. No frontend requests are wired here.
+the latter watches compiled JS after its initial build. Public product reads are wired through
+feature hooks; authentication and inquiry submission remain outside this integration.
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:3000/api/v1/health/live
@@ -171,10 +174,10 @@ on Unix. Graceful shutdown requires the process manager to deliver supported sig
 
 ## Explicit migrations
 
-There are no business tables or versioned migrations yet. `synchronize`, `dropSchema` and
-`migrationsRun` are all false. `src/database/migrations/` is intentionally empty. Migration
-commands may create only TypeORM's `voic_migrations` bookkeeping table before business
-migrations exist. Do not interpret that table as a catalog schema.
+The catalog has four entities and one explicit migration, `PublicCatalog1795435200000`.
+`synchronize`, `dropSchema` and `migrationsRun` are all false. Startup never applies migrations.
+`voic_migrations` records operator-run migrations. Inspect the target before applying changes;
+never test rollback on development. Full DDL/import behavior is in [the catalog guide](../docs/catalog-implementation.md).
 
 ```powershell
 pnpm.cmd migration:show
@@ -183,7 +186,7 @@ pnpm.cmd migration:run
 $env:CONFIRM_MIGRATION_REVERT = 'yes'
 pnpm.cmd migration:revert
 Remove-Item Env:CONFIRM_MIGRATION_REVERT
-# Future approved migration scaffold; does not connect to the database:
+# A future approved migration scaffold; does not connect to the database:
 pnpm.cmd migration:create src/database/migrations/ApprovedChange
 ```
 
@@ -200,16 +203,18 @@ is provided. Do not run destructive commands against an existing database for te
 pnpm.cmd test
 pnpm.cmd typecheck
 pnpm.cmd build
-# Native server running; prompts for administrator password locally:
-node scripts/setup-native-mysql.mjs --test-only
+# Catalog verification on a fresh disposable native database; local hidden admin prompt:
+node scripts/setup-native-mysql.mjs --catalog-test
 ```
 
-The native helper runs the same disposable verification fixture described below. It creates
+With `--catalog-test`, the native helper runs `scripts/check-catalog.mjs`, covering the real
+catalog migration, repeatable import, public contracts and rollback/restoration. It creates
 its own random test database/user and removes only those resources. It does not reset the
 development database. Legacy `test:compose` tooling is retained but is not part of the chosen
 local workflow and must not be invoked for this task.
 
-For a native or other non-Compose disposable database supplied by an administrator, run
+The legacy foundation-only `test:database` command remains available. For its native
+disposable database supplied by an administrator, run
 `pnpm.cmd test:database` with `NODE_ENV=test`, a new empty
 `DB_DATABASE=voic_test_<16 lowercase hex characters>`, its dedicated user's credentials and
 `CONFIRM_DISPOSABLE_DATABASE=yes` in the private environment. For example, after provisioning
@@ -282,7 +287,7 @@ This is historical context, not an instruction to resume Docker. The newer nativ
 supersedes the image target and Docker attempts. Those containers/volumes are untouched by
 the native task. Native verification results are recorded separately below.
 
-## Native verification completed (2026-11-23)
+## Historical native foundation verification (2026-11-23, before catalog)
 
 The user ran the interactive native setup successfully and confirmed the full disposable
 verification: real connection, InnoDB, restricted grants, migration command execution,
@@ -302,4 +307,22 @@ Backend tests passed 10/10 on rerun, typecheck and build passed. The first run h
 changing the timeout. Both new scripts passed syntax checks and setup refused non-interactive
 execution. No dependencies, frontend files, Docker resources or unrelated databases/users
 were changed. `synchronize`, `dropSchema` and `migrationsRun` remain false. No business tables
-or feature integration were added. See [the full verification record](../docs/current-state.md#native-mysql-setup-verified-2026-11-23).
+or feature integration were added. See [the full verification record](../docs/current-state.md#historical-native-foundation-verified-2026-11-23-before-catalog).
+
+## Catalog development workflow
+
+The native server/user are already provisioned on this workstation. Do not rerun initial
+provisioning over existing resources. From `backend/`:
+
+```powershell
+pnpm.cmd migration:show
+pnpm.cmd migration:run
+$env:CONFIRM_DEVELOPMENT_CATALOG = 'yes'
+try { pnpm.cmd catalog:seed } finally { Remove-Item Env:CONFIRM_DEVELOPMENT_CATALOG }
+pnpm.cmd start
+```
+
+The import preserves every existing product and term; it adds only missing records, and
+never promotes development content to production approval. Original ingredients are retained
+unpublished. No local seed input is used as a frontend fallback. See the
+[implemented contracts and verification commands](../docs/catalog-implementation.md).
