@@ -1,9 +1,12 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import AppLink from "../components/AppLink";
 import { ErrorSummary, PasswordField, TextField } from "../components/FormFields";
-import { IntegrationNotice, StatusBadge } from "../components/Feedback";
+import { StatusBadge } from "../components/Feedback";
 import { msg, withLang, type Lang } from "../i18n";
 import { safeInternalPath } from "../utils/navigation";
+
+import { useAuth, useAuthAction, useLogin, authFailure } from "../hooks/auth/queries";
+import * as authService from "../services/auth";
 
 type AuthPageProps = {
   lang: Lang;
@@ -29,12 +32,6 @@ const invalidEmail = (lang: Lang) =>
     ar: "أدخل بريدًا إلكترونيًا صحيحًا.",
     en: "Enter a valid email address.",
   });
-const disconnected = (lang: Lang) =>
-  msg(lang, {
-    ar: "تعذّر المتابعة لأن خدمة الحسابات غير متصلة بعد. لم يتم إرسال أو حفظ أي بيانات.",
-    en: "The account service is not connected yet. No data was sent or saved.",
-  });
-
 function AuthShell({
   lang,
   title,
@@ -72,433 +69,532 @@ function AuthShell({
   );
 }
 
-export function LoginPage({ lang, go, search = "", previewState = "default" }: AuthPageProps) {
-  const params = new URLSearchParams(search);
-  const returnTo = safeInternalPath(params.get("returnTo"));
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const text = (lang: Lang, ar: string, en: string) => msg(lang, { ar, en });
+const passHint = (lang: Lang) =>
+  text(lang, "استخدم 15 محرفًا على الأقل، وبحد أقصى 128.", "Use 15 to 128 characters.");
+const contextPath = (path: string, returnTo: string) =>
+  `${path}?returnTo=${encodeURIComponent(returnTo)}`;
+const returnPath = (search: string) =>
+  safeInternalPath(new URLSearchParams(search).get("returnTo"));
+function TokenFeedback({ error, success, lang }: { error: unknown; success?: string; lang: Lang }) {
+  return (
+    <>
+      {error && (
+        <div className="inline-alert" role="alert">
+          {authFailure(error, lang)}
+        </div>
+      )}
+      {success && <p role="status">{success}</p>}
+    </>
+  );
+}
+export function LoginPage({ lang, go, search = "", previewState }: AuthPageProps) {
+  const returnTo = returnPath(search),
+    login = useLogin();
+  const [email, setEmail] = useState(""),
+    [password, setPassword] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    const next = [];
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.push(invalidEmail(lang));
-    if (!password) next.push(required(lang));
-    if (!next.length) next.push(disconnected(lang));
-    setErrors(next);
-  };
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (login.isPending) return;
+    if (!email || !password) {
+      setErrors([required(lang)]);
+      return;
+    }
+    setErrors([]);
+    try {
+      const result = await login.mutateAsync({ email: email.trim(), password });
+      setPassword("");
+      const user = result.user!;
+      const destination =
+        user.role !== "customer" ? "/staff" : returnTo.startsWith("/staff") ? "/account" : returnTo;
+      go(
+        withLang(
+          user.role === "customer" && !user.emailVerified
+            ? contextPath("/verify-email", destination)
+            : destination,
+          lang,
+        ),
+      );
+    } catch {
+      /* Mutation state owns the safe error. */
+    }
+  }
   return (
     <AuthShell
       lang={lang}
-      title={msg(lang, { ar: "تسجيل الدخول", en: "Sign in" })}
-      description={msg(lang, {
-        ar: "مدخل واحد للعملاء والموظفين المصرّح لهم.",
-        en: "One secure entry for customers and authorized employees.",
-      })}
-    >
-      {previewState === "session-expired" && (
-        <div className="inline-alert" role="alert">
-          {msg(lang, {
-            ar: "انتهت الجلسة. سجّل الدخول للمتابعة.",
-            en: "Your session expired. Sign in to continue.",
-          })}
-        </div>
+      title={text(lang, "تسجيل الدخول", "Sign in")}
+      description={text(
+        lang,
+        "مدخل واحد للعملاء والموظفين المصرّح لهم.",
+        "One secure entry for customers and authorized employees.",
       )}
-      <ErrorSummary
-        title={msg(lang, { ar: "راجع البيانات", en: "Check your details" })}
-        errors={errors}
-      />
-      <form className="stack-form" onSubmit={submit} noValidate>
+    >
+      {(previewState === "session-expired" ||
+        new URLSearchParams(search).get("expired") === "1") && (
+        <p role="alert">
+          {text(
+            lang,
+            "انتهت الجلسة. سجّل الدخول للمتابعة.",
+            "Your session expired. Sign in to continue.",
+          )}
+        </p>
+      )}
+      <ErrorSummary title={text(lang, "راجع البيانات", "Check your details")} errors={errors} />
+      <TokenFeedback error={login.error} lang={lang} />
+      <form className="stack-form" onSubmit={submit}>
         <TextField
-          label={msg(lang, { ar: "البريد الإلكتروني", en: "Email" })}
+          label={text(lang, "البريد الإلكتروني", "Email")}
           type="email"
           autoComplete="email"
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
           required
+          maxLength={254}
         />
         <PasswordField
           lang={lang}
-          label={msg(lang, { ar: "كلمة المرور", en: "Password" })}
+          label={text(lang, "كلمة المرور", "Password")}
           autoComplete="current-password"
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           required
+          maxLength={128}
         />
-        <AppLink href={withLang("/forgot-password", lang)} go={go} className="text-link">
-          {msg(lang, {
-            ar: "نسيت كلمة المرور؟",
-            en: "Forgot password?",
-          })}
-        </AppLink>
-        <button className="button button-primary" type="submit">
-          {msg(lang, { ar: "تسجيل الدخول", en: "Sign in" })}
+        <button className="button button-primary" disabled={login.isPending}>
+          {login.isPending
+            ? text(lang, "جارٍ الدخول…", "Signing in…")
+            : text(lang, "تسجيل الدخول", "Sign in")}
         </button>
       </form>
-      <p className="auth-switch">
-        {msg(lang, { ar: "ما عندك حساب؟", en: "New to VOIC?" })}{" "}
+      <AppLink
+        className="text-link"
+        go={go}
+        href={withLang(contextPath("/forgot-password", returnTo), lang)}
+      >
+        {text(lang, "نسيت كلمة المرور؟", "Forgot password?")}
+      </AppLink>
+      <p>
         <AppLink
-          href={withLang(`/register?returnTo=${encodeURIComponent(returnTo)}`, lang)}
-          go={go}
           className="text-link"
+          go={go}
+          href={withLang(contextPath("/register", returnTo), lang)}
         >
-          {msg(lang, { ar: "أنشئ حسابًا", en: "Create an account" })}
+          {text(lang, "أنشئ حسابًا", "Create an account")}
         </AppLink>
       </p>
     </AuthShell>
   );
 }
-
 export function RegisterPage({ lang, go, search = "" }: AuthPageProps) {
-  const returnTo = safeInternalPath(new URLSearchParams(search).get("returnTo"));
+  const returnTo = returnPath(search),
+    mutation = useAuthAction(authService.register);
   const [kind, setKind] = useState<"individual" | "company">("individual");
   const [values, setValues] = useState({
     name: "",
     company: "",
+    country: "",
+    phone: "",
     email: "",
     password: "",
     confirm: "",
   });
   const [errors, setErrors] = useState<string[]>([]);
   const set = (key: keyof typeof values, value: string) => setValues({ ...values, [key]: value });
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    const next: string[] = [];
-    if (!values.name.trim()) next.push(required(lang));
-    if (kind === "company" && !values.company.trim()) next.push(required(lang));
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) next.push(invalidEmail(lang));
-    if (values.password.length < 10)
-      next.push(
-        msg(lang, {
-          ar: "يجب أن تتكون كلمة المرور من 10 أحرف على الأقل.",
-          en: "Use at least 10 characters for the password.",
-        }),
-      );
-    if (values.password !== values.confirm)
-      next.push(
-        msg(lang, {
-          ar: "كلمتا المرور غير متطابقتين.",
-          en: "Passwords do not match.",
-        }),
-      );
-    if (!next.length) next.push(disconnected(lang));
-    setErrors([...new Set(next)]);
-  };
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (mutation.isPending) return;
+    if (values.password !== values.confirm) {
+      setErrors([text(lang, "كلمتا المرور غير متطابقتين.", "Passwords do not match.")]);
+      return;
+    }
+    setErrors([]);
+    try {
+      await mutation.mutateAsync({
+        name: values.name,
+        kind,
+        company: kind === "company" ? values.company : undefined,
+        country: values.country,
+        phone: values.phone,
+        email: values.email.trim(),
+        password: values.password,
+        lang,
+        returnTo,
+      });
+      setValues({ ...values, password: "", confirm: "" });
+      go(withLang(contextPath("/verify-email", returnTo), lang));
+    } catch {}
+  }
   return (
     <AuthShell
       lang={lang}
-      title={msg(lang, {
-        ar: "إنشاء حساب عميل",
-        en: "Create a customer account",
-      })}
-      description={msg(lang, {
-        ar: "للأفراد والشركات. لا يمكن إنشاء حساب موظف من التسجيل العام.",
-        en: "For individuals and companies. Staff accounts cannot be created through public registration.",
-      })}
+      title={text(lang, "إنشاء حساب عميل", "Create a customer account")}
+      description={text(
+        lang,
+        "للأفراد والشركات دون موافقة موظف. التسجيل العام ينشئ حساب عميل فقط.",
+        "For individuals and companies without staff approval. Public registration creates customer accounts only.",
+      )}
     >
-      <ErrorSummary
-        title={msg(lang, { ar: "راجع البيانات", en: "Check your details" })}
-        errors={errors}
-      />
-      <form className="stack-form" onSubmit={submit} noValidate>
+      <ErrorSummary title={text(lang, "راجع البيانات", "Check your details")} errors={errors} />
+      <TokenFeedback error={mutation.error} lang={lang} />
+      <form className="stack-form" onSubmit={submit}>
         <fieldset className="segmented-control">
-          <legend>{msg(lang, { ar: "نوع الحساب", en: "Account type" })}</legend>
-          <label>
-            <input
-              type="radio"
-              checked={kind === "individual"}
-              onChange={() => setKind("individual")}
-            />
-            <span>{msg(lang, { ar: "فرد", en: "Individual" })}</span>
-          </label>
-          <label>
-            <input type="radio" checked={kind === "company"} onChange={() => setKind("company")} />
-            <span>{msg(lang, { ar: "شركة", en: "Company" })}</span>
-          </label>
+          <legend>{text(lang, "نوع الحساب", "Account type")}</legend>
+          {(["individual", "company"] as const).map((k) => (
+            <label key={k}>
+              <input type="radio" checked={kind === k} onChange={() => setKind(k)} />
+              <span>
+                {k === "individual"
+                  ? text(lang, "فرد", "Individual")
+                  : text(lang, "شركة", "Company")}
+              </span>
+            </label>
+          ))}
         </fieldset>
-        <TextField
-          label={msg(lang, { ar: "الاسم الكامل", en: "Full name" })}
-          value={values.name}
-          onChange={(e) => set("name", e.target.value)}
-          required
-        />
-        {kind === "company" && (
+        {(
+          ["name", ...(kind === "company" ? ["company"] : []), "country", "phone"] as (
+            | "name"
+            | "company"
+            | "country"
+            | "phone"
+          )[]
+        ).map((k) => (
           <TextField
-            label={msg(lang, { ar: "اسم الشركة", en: "Company name" })}
-            value={values.company}
-            onChange={(e) => set("company", e.target.value)}
-            required
+            key={k}
+            label={
+              {
+                name: text(lang, "الاسم الكامل", "Full name"),
+                company: text(lang, "اسم الشركة", "Company name"),
+                country: text(lang, "الدولة", "Country"),
+                phone: text(lang, "الهاتف (اختياري)", "Phone (optional)"),
+              }[k]
+            }
+            value={values[k]}
+            onChange={(e) => set(k, e.target.value)}
+            required={k !== "phone"}
+            maxLength={k === "company" ? 150 : k === "phone" ? 40 : 100}
           />
-        )}
+        ))}
         <TextField
-          label={msg(lang, { ar: "البريد الإلكتروني", en: "Email" })}
+          label={text(lang, "البريد الإلكتروني", "Email")}
           type="email"
           autoComplete="email"
           value={values.email}
           onChange={(e) => set("email", e.target.value)}
           required
+          maxLength={254}
         />
         <PasswordField
           lang={lang}
-          label={msg(lang, { ar: "كلمة المرور", en: "Password" })}
+          label={text(lang, "كلمة المرور", "Password")}
           autoComplete="new-password"
           value={values.password}
           onChange={(e) => set("password", e.target.value)}
           required
-          hint={msg(lang, {
-            ar: "10 أحرف على الأقل.",
-            en: "At least 10 characters.",
-          })}
+          minLength={15}
+          maxLength={128}
+          hint={passHint(lang)}
         />
         <PasswordField
           lang={lang}
-          label={msg(lang, {
-            ar: "تأكيد كلمة المرور",
-            en: "Confirm password",
-          })}
+          label={text(lang, "تأكيد كلمة المرور", "Confirm password")}
           autoComplete="new-password"
           value={values.confirm}
           onChange={(e) => set("confirm", e.target.value)}
           required
+          minLength={15}
+          maxLength={128}
         />
         <p className="form-hint">
-          {msg(lang, {
-            ar: "ستحتاج إلى التحقق من بريدك قبل إرسال استفسار توريد.",
-            en: "You will need to verify your email before submitting a supply inquiry.",
-          })}{" "}
-          <AppLink href={withLang("/privacy", lang)} go={go} className="text-link">
-            {msg(lang, { ar: "مسودة الخصوصية", en: "Privacy draft" })}
-          </AppLink>
+          {text(
+            lang,
+            "يجب تأكيد البريد قبل إرسال استفسار توريد. إرسال الاستفسارات لم يُربط بعد.",
+            "Verify your email before supply inquiry submission. Submission is not connected yet.",
+          )}
         </p>
-        <button className="button button-primary" type="submit">
-          {msg(lang, { ar: "إنشاء الحساب", en: "Create account" })}
+        <AppLink className="text-link" href={withLang("/privacy", lang)} go={go}>
+          {text(lang, "مسودة الخصوصية", "Privacy draft")}
+        </AppLink>
+        <button className="button button-primary" disabled={mutation.isPending}>
+          {mutation.isPending
+            ? text(lang, "جارٍ الإرسال…", "Sending…")
+            : text(lang, "إنشاء الحساب", "Create account")}
         </button>
       </form>
-      <AppLink
-        href={withLang(`/login?returnTo=${encodeURIComponent(returnTo)}`, lang)}
-        go={go}
-        className="text-link"
-      >
-        {msg(lang, {
-          ar: "عندي حساب",
-          en: "I already have an account",
-        })}
+      <AppLink className="text-link" go={go} href={withLang(contextPath("/login", returnTo), lang)}>
+        {text(lang, "عندي حساب", "I already have an account")}
       </AppLink>
     </AuthShell>
   );
 }
-
-export function VerifyEmailPage({ lang, go, previewState = "default" }: AuthPageProps) {
-  const states = {
-    default: msg(lang, {
-      ar: "تحقق من بريدك للمتابعة",
-      en: "Verify your email to continue",
-    }),
-    pending: msg(lang, { ar: "جارٍ التحقق", en: "Verification pending" }),
-    success: msg(lang, {
-      ar: "تم التحقق من البريد",
-      en: "Email verified",
-    }),
-    expired: msg(lang, {
-      ar: "انتهت صلاحية الرابط",
-      en: "Verification link expired",
-    }),
-    invalid: msg(lang, {
-      ar: "رابط التحقق غير صالح",
-      en: "Verification link is invalid",
-    }),
-    error: msg(lang, {
-      ar: "تعذّر التحقق",
-      en: "Verification failed",
-    }),
-    "session-expired": "",
-  };
-  const [notice, setNotice] = useState("");
+function linkToken() {
+  return new URLSearchParams(window.location.hash.slice(1)).get("token") || "";
+}
+function useLinkToken() {
+  const [token, setToken] = useState(linkToken);
+  useEffect(() => {
+    const update = () => setToken(linkToken());
+    window.addEventListener("hashchange", update);
+    window.addEventListener("popstate", update);
+    return () => {
+      window.removeEventListener("hashchange", update);
+      window.removeEventListener("popstate", update);
+    };
+  }, []);
+  return token;
+}
+export function VerifyEmailPage({ lang, go, search = "" }: AuthPageProps) {
+  const auth = useAuth(),
+    verify = useAuthAction(authService.confirmVerification, true),
+    resend = useAuthAction(authService.resendVerification);
+  const [email, setEmail] = useState(""),
+    token = useLinkToken();
+  useEffect(() => {
+    verify.reset();
+    resend.reset();
+  }, [token]);
+  const returnTo = returnPath(search),
+    verified = verify.isSuccess || (!token && auth.session?.user?.emailVerified);
   return (
     <AuthShell
       lang={lang}
-      title={states[previewState]}
-      description={msg(lang, {
-        ar: "التحقق مطلوب قبل إرسال استفسار توريد، بينما يبقى التصفح متاحًا.",
-        en: "Verification is required before submitting an inquiry; browsing remains public.",
-      })}
+      title={
+        verified
+          ? text(lang, "تم التحقق من البريد", "Email verified")
+          : text(lang, "تحقق من بريدك للمتابعة", "Verify your email to continue")
+      }
+      description={text(
+        lang,
+        "إن كان الحساب مؤهلًا فستصل رسالة التحقق. التصفح وتسجيل الدخول متاحان دون تأكيد، وإرسال الاستفسارات يتطلب التأكيد.",
+        "If eligible, a verification message will be sent. Browsing and sign-in remain available; inquiry submission requires verification.",
+      )}
     >
       <StatusBadge
-        status={
-          previewState === "success"
-            ? "success"
-            : previewState === "expired" || previewState === "invalid"
-              ? "warning"
-              : "info"
+        status={verified ? "success" : "warning"}
+        label={
+          verified
+            ? text(lang, "تم التحقق", "Verified")
+            : text(lang, "لم يتم التحقق بعد", "Not verified yet")
         }
-        label={states[previewState]}
       />
-      {notice && (
-        <div className="inline-alert" role="alert">
-          {notice}
-        </div>
+      <TokenFeedback
+        error={verify.error || resend.error}
+        lang={lang}
+        success={
+          resend.isSuccess
+            ? text(
+                lang,
+                "تم قبول الطلب. تحقق من بريدك إن كان الحساب مؤهلًا.",
+                "Request accepted. Check your email if the account is eligible.",
+              )
+            : undefined
+        }
+      />
+      {token && !verified && (
+        <button
+          className="button button-primary"
+          disabled={verify.isPending}
+          onClick={() => verify.mutate(token)}
+        >
+          {verify.isPending
+            ? text(lang, "جارٍ التحقق…", "Verifying…")
+            : text(lang, "تأكيد البريد الإلكتروني", "Confirm email")}
+        </button>
       )}
-      <button className="button button-primary" onClick={() => setNotice(disconnected(lang))}>
-        {msg(lang, {
-          ar: "إعادة إرسال رسالة التحقق",
-          en: "Resend verification email",
-        })}
-      </button>
-      <AppLink href={withLang("/register", lang)} go={go} className="text-link">
-        {msg(lang, {
-          ar: "استخدم بريدًا مختلفًا",
-          en: "Use a different email",
-        })}
+      {!verified && (
+        <form
+          className="stack-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!resend.isPending)
+              resend.mutate({ email: auth.session?.user?.email || email, lang, returnTo });
+          }}
+        >
+          {!auth.session?.user && (
+            <TextField
+              label={text(lang, "البريد الإلكتروني", "Email")}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              required
+            />
+          )}
+          <button className="button button-secondary" disabled={resend.isPending}>
+            {text(lang, "إعادة إرسال رسالة التحقق", "Resend verification email")}
+          </button>
+        </form>
+      )}
+      <AppLink
+        className="text-link"
+        go={go}
+        href={withLang(auth.session?.user ? returnTo : contextPath("/login", returnTo), lang)}
+      >
+        {verified
+          ? text(lang, "متابعة", "Continue")
+          : text(
+              lang,
+              "تسجيل الدخول أو المتابعة دون تأكيد",
+              "Sign in or continue without verification",
+            )}
       </AppLink>
     </AuthShell>
   );
 }
-
-export function ForgotPasswordPage({ lang, go }: AuthPageProps) {
-  const [email, setEmail] = useState("");
-  const [errors, setErrors] = useState<string[]>([]);
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    setErrors([/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? disconnected(lang) : invalidEmail(lang)]);
-  };
+export function ForgotPasswordPage({ lang, go, search = "" }: AuthPageProps) {
+  const [email, setEmail] = useState(""),
+    recovery = useAuthAction(authService.forgotPassword),
+    returnTo = returnPath(search);
   return (
     <AuthShell
       lang={lang}
-      title={msg(lang, {
-        ar: "استعادة كلمة المرور",
-        en: "Recover your password",
-      })}
-      description={msg(lang, {
-        ar: "أدخل بريدك. عند ربط الخدمة ستكون الاستجابة محايدة لحماية خصوصية الحسابات.",
-        en: "Enter your email. Once connected, the response will remain neutral to protect account privacy.",
-      })}
+      title={text(lang, "استعادة كلمة المرور", "Recover your password")}
+      description={text(
+        lang,
+        "أدخل بريدك. الاستجابة محايدة لحماية خصوصية الحسابات.",
+        "Enter your email. The response remains neutral to protect account privacy.",
+      )}
     >
-      <ErrorSummary
-        title={msg(lang, {
-          ar: "تعذّر إرسال الطلب",
-          en: "Request not sent",
-        })}
-        errors={errors}
+      <TokenFeedback
+        error={recovery.error}
+        lang={lang}
+        success={
+          recovery.isSuccess
+            ? text(
+                lang,
+                "إن كان البريد مرتبطًا بحساب فستصلك تعليمات الاستعادة.",
+                "If the email has an account, recovery instructions will be sent.",
+              )
+            : undefined
+        }
       />
-      <form className="stack-form" onSubmit={submit} noValidate>
+      <form
+        className="stack-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!recovery.isPending) recovery.mutate({ email: email.trim(), lang, returnTo });
+        }}
+      >
         <TextField
-          label={msg(lang, { ar: "البريد الإلكتروني", en: "Email" })}
+          label={text(lang, "البريد الإلكتروني", "Email")}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          maxLength={254}
         />
-        <button className="button button-primary" type="submit">
-          {msg(lang, {
-            ar: "طلب رابط الاستعادة",
-            en: "Request recovery link",
-          })}
+        <button className="button button-primary" disabled={recovery.isPending}>
+          {text(lang, "طلب رابط الاستعادة", "Request recovery link")}
         </button>
       </form>
-      <AppLink href={withLang("/login", lang)} go={go} className="text-link">
-        {msg(lang, {
-          ar: "العودة لتسجيل الدخول",
-          en: "Back to sign in",
-        })}
+      <AppLink className="text-link" go={go} href={withLang(contextPath("/login", returnTo), lang)}>
+        {text(lang, "العودة لتسجيل الدخول", "Back to sign in")}
       </AppLink>
     </AuthShell>
   );
 }
-
-export function ResetPasswordPage({ lang, go, previewState = "default" }: AuthPageProps) {
-  const [values, setValues] = useState({ password: "", confirm: "" });
-  const [errors, setErrors] = useState<string[]>([]);
-  const blocked = previewState === "expired" || previewState === "invalid";
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    const next = [];
-    if (values.password.length < 10)
-      next.push(
-        msg(lang, {
-          ar: "استخدم 10 أحرف على الأقل.",
-          en: "Use at least 10 characters.",
-        }),
-      );
-    if (values.password !== values.confirm)
-      next.push(
-        msg(lang, {
-          ar: "كلمتا المرور غير متطابقتين.",
-          en: "Passwords do not match.",
-        }),
-      );
-    if (!next.length) next.push(disconnected(lang));
-    setErrors(next);
-  };
+export function ResetPasswordPage({ lang, go, search = "" }: AuthPageProps) {
+  const reset = useAuthAction(authService.resetPassword),
+    token = useLinkToken(),
+    [password, setPassword] = useState(""),
+    [confirm, setConfirm] = useState(""),
+    [errors, setErrors] = useState<string[]>([]);
+  useEffect(() => {
+    reset.reset();
+    setPassword("");
+    setConfirm("");
+    setErrors([]);
+  }, [token]);
+  const returnTo = returnPath(search);
   return (
     <AuthShell
       lang={lang}
-      title={msg(lang, {
-        ar: "تعيين كلمة مرور جديدة",
-        en: "Set a new password",
-      })}
-      description={msg(lang, {
-        ar: "رابط صالح من الخدمة الخلفية مطلوب لإتمام العملية.",
-        en: "A valid backend-issued link is required to complete this action.",
-      })}
+      title={text(lang, "إعادة تعيين كلمة المرور", "Reset password")}
+      description={passHint(lang)}
     >
-      {blocked ? (
-        <>
-          <IntegrationNotice
+      <ErrorSummary title={text(lang, "راجع البيانات", "Check your details")} errors={errors} />
+      <TokenFeedback
+        error={reset.error}
+        lang={lang}
+        success={
+          reset.isSuccess
+            ? text(
+                lang,
+                "تم تغيير كلمة المرور وإبطال الجلسات السابقة. سجّل الدخول مجددًا.",
+                "Password reset. Previous sessions were revoked. Sign in again.",
+              )
+            : undefined
+        }
+      />
+      {!token && (
+        <p role="alert">
+          {text(lang, "الرابط غير صالح. اطلب رابطًا جديدًا.", "Invalid link. Request a new link.")}
+        </p>
+      )}
+      {!reset.isSuccess && token && (
+        <form
+          className="stack-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (reset.isPending) return;
+            if (password !== confirm) {
+              setErrors([text(lang, "كلمتا المرور غير متطابقتين.", "Passwords do not match.")]);
+              return;
+            }
+            setErrors([]);
+            reset.mutate(
+              { token, password },
+              {
+                onSuccess: () => {
+                  setPassword("");
+                  setConfirm("");
+                  void authRefresh();
+                },
+              },
+            );
+          }}
+        >
+          <PasswordField
             lang={lang}
-            title={msg(lang, {
-              ar: "الرابط منتهي أو غير صالح",
-              en: "Link expired or invalid",
-            })}
-          />
-          <AppLink
-            href={withLang("/forgot-password", lang)}
-            go={go}
-            className="button button-primary"
-          >
-            {msg(lang, {
-              ar: "اطلب رابطًا جديدًا",
-              en: "Request a new link",
-            })}
-          </AppLink>
-        </>
-      ) : (
-        <form className="stack-form" onSubmit={submit} noValidate>
-          <ErrorSummary
-            title={msg(lang, {
-              ar: "راجع كلمة المرور",
-              en: "Check the password",
-            })}
-            errors={errors}
+            label={text(lang, "كلمة المرور الجديدة", "New password")}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={15}
+            maxLength={128}
           />
           <PasswordField
             lang={lang}
-            label={msg(lang, {
-              ar: "كلمة المرور الجديدة",
-              en: "New password",
-            })}
-            value={values.password}
-            onChange={(e) => setValues({ ...values, password: e.target.value })}
+            label={text(lang, "تأكيد كلمة المرور", "Confirm password")}
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
             required
+            minLength={15}
+            maxLength={128}
           />
-          <PasswordField
-            lang={lang}
-            label={msg(lang, {
-              ar: "تأكيد كلمة المرور",
-              en: "Confirm password",
-            })}
-            value={values.confirm}
-            onChange={(e) => setValues({ ...values, confirm: e.target.value })}
-            required
-          />
-          <button className="button button-primary" type="submit">
-            {msg(lang, {
-              ar: "تحديث كلمة المرور",
-              en: "Update password",
-            })}
+          <button className="button button-primary" disabled={reset.isPending}>
+            {text(lang, "حفظ كلمة المرور", "Save password")}
           </button>
         </form>
       )}
+      <AppLink
+        className="text-link"
+        go={go}
+        href={withLang(
+          contextPath(reset.isSuccess ? "/login" : "/forgot-password", returnTo),
+          lang,
+        )}
+      >
+        {reset.isSuccess
+          ? text(lang, "تسجيل الدخول", "Sign in")
+          : text(lang, "طلب رابط جديد", "Request a new link")}
+      </AppLink>
     </AuthShell>
   );
+  async function authRefresh() {
+    window.dispatchEvent(new Event("voic:session-expired"));
+  }
 }
 
 export function MfaChallenge({ lang }: { lang: Lang }) {
@@ -526,7 +622,18 @@ export function MfaChallenge({ lang }: { lang: Lang }) {
         onChange={(e) => setValue(e.target.value)}
         inputMode={method === "code" ? "numeric" : "text"}
       />
-      <button className="button button-primary" onClick={() => setNotice(disconnected(lang))}>
+      <button
+        className="button button-primary"
+        onClick={() =>
+          setNotice(
+            text(
+              lang,
+              "المصادقة الإضافية غير متصلة بعد.",
+              "Additional authentication is not connected yet.",
+            ),
+          )
+        }
+      >
         {msg(lang, { ar: "تحقق", en: "Verify" })}
       </button>
       <button

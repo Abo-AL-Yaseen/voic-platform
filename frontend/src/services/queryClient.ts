@@ -19,6 +19,9 @@ export const queryClient = new QueryClient({
 
 export async function clearPrivateQueries(userScope?: string) {
   await queryClient.cancelQueries({ predicate: (query) => query.meta?.private === true });
+  for (const mutation of queryClient.getMutationCache().getAll()) {
+    if (mutation.meta?.private === true) queryClient.getMutationCache().remove(mutation);
+  }
   queryClient.removeQueries({
     predicate: (query) =>
       query.meta?.private === true &&

@@ -1,50 +1,55 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import AppLink from "../components/AppLink";
-import { EmptyState, IntegrationNotice, StatusBadge } from "../components/Feedback";
+import { IntegrationNotice, StatusBadge } from "../components/Feedback";
 import { PasswordField, SelectField, TextAreaField, TextField } from "../components/FormFields";
 import { AccountLayout, Pagination } from "../components/WorkspaceLayouts";
 import { msg, withLang, type Lang } from "../i18n";
+import { useAuth, useLogout, usePasswordChange, authFailure } from "../hooks/auth/queries";
+import { useProfile, useSaveProfile } from "../hooks/account/queries";
+import type { ProfileInput, User } from "../services/auth";
 
-type Props = { lang: Lang; go: (href: string) => void; preview?: boolean; inquiryId?: string };
-
-export function AccountAccessPage({ lang, go }: Props) {
+type Props = {
+  lang: Lang;
+  go: (href: string) => void;
+  preview?: boolean;
+  inquiryId?: string;
+  search?: string;
+};
+const text = (lang: Lang, ar: string, en: string) => msg(lang, { ar, en });
+export function AccountAccessPage({ lang, go, search = "" }: Props) {
+  const returnTo = `/account${search}`;
   return (
     <main className="access-page section-pad">
       <div>
-        <p className="eyebrow">{msg(lang, { ar: "حساب العميل", en: "Customer account" })}</p>
-        <h1>
-          {msg(lang, {
-            ar: "سجّل الدخول لعرض حسابك",
-            en: "Sign in to view your account",
-          })}
-        </h1>
+        <p className="eyebrow">VOIC</p>
+        <h1>{text(lang, "سجّل الدخول لعرض حسابك", "Sign in to view your account")}</h1>
         <p>
-          {msg(lang, {
-            ar: "تبقى المنتجات والوصفات متاحة للجميع. الحساب مطلوب فقط لحفظ ومتابعة استفسارات التوريد.",
-            en: "Products and recipes remain public. An account is only required to save and track supply inquiries.",
-          })}
+          {text(
+            lang,
+            "تبقى المنتجات والوصفات متاحة للجميع.",
+            "Products and recipes remain public.",
+          )}
         </p>
         <div className="page-actions">
           <AppLink
-            href={withLang("/login?returnTo=/account", lang)}
+            href={withLang(`/login?returnTo=${encodeURIComponent(returnTo)}&expired=1`, lang)}
             go={go}
             className="button button-primary"
           >
-            {msg(lang, { ar: "تسجيل الدخول", en: "Sign in" })}
+            {text(lang, "تسجيل الدخول", "Sign in")}
           </AppLink>
           <AppLink
-            href={withLang("/register?returnTo=/account", lang)}
+            href={withLang(`/register?returnTo=${encodeURIComponent(returnTo)}`, lang)}
             go={go}
             className="button button-secondary"
           >
-            {msg(lang, { ar: "إنشاء حساب", en: "Create account" })}
+            {text(lang, "إنشاء حساب", "Create account")}
           </AppLink>
         </div>
       </div>
     </main>
   );
 }
-
 function PreviewHeader({
   lang,
   title,
@@ -57,238 +62,283 @@ function PreviewHeader({
   return (
     <header className="workspace-page-heading">
       <div>
-        <p className="eyebrow">{msg(lang, { ar: "معاينة واجهة", en: "Interface preview" })}</p>
+        <p className="eyebrow">VOIC</p>
         <h1>{title}</h1>
         <p>{description}</p>
       </div>
-      <StatusBadge status="warning" label={msg(lang, { ar: "غير متصل", en: "Disconnected" })} />
     </header>
   );
 }
-
 export function AccountOverviewPage({ lang, go }: Props) {
+  const user = useAuth().session?.user;
   return (
     <AccountLayout lang={lang} go={go} active="/account">
       <PreviewHeader
         lang={lang}
-        title={msg(lang, { ar: "نظرة عامة", en: "Account overview" })}
-        description={msg(lang, {
-          ar: "ملخص الحساب وحالة التحقق والاستفسارات دون أرقام مختلقة.",
-          en: "Account, verification and inquiry summary without fabricated activity.",
-        })}
+        title={text(lang, "نظرة عامة", "Account overview")}
+        description={user?.name || ""}
       />
       <div className="account-summary-grid">
         <section>
-          <span>{msg(lang, { ar: "حالة البريد", en: "Email status" })}</span>
+          <span>{text(lang, "حالة البريد", "Email status")}</span>
           <StatusBadge
-            status="success"
-            label={msg(lang, {
-              ar: "تم التحقق — مثال بصري",
-              en: "Verified — visual example",
-            })}
+            status={user?.emailVerified ? "success" : "warning"}
+            label={
+              user?.emailVerified
+                ? text(lang, "تم التحقق", "Verified")
+                : text(lang, "لم يتم التحقق بعد", "Not verified yet")
+            }
           />
-          <p>
-            {msg(lang, {
-              ar: "يتطلب التحقق الفعلي استجابة من الخادم.",
-              en: "Actual verification requires a server response.",
-            })}
-          </p>
+          <p>{user?.email}</p>
+          {!user?.emailVerified && (
+            <AppLink
+              className="text-link"
+              go={go}
+              href={withLang("/verify-email?returnTo=/account", lang)}
+            >
+              {text(lang, "تحقق من البريد الإلكتروني", "Verify email")}
+            </AppLink>
+          )}
         </section>
         <section>
-          <span>{msg(lang, { ar: "استفسارات التوريد", en: "Supply inquiries" })}</span>
+          <span>{text(lang, "استفسارات التوريد", "Supply inquiries")}</span>
           <strong>—</strong>
           <p>
-            {msg(lang, {
-              ar: "لا تُعرض قيمة صفرية قبل تحميل البيانات.",
-              en: "No zero value is shown before data is loaded.",
-            })}
+            {text(
+              lang,
+              "إرسال وحفظ الاستفسارات غير متصلين بعد.",
+              "Inquiry submission and saved inquiries are not connected yet.",
+            )}
           </p>
         </section>
       </div>
-      <IntegrationNotice lang={lang} />
-      <EmptyState
-        title={msg(lang, {
-          ar: "لا توجد بيانات استفسارات محمّلة",
-          en: "No inquiry data loaded",
-        })}
-        description={msg(lang, {
-          ar: "هذه ليست قائمة فارغة مؤكدة؛ يلزم ربط الحساب بالخدمة.",
-          en: "This is not a confirmed empty list; account integration is required.",
-        })}
-        action={
-          <AppLink
-            href={withLang("/inquiries/new", lang)}
-            go={go}
-            className="button button-primary"
-          >
-            {msg(lang, { ar: "ابدأ استفسارًا", en: "Start an inquiry" })}
-          </AppLink>
-        }
-      />
+      <IntegrationNotice lang={lang}>
+        {text(
+          lang,
+          "الحساب متصل. إرسال الاستفسارات ومتابعتها لم يُربطا بعد.",
+          "Your account is connected. Inquiry submission and tracking are not connected yet.",
+        )}
+      </IntegrationNotice>
     </AccountLayout>
   );
 }
-
 export function ProfilePage({ lang, go }: Props) {
-  const [kind, setKind] = useState("company");
-  const [notice, setNotice] = useState("");
+  const query = useProfile(),
+    save = useSaveProfile();
+  if (query.isPending)
+    return (
+      <p role="status" className="section-pad">
+        {text(lang, "جارٍ تحميل الملف…", "Loading profile…")}
+      </p>
+    );
+  if (query.isError || !query.data)
+    return (
+      <div className="section-pad" role="alert">
+        {authFailure(query.error, lang)}{" "}
+        <button onClick={() => query.refetch()}>{text(lang, "إعادة المحاولة", "Retry")}</button>
+      </div>
+    );
+  return <ProfileForm key={query.data.id} initial={query.data} lang={lang} go={go} save={save} />;
+}
+function ProfileForm({
+  initial,
+  lang,
+  go,
+  save,
+}: {
+  initial: User;
+  lang: Lang;
+  go: Props["go"];
+  save: ReturnType<typeof useSaveProfile>;
+}) {
+  const [values, setValues] = useState<ProfileInput>({
+    name: initial.name,
+    kind: initial.kind,
+    company: initial.company || "",
+    country: initial.country,
+    phone: initial.phone || "",
+  });
+  const set = (key: keyof ProfileInput, value: string) => setValues({ ...values, [key]: value });
   return (
     <AccountLayout lang={lang} go={go} active="/account/profile">
       <PreviewHeader
         lang={lang}
-        title={msg(lang, { ar: "الملف الشخصي", en: "Profile" })}
-        description={msg(lang, {
-          ar: "بيانات الحساب القابلة للتعديل.",
-          en: "Editable account details.",
-        })}
+        title={text(lang, "الملف الشخصي", "Profile")}
+        description={text(lang, "بيانات الحساب القابلة للتعديل.", "Editable account details.")}
       />
       <form
         className="workspace-form"
         onSubmit={(e) => {
           e.preventDefault();
-          setNotice(
-            msg(lang, {
-              ar: "لم تُحفظ التغييرات؛ خدمة الحساب غير متصلة.",
-              en: "Changes were not saved; the account service is disconnected.",
-            }),
-          );
+          if (!save.isPending)
+            save.mutate({
+              ...values,
+              company: values.kind === "company" ? values.company : undefined,
+            });
         }}
+        onReset={() =>
+          setValues({
+            name: initial.name,
+            kind: initial.kind,
+            company: initial.company || "",
+            country: initial.country,
+            phone: initial.phone || "",
+          })
+        }
       >
         <div className="form-grid">
           <TextField
-            label={msg(lang, { ar: "الاسم الكامل", en: "Full name" })}
-            placeholder="—"
+            label={text(lang, "الاسم الكامل", "Full name")}
+            value={values.name}
+            onChange={(e) => set("name", e.target.value)}
             required
+            maxLength={100}
           />
           <SelectField
-            label={msg(lang, { ar: "نوع الحساب", en: "Account type" })}
-            value={kind}
-            onChange={(e) => setKind(e.target.value)}
+            label={text(lang, "نوع الحساب", "Account type")}
+            value={values.kind}
+            onChange={(e) => set("kind", e.target.value)}
           >
-            <option value="individual">{msg(lang, { ar: "فرد", en: "Individual" })}</option>
-            <option value="company">{msg(lang, { ar: "شركة", en: "Company" })}</option>
+            <option value="individual">{text(lang, "فرد", "Individual")}</option>
+            <option value="company">{text(lang, "شركة", "Company")}</option>
           </SelectField>
-          {kind === "company" && (
+          {values.kind === "company" && (
             <TextField
-              label={msg(lang, { ar: "اسم الشركة", en: "Company name" })}
-              placeholder="—"
+              label={text(lang, "اسم الشركة", "Company name")}
+              value={values.company || ""}
+              onChange={(e) => set("company", e.target.value)}
               required
+              maxLength={150}
             />
           )}
-          <TextField label={msg(lang, { ar: "الدولة", en: "Country" })} placeholder="—" required />
           <TextField
-            label={msg(lang, {
-              ar: "الهاتف (اختياري)",
-              en: "Phone (optional)",
-            })}
-            type="tel"
-            placeholder="—"
+            label={text(lang, "الدولة", "Country")}
+            value={values.country}
+            onChange={(e) => set("country", e.target.value)}
+            required
+            maxLength={100}
           />
           <TextField
-            label={msg(lang, { ar: "البريد الإلكتروني", en: "Email" })}
-            type="email"
-            placeholder="—"
+            label={text(lang, "الهاتف (اختياري)", "Phone (optional)")}
+            value={values.phone || ""}
+            onChange={(e) => set("phone", e.target.value)}
+            maxLength={40}
+          />
+          <TextField
+            label={text(lang, "البريد الإلكتروني", "Email")}
+            value={initial.email}
             disabled
-            hint={msg(lang, {
-              ar: "تغيير البريد يتطلب تحققًا جديدًا.",
-              en: "Changing email requires reverification.",
-            })}
+            hint={text(
+              lang,
+              "تغيير البريد غير متاح في هذه المرحلة.",
+              "Email changes are not available in this phase.",
+            )}
           />
         </div>
         <div className="page-actions">
-          <button className="button button-primary" type="submit">
-            {msg(lang, { ar: "حفظ التغييرات", en: "Save changes" })}
+          <button className="button button-primary" disabled={save.isPending}>
+            {text(lang, "حفظ التغييرات", "Save changes")}
           </button>
           <button className="button button-secondary" type="reset">
-            {msg(lang, { ar: "إلغاء", en: "Cancel" })}
+            {text(lang, "إلغاء", "Cancel")}
           </button>
         </div>
-        {notice && (
-          <p className="field-error" role="alert">
-            {notice}
-          </p>
-        )}
+        {save.isSuccess && <p role="status">{text(lang, "حُفظت التغييرات.", "Changes saved.")}</p>}
+        {save.error && <p role="alert">{authFailure(save.error, lang)}</p>}
       </form>
     </AccountLayout>
   );
 }
-
 export function SecurityPage({ lang, go }: Props) {
-  const [notice, setNotice] = useState("");
+  const change = usePasswordChange(),
+    logout = useLogout();
+  const [values, setValues] = useState({ currentPassword: "", password: "", confirm: "" }),
+    [error, setError] = useState("");
+  const set = (key: keyof typeof values, value: string) => setValues({ ...values, [key]: value });
   return (
     <AccountLayout lang={lang} go={go} active="/account/security">
       <PreviewHeader
         lang={lang}
-        title={msg(lang, { ar: "أمان الحساب", en: "Account security" })}
-        description={msg(lang, {
-          ar: "تغيير كلمة المرور وإدارة الجلسة الحالية.",
-          en: "Password change and current-session controls.",
-        })}
+        title={text(lang, "أمان الحساب", "Account security")}
+        description={text(
+          lang,
+          "تغيير كلمة المرور يلغي جميع جلسات الحساب ويطلب تسجيل الدخول مجددًا.",
+          "Changing your password revokes every account session and requires sign-in again.",
+        )}
       />
       <form
         className="workspace-form compact-form"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          setNotice(
-            msg(lang, {
-              ar: "لم يتم تغيير كلمة المرور؛ الخدمة غير متصلة.",
-              en: "Password was not changed; the service is disconnected.",
-            }),
-          );
+          if (change.isPending) return;
+          if (values.password !== values.confirm) {
+            setError(text(lang, "كلمتا المرور غير متطابقتين.", "Passwords do not match."));
+            return;
+          }
+          setError("");
+          try {
+            await change.mutateAsync({
+              currentPassword: values.currentPassword,
+              password: values.password,
+            });
+            go(withLang("/login?changed=1", lang));
+          } catch {}
         }}
       >
         <PasswordField
           lang={lang}
-          label={msg(lang, {
-            ar: "كلمة المرور الحالية",
-            en: "Current password",
-          })}
+          label={text(lang, "كلمة المرور الحالية", "Current password")}
+          autoComplete="current-password"
+          value={values.currentPassword}
+          onChange={(e) => set("currentPassword", e.target.value)}
           required
+          maxLength={128}
         />
         <PasswordField
           lang={lang}
-          label={msg(lang, { ar: "كلمة المرور الجديدة", en: "New password" })}
+          label={text(lang, "كلمة المرور الجديدة", "New password")}
+          autoComplete="new-password"
+          value={values.password}
+          onChange={(e) => set("password", e.target.value)}
           required
+          minLength={15}
+          maxLength={128}
+          hint={text(lang, "15 محرفًا على الأقل.", "At least 15 characters.")}
         />
         <PasswordField
           lang={lang}
-          label={msg(lang, {
-            ar: "تأكيد كلمة المرور",
-            en: "Confirm password",
-          })}
+          label={text(lang, "تأكيد كلمة المرور", "Confirm password")}
+          autoComplete="new-password"
+          value={values.confirm}
+          onChange={(e) => set("confirm", e.target.value)}
           required
+          minLength={15}
+          maxLength={128}
         />
-        <button className="button button-primary" type="submit">
-          {msg(lang, {
-            ar: "تحديث كلمة المرور",
-            en: "Update password",
-          })}
+        <button className="button button-primary" disabled={change.isPending}>
+          {text(lang, "تحديث كلمة المرور", "Update password")}
         </button>
-        {notice && (
-          <p className="field-error" role="alert">
-            {notice}
-          </p>
-        )}
+        {(error || change.error) && <p role="alert">{error || authFailure(change.error, lang)}</p>}
       </form>
       <section className="workspace-section">
-        <h2>{msg(lang, { ar: "الجلسة الحالية", en: "Current session" })}</h2>
-        <p>
-          {msg(lang, {
-            ar: "لا تُعرض سجلات أجهزة أو مواقع غير حقيقية.",
-            en: "No fabricated device or location history is shown.",
-          })}
-        </p>
-        <button className="button button-secondary" type="button">
-          {msg(lang, {
-            ar: "تسجيل الخروج من هذه الجلسة",
-            en: "Log out of this session",
-          })}
+        <h2>{text(lang, "الجلسة الحالية", "Current session")}</h2>
+        <button
+          className="button button-secondary"
+          disabled={logout.isPending}
+          onClick={async () => {
+            try {
+              await logout.mutateAsync();
+              go(withLang("/login", lang));
+            } catch {}
+          }}
+        >
+          {text(lang, "تسجيل الخروج من هذه الجلسة", "Log out of this session")}
         </button>
+        {logout.error && <p role="alert">{authFailure(logout.error, lang)}</p>}
       </section>
     </AccountLayout>
   );
 }
-
 export function InquiryListPage({ lang, go }: Props) {
   return (
     <AccountLayout lang={lang} go={go} active="/account/inquiries">

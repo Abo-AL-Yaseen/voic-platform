@@ -29,11 +29,24 @@ export class ApiErrorFilter implements ExceptionFilter {
           : parserType === "entity.parse.failed"
             ? 400
             : 500;
-    const [code, message] = errors[statusCode] ?? [
+    let [code, message] = errors[statusCode] ?? [
       "INTERNAL_ERROR",
       "The request could not be completed.",
     ];
+    if (statusCode === 400 && exception instanceof HttpException) {
+      const detail = exception.getResponse();
+      if (
+        typeof detail === "object" &&
+        detail &&
+        "code" in detail &&
+        ["TOKEN_INVALID", "TOKEN_EXPIRED", "TOKEN_USED", "INVALID_CURRENT_PASSWORD"].includes(
+          String(detail.code),
+        )
+      )
+        code = String(detail.code);
+    }
     response.setHeader("Cache-Control", "no-store");
+    if (statusCode === 429) response.setHeader("Retry-After", "900");
     response
       .status(statusCode)
       .json({ statusCode, code, message, requestId: response.getHeader("X-Request-Id") });

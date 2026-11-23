@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import AppLink from "./AppLink";
 import { msg, ui, withLang, type Lang } from "../i18n";
+import { useLogout, authFailure } from "../hooks/auth/queries";
 
 type NavItem = { href: string; label: string };
 
@@ -15,6 +16,7 @@ export function AccountLayout({
   active: string;
   children: ReactNode;
 }) {
+  const logout = useLogout();
   const items: NavItem[] = [
     { href: "/account", label: msg(lang, { ar: "نظرة عامة", en: "Overview" }) },
     {
@@ -51,9 +53,20 @@ export function AccountLayout({
             </AppLink>
           ))}
         </nav>
-        <button className="text-link" type="button">
+        <button
+          className="text-link"
+          type="button"
+          disabled={logout.isPending}
+          onClick={async () => {
+            try {
+              await logout.mutateAsync();
+              go(withLang("/login", lang));
+            } catch {}
+          }}
+        >
           {msg(lang, { ar: "تسجيل الخروج", en: "Log out" })}
         </button>
+        {logout.error && <p role="alert">{authFailure(logout.error, lang)}</p>}
       </aside>
       <div className="workspace-content">{children}</div>
     </main>

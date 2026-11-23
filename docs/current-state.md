@@ -1,6 +1,6 @@
 # VOIC platform current state
 
-Inspected: 2026-11-23. Application baseline:
+Inspected: 2026-11-24. Application baseline:
 `9c9c0310b74c3df34a10ad2828104bf9bc94e897` (`chore: import VOIC frontend baseline`).
 Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
 
@@ -17,7 +17,8 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
   is independent of the database; readiness initializes TypeORM lazily and checks `SELECT 1`.
 - Schema synchronization, schema dropping and automatic migrations are disabled. Explicit
   migration commands and disposable database checks exist. Four catalog entities and one
-  explicit catalog migration are implemented. Native MySQL Server, managed through the separate Workbench client,
+  explicit catalog migration are implemented. The authentication migration adds three account/session/token entities.
+  Native MySQL Server, managed through the separate Workbench client,
   is the chosen local setup as of 2026-11-23. Legacy Compose files are retained but unused;
   do not operate Docker or containers/volumes for this setup.
 - Shutdown hooks close the connection pool; required configuration fails startup with safe
@@ -37,15 +38,20 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
 - Vite imports `.figma/make/site.json`; retain the required Figma configuration. Original
   images/fonts use the existing Git LFS attributes; retain those attributes and font license.
 
-## Disconnected and not yet implemented
+## Account integration and remaining boundaries
 
-- Auth, account, authenticated inquiry, and staff screens are frontend designs, without live
-  registration, verification, sessions, authorization, saved inquiries, or staff data.
+- Customer auth/account screens are connected to real registration, verification, recovery,
+  server-side sessions, own-profile editing and password change; [authentication](authentication.md)
+  records the implemented contracts and current verification. Staff workspace access has a
+  backend role check. Authenticated inquiry submission, staff business CRUD, MFA, saved
+  inquiries and staff data remain unimplemented.
 - `services/api.ts` and `services/products.ts` connect public catalog reads to `/api/v1`
   through same-origin requests (local Vite proxy to port 3000) or `VITE_API_BASE_URL`.
-  They do not connect authentication, staff operations or inquiry submission.
-- Product feature hooks and complete request-scoped query keys use the existing QueryClient.
-  Other feature key files remain infrastructure, not evidence of their integration.
+  Authentication/account services use that same HTTP boundary. Staff business operations
+  and inquiry submission remain disconnected.
+- Product, auth and account feature hooks use the existing QueryClient. Private data uses
+  identity/session scope and cancellation/removal on account transitions; public catalog
+  cache remains intact. Other feature key files alone remain infrastructure.
 - The public `InquiryForm.tsx` can prepare a `mailto:` message or copy text for the user.
   This is not server-side submission, persistence, successful mail delivery, or inquiry tracking.
 - `App.tsx` guards the development preview import and route registration with
@@ -232,3 +238,63 @@ not production deployment, restoration, security certification or capacity verif
 
 Catalog verification is complete locally. Actual credentials and generated verification
 evidence remain ignored. Production content approval and deployment remain outside this task.
+
+## Authentication/accounts verification (2026-11-24)
+
+- The user authorized open individual/company customer registration, login/logout,
+  verification/resend, recovery/reset, own-profile editing, password change and foundational
+  role enforcement. [The auth guide](authentication.md) records the actual endpoints,
+  migration, session/CSRF contracts, mail capture/SMTP settings and deployment limits.
+  The working tree was clean at the start, on `mahmoud`; no other branch or Docker was used.
+- Backend tests passed 16/16; frontend tests passed 11/11. Both typechecks and builds passed.
+  Backend used `pnpm.cmd build --outDir .tmp/auth-build`, retaining the production compiler
+  configuration while leaving the user's watched `dist/` output untouched. Native Argon2
+  hashing/verification also passed. No existing direct dependency was upgraded.
+- The user entered administrator credentials locally at the hidden prompt. The native helper
+  created a separate random disposable database/user; credentials remained only in memory.
+  The final checker evidence records `passed:true` at `2026-11-23T22:44:44.837Z`
+  (2026-11-24 in Asia/Jerusalem). The agent inspected both checker and operator results.
+- Real disposable MySQL checks passed: both migrations apply/idempotence, auth-only rollback
+  and reapply preserving the 11-product catalog; repeatable catalog import; concurrent unique
+  email registration; Argon2id hash verification; generic duplicate/recovery responses;
+  unverified sign-in; session rotation, hashed storage, expiry, logout and revocation;
+  CSRF rejection for missing/wrong tokens and missing/foreign origins; role/identity injection
+  rejection and own-profile boundaries; customer/staff access; expiring and single-use
+  verification/reset tokens (including concurrent verification consumption); password reset
+  and current-password change revoking sessions; login/resend/recovery rate limits; production
+  cookie flags. An actual MySQL/Node timezone discrepancy in session cleanup was corrected
+  to UTC and the full checker passed afterward.
+- Real installed-Chrome flows passed in Arabic and English: individual/company registration,
+  captured verification and recovery messages, link reloads, login/product-selection returns,
+  profile save/reload, password change, logout, revoked sessions, account switching, and late
+  private-response cancellation without removing public catalog cache. Mobile 390-pixel RTL/LTR
+  profile layout had no horizontal overflow. A content-editor fixture in the disposable
+  database reached the authorized staff shell; customer access was refused. Staff business
+  features remained explicitly disconnected. Additional browser checks passed for loading,
+  service failure/recovery, expired/used/invalid links and rate-limit feedback. Timing/failure
+  feedback uses test-only interception; token lifecycle and mail capture use the real API.
+  Same-document email-link fragment changes were fixed and covered by the final successful run.
+- All nine existing catalog browser tests passed again against the disposable native backend:
+  11 detail/quick-view identities in both languages, filters/pagination, comparison/selection,
+  chooser/featured/recipe/business relationships, failure states, mobile and keyboard behavior.
+- Only after the disposable checks passed, the development schema was inspected and one
+  explicit auth migration applied. Complete before/after snapshots of all four catalog
+  tables matched; 11 products remained. Development auth users/sessions were both zero:
+  no test/default staff account was created there. No development reset, rollback, publication
+  change, ingredient approval or catalog re-import was performed.
+- The test browser, ephemeral API and frontend port 8444 processes were closed. The operator
+  received `finish`, removed its ready marker, completed its scoped cleanup and exited.
+  Existing user-owned watcher 25516 and Vite process 26056 were retained, and MySQL remained
+  running. The user's watcher controls its child PID; no stop/replacement was issued for it.
+  Existing backend readiness and catalog reads still returned HTTP 200 and 11 products.
+  The default backend `dist/` still contains the previous catalog build: the user must rebuild
+  and restart it in their own terminal to load the new auth endpoints. No test server is left
+  running by this task.
+- SMTP credentials/external sender delivery were not available or tested. Development capture
+  completed the local flows and is not proof of external delivery. Configure APP_URL, HTTPS
+  CORS, MAIL_FROM and SMTP_* privately before a separate external-delivery check. No deployment,
+  inquiry submission, staff CRUD or staff MFA was implemented or claimed.
+- Final staged review covered 45 files and found no actual local credential, private environment
+  file, captured email, token/session export, test result, build output or original asset change.
+  The original catalog seed and recipe data were unchanged. Syntax checks and `git diff --check`
+  passed. Actual credentials and generated verification evidence remain ignored.

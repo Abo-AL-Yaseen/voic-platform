@@ -63,5 +63,5 @@ test("private credentials and roles are not persisted in browser storage", async
   ]);
   const source = files.join("\n");
   assert.doesNotMatch(source, /localStorage|sessionStorage/);
-  assert.doesNotMatch(source, /fetch\s*\(/);
+  assert.doesNotMatch(source, /\bfetch\s*\(/);
 });

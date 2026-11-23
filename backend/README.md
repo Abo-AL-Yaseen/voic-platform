@@ -2,7 +2,9 @@
 
 This is a local development backend, not a production deployment. The public product
 catalog now uses explicit TypeORM entities/migrations and native MySQL, integrated with the
-existing frontend. Accounts, sessions, staff writes and inquiry submission remain disconnected.
+existing frontend. Customer authentication/accounts now use server-side sessions; staff
+business writes and inquiry submission remain disconnected. See [authentication](../docs/authentication.md)
+for endpoints, CSRF, mail capture, SMTP settings and security/deployment limits.
 Arabic and English are the only product languages. Project rules: [project plan](../docs/project-plan.md).
 Schema, publication rules, API contracts, import and checks: [catalog implementation](../docs/catalog-implementation.md).
 All VOIC work stays on the permanent `mahmoud` branch; do not create feature/task branches.
@@ -155,7 +157,8 @@ on Unix. Graceful shutdown requires the process manager to deliver supported sig
 
 ## API conventions and implemented protections
 
-- Application endpoints use `/api/v1`. Only the two health routes are implemented.
+- Application endpoints use `/api/v1`: health, public catalog, authentication/account reads
+  and writes, and the foundational staff-access check. Business staff CRUD is not implemented.
 - DTO validation is global: decorated class DTOs, `whitelist`, `forbidNonWhitelisted`,
   `forbidUnknownValues`, transformation with implicit scalar coercion disabled. Unexpected
   fields or invalid types return 400. The test-only DTO route is never shipped in the build.

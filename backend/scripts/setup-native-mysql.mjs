@@ -22,9 +22,10 @@ if (Object.keys(process.env).some((key) => key.startsWith("DB_") || key === "NOD
 }
 
 const catalogTest = process.argv.slice(2).join(" ") === "--catalog-test";
-const testOnly = catalogTest || process.argv.slice(2).join(" ") === "--test-only";
+const authTest = process.argv.slice(2).join(" ") === "--auth-test";
+const testOnly = authTest || catalogTest || process.argv.slice(2).join(" ") === "--test-only";
 if (process.argv.length > 2 && !testOnly) {
-  process.stderr.write("Only --test-only or --catalog-test is supported.\n");
+  process.stderr.write("Only --test-only, --catalog-test or --auth-test is supported.\n");
   process.exit(1);
 }
 const original = fs.readFileSync(".env", "utf8");
@@ -139,13 +140,13 @@ try {
       const result = execFileSync(process.execPath, args, {
         env: { ...env, ...overrides },
         stdio: "pipe",
-        timeout: 120000,
+        timeout: authTest ? 300000 : 120000,
       });
       process.stdout.write(result);
     } catch (error) {
       const safeStage = error.stderr
         ?.toString()
-        .match(/Disposable catalog verification failed during: [a-z /()-]+\./)?.[0];
+        .match(/Disposable (?:catalog|auth) verification failed during: [a-z /()-]+\./)?.[0];
       if (safeStage) process.stderr.write(`${safeStage}\n`);
       throw new Error("Child verification failed");
     }
@@ -165,14 +166,88 @@ try {
     `GRANT ALL PRIVILEGES ON \`${grantTarget(testName)}\`.* TO '${testName}'@'localhost'`,
   );
   stage = "disposable database migration verification";
-  run([catalogTest ? "scripts/check-catalog.mjs" : "scripts/check-database.mjs"], {
+  const testOverrides = {
     NODE_ENV: "test",
     DB_DATABASE: testName,
     DB_USERNAME: testName,
     DB_PASSWORD: testPassword,
     CONFIRM_DISPOSABLE_DATABASE: "yes",
-  });
-  process.stdout.write("Native setup and disposable migration verification passed.\n");
+  };
+  if (authTest) {
+    // An interactive operator grants access once. Credentials stay only in this process
+    // and its test children. Safe file signals allow reruns without asking for a password.
+    fs.mkdirSync(".tmp", { recursive: true });
+    const readyPath = ".tmp/auth-operator-ready.json",
+      commandPath = ".tmp/auth-operator-command.json";
+    if (fs.existsSync(readyPath)) {
+      const previous = JSON.parse(fs.readFileSync(readyPath, "utf8"));
+      let alive = false;
+      try {
+        process.kill(previous.pid, 0);
+        alive = true;
+      } catch {}
+      if (alive) throw new Error("Another auth verification operator is active");
+    }
+    fs.rmSync(commandPath, { force: true });
+    fs.writeFileSync(
+      readyPath,
+      JSON.stringify({ pid: process.pid, ready: true, startedAt: new Date().toISOString() }),
+    );
+    process.stdout.write(
+      "Auth test operator ready. Leave this terminal open; no password is saved. Only the new disposable database/user are in use.\n",
+    );
+    let stopping = false;
+    const stop = () => {
+      stopping = true;
+    };
+    process.on("SIGINT", stop);
+    const until = Date.now() + 45 * 60_000;
+    try {
+      while (!stopping && Date.now() < until) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        if (!fs.existsSync(commandPath)) continue;
+        let command;
+        try {
+          command = JSON.parse(fs.readFileSync(commandPath, "utf8").replace(/^\uFEFF/, ""));
+        } catch {
+          fs.rmSync(commandPath, { force: true });
+          continue;
+        }
+        fs.rmSync(commandPath, { force: true });
+        if (command.action === "finish") break;
+        if (command.action !== "run") continue;
+        let passed = false;
+        try {
+          run([
+            "node_modules/typescript/bin/tsc",
+            "-p",
+            "tsconfig.json",
+            "--outDir",
+            ".tmp/auth-build",
+          ]);
+          run(["scripts/check-auth.mjs"], testOverrides);
+          passed = true;
+        } catch {
+          process.stderr.write(
+            "Auth verification failed; safe stage details are above. The disposable operator remains open for a corrected rerun.\n",
+          );
+        }
+        fs.writeFileSync(
+          ".tmp/auth-operator-result.json",
+          JSON.stringify({ passed, checkedAt: new Date().toISOString() }),
+        );
+      }
+    } finally {
+      process.removeListener("SIGINT", stop);
+      fs.rmSync(readyPath, { force: true });
+    }
+  } else
+    run([catalogTest ? "scripts/check-catalog.mjs" : "scripts/check-database.mjs"], testOverrides);
+  process.stdout.write(
+    authTest
+      ? "Auth test operator closed. Review its recorded verification result.\n"
+      : "Native setup and disposable migration verification passed.\n",
+  );
 } catch {
   muted = false;
   process.stderr.write(

@@ -18,7 +18,7 @@ export function configureHttp(app: NestExpressApplication, env: Environment): vo
   app.enableCors({
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
     exposedHeaders: ["X-Request-Id"],
     origin(origin, callback) {
       if (!origin || env.corsOrigins.includes(origin)) callback(null, true);

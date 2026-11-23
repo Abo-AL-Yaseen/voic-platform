@@ -7,6 +7,7 @@ import { type Product } from "../catalog";
 import { useAllProducts, useSelectedProducts, visibleData } from "../hooks/products/queries";
 import CatalogStatus, { ProductTranslation } from "../components/CatalogStatus";
 import { categoryLabel, msg, productName, withLang, type Lang } from "../i18n";
+import { useAuth } from "../hooks/auth/queries";
 
 type Item = { productId: string; packageOption: string; quantity: string; unit: string };
 type Props = {
@@ -40,6 +41,7 @@ export default function NewInquiryPage({
   initialStep = 1,
   previewSuccess = false,
 }: Props) {
+  const auth = useAuth();
   const initialIds = useMemo(
     () => [
       ...new Set((new URLSearchParams(search).get("products") || "").split(",").filter(Boolean)),
@@ -506,15 +508,24 @@ export default function NewInquiryPage({
           </div>
           <IntegrationNotice
             lang={lang}
-            title={msg(lang, {
-              ar: "يلزم تسجيل الدخول والتحقق",
-              en: "Sign-in and verification required",
+            title={
+              auth.session?.user?.emailVerified
+                ? msg(lang, { ar: "تم التحقق من الحساب", en: "Account verified" })
+                : msg(lang, {
+                    ar: "يلزم تسجيل الدخول والتحقق",
+                    en: "Sign-in and verification required",
+                  })
+            }
+          >
+            {msg(lang, {
+              ar: "الحسابات متصلة، لكن إرسال وحفظ استفسارات التوريد غير متصلين بعد.",
+              en: "Accounts are connected, but supply inquiry submission and storage are not connected yet.",
             })}
-          />
+          </IntegrationNotice>
           <div className="page-actions">
             <AppLink
               href={withLang(
-                `/login?returnTo=${encodeURIComponent(`/inquiries/new?products=${selectedIds}`)}`,
+                `${auth.session?.user ? "/verify-email" : "/login"}?returnTo=${encodeURIComponent(`/inquiries/new?products=${selectedIds}`)}`,
                 lang,
               )}
               go={go}

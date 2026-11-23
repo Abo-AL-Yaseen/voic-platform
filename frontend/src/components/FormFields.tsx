@@ -19,12 +19,13 @@ export function TextField({
   return (
     <label className="form-field" htmlFor={id}>
       <span>
-        {label}
-        {required ? " *" : ""}
+        <span id={`${id}-label`}>{label}</span>
+        {required && <span aria-hidden="true"> *</span>}
       </span>
       <input
         {...props}
         id={id}
+        aria-labelledby={`${id}-label`}
         required={required}
         aria-invalid={!!error}
         aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
@@ -70,12 +71,13 @@ export function SelectField({
   return (
     <label className="form-field" htmlFor={id}>
       <span>
-        {label}
-        {required ? " *" : ""}
+        <span id={`${id}-label`}>{label}</span>
+        {required && <span aria-hidden="true"> *</span>}
       </span>
       <select
         {...props}
         id={id}
+        aria-labelledby={`${id}-label`}
         required={required}
         aria-invalid={!!error}
         aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
@@ -103,12 +105,13 @@ export function TextAreaField({
   return (
     <label className="form-field" htmlFor={id}>
       <span>
-        {label}
-        {required ? " *" : ""}
+        <span id={`${id}-label`}>{label}</span>
+        {required && <span aria-hidden="true"> *</span>}
       </span>
       <textarea
         {...props}
         id={id}
+        aria-labelledby={`${id}-label`}
         required={required}
         aria-invalid={!!error}
         aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}

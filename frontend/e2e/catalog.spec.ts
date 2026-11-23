@@ -17,7 +17,9 @@ test("real API read contracts: combined filters, normalization, three pages, bou
   request,
 }) => {
   const get = async (path: string, status = 200) => {
-    const response = await request.get(`http://127.0.0.1:3000/api/v1/products${path}`);
+    const response = await request.get(
+      `${process.env.VOIC_E2E_API_URL || "http://127.0.0.1:3000"}/api/v1/products${path}`,
+    );
     expect(response.status()).toBe(status);
     return response.json();
   };

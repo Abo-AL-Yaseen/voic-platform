@@ -1,14 +1,16 @@
 # Frontend integration boundaries
 
-The authentication, account, inquiry submission and staff screens remain disconnected frontend designs.
+Authentication and customer account screens now use the real session/account API; their
+contracts, CSRF, private-cache behavior and local email setup are in
+[authentication](../../docs/authentication.md). Staff workspace access is server-authorized,
+while staff business features and inquiry submission remain disconnected frontend designs.
 Public product reads, including product selection inside the inquiry UI and email forms, now
 use the real catalog API through Services and feature React Query hooks. They do not
 call invented endpoints, store credentials, assign roles, or create records.
 
-Before integration, the backend contract must define:
+Before integrating remaining business features, the backend contract must define:
 
-- Cookie-based sessions, CSRF protection, logout and account switching.
-- Open customer registration, neutral password recovery, email verification and staff MFA.
+- Staff MFA (customer sessions, CSRF, registration, verification and recovery are implemented).
 - Server-provisioned employee permissions (`administrator`, `sales`, `content_editor`) with authorization
   enforced on every protected operation.
 - User-scoped inquiry reads and ownership checks.

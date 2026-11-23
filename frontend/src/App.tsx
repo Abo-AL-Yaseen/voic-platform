@@ -36,10 +36,17 @@ import {
   ResetPasswordPage,
   VerifyEmailPage,
 } from "./pages/AuthPages";
-import { AccountAccessPage } from "./pages/AccountPages";
+import {
+  AccountOverviewPage,
+  ProfilePage,
+  SecurityPage,
+  InquiryListPage,
+  InquiryDetailPage,
+} from "./pages/AccountPages";
+import SessionGate, { StaffWorkspace } from "./components/SessionGate";
+import { useAuth, authFailure } from "./hooks/auth/queries";
 import NewInquiryPage from "./pages/NewInquiryPage";
 import PrivacyPage from "./pages/PrivacyPage";
-import StaffAccessPage from "./pages/StaffAccessPage";
 
 type PreviewProps = { lang: Lang; go: (href: string) => void; search: string };
 const previewModulePath = "/src/pages/PreviewPage.tsx";
@@ -81,6 +88,7 @@ function AppLink({
 }
 
 export default function App() {
+  const auth = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [location, setLocation] = useState(() => window.location.pathname + window.location.search);
   const homeScroll = useRef(0);
@@ -291,15 +299,33 @@ export default function App() {
   } else if (path === "/verify-email") {
     page = <VerifyEmailPage lang={lang} go={go} search={url.search} />;
   } else if (path === "/forgot-password") {
-    page = <ForgotPasswordPage lang={lang} go={go} />;
+    page = <ForgotPasswordPage lang={lang} go={go} search={url.search} />;
   } else if (path === "/reset-password") {
     page = <ResetPasswordPage lang={lang} go={go} search={url.search} />;
   } else if (path === "/inquiries/new") {
     page = <NewInquiryPage lang={lang} go={go} search={url.search} />;
   } else if (path === "/account" || path.startsWith("/account/")) {
-    page = <AccountAccessPage lang={lang} go={go} />;
+    page = (
+      <SessionGate lang={lang} go={go}>
+        {path === "/account/profile" ? (
+          <ProfilePage lang={lang} go={go} />
+        ) : path === "/account/security" ? (
+          <SecurityPage lang={lang} go={go} />
+        ) : path === "/account/inquiries" ? (
+          <InquiryListPage lang={lang} go={go} />
+        ) : path.startsWith("/account/inquiries/") ? (
+          <InquiryDetailPage lang={lang} go={go} inquiryId={path.split("/").at(-1)} />
+        ) : (
+          <AccountOverviewPage lang={lang} go={go} />
+        )}
+      </SessionGate>
+    );
   } else if (path === "/staff" || path.startsWith("/staff/")) {
-    page = <StaffAccessPage lang={lang} go={go} />;
+    page = (
+      <SessionGate lang={lang} go={go} staff>
+        <StaffWorkspace lang={lang} go={go} path={path} />
+      </SessionGate>
+    );
   } else if (path === "/privacy") {
     page = <PrivacyPage lang={lang} go={go} />;
   } else {
@@ -308,6 +334,11 @@ export default function App() {
 
   return (
     <div className="site-shell" dir={direction(lang)}>
+      {auth.transitionError && path !== "/login" && (
+        <p className="inline-alert" role="alert">
+          {authFailure(auth.transitionError, lang)}
+        </p>
+      )}
       <a className="skip-link" href="#main-content">
         {msg(lang, { ar: "انتقل إلى المحتوى", en: "Skip to content" })}
       </a>
@@ -352,8 +383,21 @@ export default function App() {
               ))}
             </select>
           </label>
-          <AppLink className="header-login" href={withLang("/login", lang)} go={go}>
-            {msg(lang, { ar: "دخول", en: "Sign in" })}
+          <AppLink
+            className="header-login"
+            href={withLang(
+              auth.session?.user
+                ? auth.session.user.role === "customer"
+                  ? "/account"
+                  : "/staff"
+                : "/login",
+              lang,
+            )}
+            go={go}
+          >
+            {auth.session?.user
+              ? msg(lang, { ar: "حسابي", en: "My account" })
+              : msg(lang, { ar: "دخول", en: "Sign in" })}
           </AppLink>
           <AppLink
             className="button button-primary header-contact"
