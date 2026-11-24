@@ -127,7 +127,28 @@ export function StaffLayout({
               go={go}
               className={active === item.href ? "active" : undefined}
             >
-              {item.label}
+              {msg(
+                lang,
+                (
+                  {
+                    Dashboard: { ar: "لوحة الموظفين", en: "Dashboard" },
+                    Inquiries: { ar: "الاستفسارات", en: "Inquiries" },
+                    Products: { ar: "المنتجات", en: "Products" },
+                    Categories: { ar: "الفئات", en: "Categories" },
+                    Uses: { ar: "الاستخدامات", en: "Uses" },
+                    Recipes: { ar: "الوصفات", en: "Recipes" },
+                    "Page content": { ar: "محتوى الصفحات", en: "Page content" },
+                    Media: { ar: "الوسائط", en: "Media" },
+                    Customers: { ar: "العملاء", en: "Customers" },
+                    "Employees & permissions": {
+                      ar: "الموظفون والصلاحيات",
+                      en: "Employees & permissions",
+                    },
+                    Employees: { ar: "الموظفون", en: "Employees" },
+                    "Audit log": { ar: "سجل التدقيق", en: "Audit log" },
+                  } as Record<string, { ar: string; en: string }>
+                )[item.label] || { ar: "قسم غير متصل", en: item.label },
+              )}
             </AppLink>
           ))}
         </nav>
@@ -135,7 +156,10 @@ export function StaffLayout({
       <div className="workspace-content staff-content">
         <header className="workspace-topbar">
           <span>
-            {ui[lang].home} / {active.replace("/staff", "") || "Dashboard"}
+            {ui[lang].home} /{" "}
+            {active.startsWith("/staff/inquiries")
+              ? msg(lang, { ar: "الاستفسارات", en: "Inquiries" })
+              : msg(lang, { ar: "مساحة الموظفين", en: "Staff workspace" })}
           </span>
           {preview && <strong>Frontend preview</strong>}
         </header>

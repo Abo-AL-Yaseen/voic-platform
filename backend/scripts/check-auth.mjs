@@ -17,6 +17,14 @@ import { AuthService, hashToken, passwordOptions } from "../.tmp/auth-build/auth
 import { AuthRateLimit } from "../.tmp/auth-build/auth/rate-limit.js";
 import { authConfiguration } from "../.tmp/auth-build/auth/auth.config.js";
 import { DatabaseService } from "../.tmp/auth-build/database/database.service.js";
+import {
+  CustomerInquiry,
+  InquiryLine,
+  InquiryHistory,
+  InquiryNotification,
+} from "../.tmp/auth-build/inquiries/inquiry.entities.js";
+import { checkStaffWorkflow } from "./check-staff-workflow.mjs";
+import { runStaffUi } from "../../frontend/e2e/staff-workflow.mjs";
 import { checkInquiries } from "./check-inquiries.mjs";
 import { runInquiryUi } from "../../frontend/e2e/inquiries-flow.mjs";
 import { runAuthUi } from "../../frontend/e2e/auth-flow.mjs";
@@ -26,9 +34,14 @@ let source,
   webProcess,
   stage = "target validation";
 const front = "http://127.0.0.1:8444";
+const scope = fs.existsSync(".tmp/verification-scope.json")
+  ? JSON.parse(fs.readFileSync(".tmp/verification-scope.json", "utf8")).scope
+  : "all";
+if (!["all", "staff", "regression"].includes(scope)) throw new Error("Invalid verification scope");
 process.env.APP_URL = front;
 process.env.CORS_ORIGINS = front;
 process.env.MAIL_MODE = "capture";
+process.env.STAFF_INQUIRY_WRITES = "true";
 process.env.MAIL_CAPTURE_NAME = `auth-test-${randomBytes(6).toString("hex")}`;
 const mailDir = path.resolve(".tmp", process.env.MAIL_CAPTURE_NAME);
 const password = "test-only long password 2026";
@@ -71,6 +84,10 @@ try {
     )
   ).map((r) => r.name);
   const owned = [
+    "inquiry_audit_events",
+    "inquiry_internal_notes",
+    "inquiry_messages",
+    "inquiry_actions",
     "inquiry_notifications",
     "customer_inquiry_history",
     "customer_inquiry_lines",
@@ -87,26 +104,105 @@ try {
   assert.ok(names.every((n) => owned.includes(n)));
   for (const name of owned) if (names.includes(name)) await source.query(`DROP TABLE \`${name}\``);
   stage = "migrations and catalog preservation";
-  assert.equal((await source.runMigrations()).length, 3);
+  assert.equal((await source.runMigrations()).length, 4);
   assert.equal((await source.runMigrations()).length, 0);
   assert.deepEqual(await seedCatalog(source), { inserted: 11, skipped: 0 });
   await source.query(
     "INSERT INTO auth_users (id,email,passwordHash,role,kind,name,company,country,phone,emailVerifiedAt,securityVersion,createdAt) VALUES ('00000000-0000-4000-8000-000000000001','preserved@example.test','test-only','customer','individual','Preserved',NULL,'PS',NULL,NULL,0,UTC_TIMESTAMP())",
   );
+  const preserveId = "00000000-0000-4000-8000-000000000002",
+    now = new Date("2026-01-01T00:00:00Z");
+  await source
+    .getRepository(CustomerInquiry)
+    .insert({
+      id: preserveId,
+      userId: "00000000-0000-4000-8000-000000000001",
+      creationKey: "00000000-0000-4000-8000-000000000003",
+      reference: "VOIC-PRESERVED",
+      status: "submitted",
+      revision: 2,
+      lang: "en",
+      fields: {
+        kind: "individual",
+        name: "Preserved",
+        company: "",
+        destination: "PS",
+        phone: "",
+        notes: "Legacy request",
+      },
+      contactEmail: "preserved@example.test",
+      submissionKey: "00000000-0000-4000-8000-000000000004",
+      submittedRevision: 1,
+      createdAt: now,
+      updatedAt: now,
+      submittedAt: now,
+    });
+  await source
+    .getRepository(InquiryLine)
+    .insert({
+      id: "00000000-0000-4000-8000-000000000005",
+      inquiryId: preserveId,
+      position: 0,
+      productId: "ghazal",
+      packageId: null,
+      quantity: "5",
+      unit: "kg",
+      requirements: "Legacy packaging discussion",
+      snapshot: { name: "Legacy snapshot", description: "Preserved at submission", package: null },
+    });
+  await source
+    .getRepository(InquiryHistory)
+    .insert({
+      id: "00000000-0000-4000-8000-000000000006",
+      inquiryId: preserveId,
+      status: "submitted",
+      occurredAt: now,
+    });
+  await source
+    .getRepository(InquiryNotification)
+    .insert({
+      id: "00000000-0000-4000-8000-000000000007",
+      inquiryId: preserveId,
+      audience: "customer",
+      recipient: "preserved@example.test",
+      state: "captured",
+      attempts: 1,
+      nextAttemptAt: now,
+    });
+  const legacyBefore = JSON.stringify(
+    await source.getRepository(CustomerInquiry).findOneBy({ id: preserveId }),
+  );
+  const snapshotBefore = JSON.stringify(
+    await source.getRepository(InquiryLine).findOneBy({ inquiryId: preserveId }),
+  );
   await source.undoLastMigration();
   assert.equal(Number((await source.query("SELECT COUNT(*) AS n FROM auth_users"))[0].n), 1);
-  await source.query("DELETE FROM auth_users WHERE id='00000000-0000-4000-8000-000000000001'");
   assert.equal(Number((await source.query("SELECT COUNT(*) AS n FROM catalog_products"))[0].n), 11);
   assert.equal((await source.runMigrations()).length, 1);
+  assert.equal(
+    JSON.stringify(await source.getRepository(CustomerInquiry).findOneBy({ id: preserveId })),
+    legacyBefore,
+  );
+  assert.equal(
+    JSON.stringify(await source.getRepository(InquiryLine).findOneBy({ inquiryId: preserveId })),
+    snapshotBefore,
+  );
+  assert.equal(await source.getRepository(InquiryHistory).countBy({ inquiryId: preserveId }), 1);
+  assert.equal(
+    await source.getRepository(InquiryNotification).countBy({ inquiryId: preserveId }),
+    1,
+  );
+  await source.getRepository(CustomerInquiry).delete({ id: preserveId });
+  await source.query("DELETE FROM auth_users WHERE id='00000000-0000-4000-8000-000000000001'");
   assert.deepEqual(await seedCatalog(source), { inserted: 0, skipped: 11 });
-  async function openApp() {
+  async function openApp(port = 0) {
     app = await NestFactory.create(AppModule, {
       bodyParser: false,
       logger: false,
       abortOnError: false,
     });
     configureHttp(app, env);
-    await app.listen(0, "127.0.0.1");
+    await app.listen(port, "127.0.0.1");
     return `${await app.getUrl()}/api/v1`;
   }
   let base = await openApp();
@@ -341,6 +437,8 @@ try {
   app = undefined;
   base = await openApp();
   const inquiryResult = await checkInquiries({ app, source, base, front, password, captured });
+  stage = "staff workflow security and persistence";
+  const staffResult = await checkStaffWorkflow({ app, source, base, front, password, captured });
   stage = "real browser flows and private cache isolation";
   // New app resets only its in-memory limits. The disposable database remains intact.
   await app.close();
@@ -368,25 +466,42 @@ try {
     } catch {}
     await new Promise((r) => setTimeout(r, 200));
   }
-  const browserResult = await runAuthUi({
-    front,
-    base,
-    mailDir,
-    captured,
-    password,
-    source,
-    AuthSession,
-    AuthUser,
-  });
+  const browserResult =
+    scope === "staff"
+      ? undefined
+      : await runAuthUi({
+          front,
+          base,
+          mailDir,
+          captured,
+          password,
+          source,
+          AuthSession,
+          AuthUser,
+        });
+  await app.close();
+  app = undefined;
+  base = await openApp(Number(new URL(base).port));
   stage = "real inquiry browser flows";
-  const inquiryBrowserResult = await runInquiryUi({
-    front,
-    base,
-    captured,
-    password,
-    source,
-    AuthUser,
-  });
+  const inquiryBrowserResult =
+    scope === "staff"
+      ? undefined
+      : await runInquiryUi({
+          front,
+          base,
+          captured,
+          password,
+          source,
+          AuthUser,
+        });
+  await app.close();
+  app = undefined;
+  base = await openApp(Number(new URL(base).port));
+  stage = "staff customer browser workflow";
+  const staffBrowserResult =
+    scope === "regression"
+      ? undefined
+      : await runStaffUi({ front, base, password, source, AuthUser });
   stage = "public catalog browser regression";
   await new Promise((resolve, reject) => {
     const runner = spawn(
@@ -418,16 +533,20 @@ try {
     JSON.stringify({
       passed: true,
       checkedAt: new Date().toISOString(),
-      scope: "disposable native authentication, customer inquiries and real browser verification",
+      scope,
       browserResult,
       inquiryResult,
       inquiryBrowserResult,
+      staffResult,
+      staffBrowserResult,
       catalogBrowserTests: 9,
     }),
   );
+  fs.copyFileSync(".tmp/auth-verification.json", `.tmp/${scope}-verification.json`);
   fs.rmSync(".tmp/auth-failure.json", { force: true });
   fs.rmSync(".tmp/auth-ui-failure.json", { force: true });
   fs.rmSync(".tmp/inquiry-ui-failure.json", { force: true });
+  fs.rmSync(".tmp/staff-ui-failure.json", { force: true });
   process.stdout.write(
     "PASS: disposable auth migrations, unique registration, Argon2id, sessions/CSRF/roles/ownership, token expiry/single use, capture email, recovery/password/session revocation, rate limits and real browser flows.\n",
   );

@@ -201,7 +201,7 @@ function OwnedDraft({ lang, go, search, id }: Props & { id: string }) {
         <button onClick={() => query.refetch()}>{t(lang, "إعادة المحاولة", "Retry")}</button>
       </main>
     );
-  if (query.data.status === "submitted")
+  if (query.data.status !== "draft")
     return (
       <main className="inquiry-flow section-pad">
         <h1>{t(lang, "الاستفسار محفوظ ومرسل", "Inquiry saved and submitted")}</h1>
@@ -738,7 +738,7 @@ function DraftEditor({
                 className="button button-secondary"
                 onClick={async () => {
                   const q = (await reload()) as { data?: Inquiry; error?: unknown };
-                  if (q.data?.status === "submitted")
+                  if (q.data && q.data.status !== "draft")
                     go(withLang(`/account/inquiries/${record.id}`, lang));
                   else if (q.data && q.data.revision === record.revision) {
                     setUncertain(false);

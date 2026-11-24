@@ -28,6 +28,26 @@ import {
   type InquiryLineInput,
 } from "./inquiry.entities.js";
 import type { CreateInquiryDto, SaveInquiryDto, SubmitInquiryDto } from "./inquiry.dto.js";
+import { InquiryMessage, submittedStatuses } from "./workflow.entities.js";
+
+export function detailPages(query: Record<string, unknown>, staff = false) {
+  const keys = staff ? ["messagePage", "historyPage", "notePage"] : ["messagePage", "historyPage"];
+  if (
+    Object.keys(query).some((k) => !keys.includes(k)) ||
+    Object.values(query).some((v) => typeof v !== "string")
+  )
+    throw new BadRequestException();
+  const page = (key: string) => {
+    const v = Number(query[key] || 1);
+    if (!Number.isInteger(v) || v < 1 || v > 10000) throw new BadRequestException();
+    return v;
+  };
+  return {
+    messagePage: page("messagePage"),
+    historyPage: page("historyPage"),
+    notePage: page("notePage"),
+  };
+}
 
 @Injectable()
 export class InquiryService {
@@ -217,7 +237,7 @@ export class InquiryService {
       const prior = await m.findOneBy(CustomerInquiry, { userId: u.id, submissionKey: dto.key });
       if (prior && (prior.id !== id || prior.submittedRevision !== dto.revision))
         throw new ConflictException({ code: "IDEMPOTENCY_CONFLICT" });
-      if (i.status === "submitted") {
+      if (i.status !== "draft") {
         if (i.submissionKey !== dto.key || i.submittedRevision !== dto.revision)
           throw new ConflictException({ code: "IDEMPOTENCY_CONFLICT" });
         return this.project(m, i);
@@ -271,16 +291,26 @@ export class InquiryService {
       return this.project(m, i);
     });
   }
-  private async project(m: EntityManager, i: CustomerInquiry) {
+  async project(m: EntityManager, i: CustomerInquiry, pages = { messagePage: 1, historyPage: 1 }) {
     const lines = await m.find(InquiryLine, {
       where: { inquiryId: i.id },
       order: { position: "ASC" },
     });
-    const history = await m.find(InquiryHistory, {
+    const [history, historyTotal] = await m.findAndCount(InquiryHistory, {
       where: { inquiryId: i.id },
       order: { occurredAt: "ASC", id: "ASC" },
+      take: 20,
+      skip: (pages.historyPage - 1) * 20,
     });
-    const notifications = await m.find(InquiryNotification, { where: { inquiryId: i.id } });
+    const [messages, messageTotal] = await m.findAndCount(InquiryMessage, {
+      where: { inquiryId: i.id },
+      order: { createdAt: "ASC", id: "ASC" },
+      take: 20,
+      skip: (pages.messagePage - 1) * 20,
+    });
+    const notifications = await m.find(InquiryNotification, {
+      where: { inquiryId: i.id, kind: "submission" },
+    });
     return {
       id: i.id,
       reference: i.reference,
@@ -301,14 +331,30 @@ export class InquiryService {
         snapshot: l.snapshot,
       })),
       history: history.map((h) => ({ status: h.status, occurredAt: h.occurredAt })),
+      historyPagination: {
+        page: pages.historyPage,
+        total: historyTotal,
+        totalPages: Math.max(1, Math.ceil(historyTotal / 20)),
+      },
+      messages: messages.map((h) => ({
+        id: h.id,
+        sender: h.sender,
+        text: h.text,
+        createdAt: h.createdAt,
+      })),
+      messagePagination: {
+        page: pages.messagePage,
+        total: messageTotal,
+        totalPages: Math.max(1, Math.ceil(messageTotal / 20)),
+      },
       notifications: notifications.map((n) => ({ audience: n.audience, state: n.state })),
     };
   }
   async detail(req: AuthRequest, id: string) {
-    if (Object.keys(req.query).length) throw new BadRequestException();
+    const pages = detailPages(req.query);
     const user = this.auth.require(req, ["customer"]);
     return this.source.transaction("REPEATABLE READ", async (m) =>
-      this.project(m, await this.owned(m, id, user.id)),
+      this.project(m, await this.owned(m, id, user.id), pages),
     );
   }
   async counts(req: AuthRequest) {
@@ -323,7 +369,9 @@ export class InquiryService {
       .groupBy("i.status")
       .getRawMany();
     const draft = Number(rows.find((r) => r.status === "draft")?.count || 0),
-      submitted = Number(rows.find((r) => r.status === "submitted")?.count || 0);
+      submitted = rows
+        .filter((r) => r.status !== "draft")
+        .reduce((sum, r) => sum + Number(r.count), 0);
     return { draft, submitted, total: draft + submitted };
   }
   async list(req: AuthRequest) {
@@ -347,7 +395,7 @@ export class InquiryService {
       pageSize < 1 ||
       pageSize > 50 ||
       !/^[A-Za-z0-9-]{0,32}$/.test(q) ||
-      !["", "draft", "submitted"].includes(status) ||
+      !["", "draft", ...submittedStatuses].includes(status) ||
       !["asc", "desc"].includes(sort)
     )
       throw new BadRequestException();

@@ -3,9 +3,11 @@
 This is a local development backend, not a production deployment. The public product
 catalog now uses explicit TypeORM entities/migrations and native MySQL, integrated with the
 existing frontend. Customer authentication/accounts now use server-side sessions; staff
-business writes remain disconnected. Customer supply inquiries now use owned drafts,
+inquiry reads and development-only business actions now use real APIs. Customer supply inquiries use owned drafts,
 atomic idempotent submission, account tracking and a durable notification outbox; see
 [customer inquiries](../docs/customer-inquiries.md) for schema, contracts, commands and manual tests.
+The [staff inquiry guide](../docs/staff-inquiries.md) documents the fourth migration,
+local staff provisioning, two-session manual tests, and the production MFA write restriction.
 See [authentication](../docs/authentication.md)
 for endpoints, CSRF, mail capture, SMTP settings and security/deployment limits.
 Arabic and English are the only product languages. Project rules: [project plan](../docs/project-plan.md).
@@ -180,8 +182,8 @@ on Unix. Graceful shutdown requires the process manager to deliver supported sig
 
 ## Explicit migrations
 
-The catalog, customer authentication and inquiries have eleven entities and three explicit
-migrations, ending with `CustomerInquiries1795521600000`.
+The catalog, authentication and inquiry workflow have fifteen entities and four explicit
+migrations, ending with `StaffInquiryWorkflow1795525200000`.
 `synchronize`, `dropSchema` and `migrationsRun` are all false. Startup never applies migrations.
 `voic_migrations` records operator-run migrations. Inspect the target before applying changes;
 never test rollback on development. Full DDL/import behavior is in [the catalog guide](../docs/catalog-implementation.md).
@@ -256,7 +258,8 @@ user, restricted network/firewall rules, trusted proxy and request limits, rate 
 availability targets, monitoring/alerts and redacted operational logs, backups and tested
 restore/rollback, dependency review, real load/security tests, and approved content/privacy.
 Customer sessions, CSRF, email verification, ownership and idempotent inquiries are implemented
-locally. Staff business workflows/MFA remain separate features. No deployment,
+locally. Staff inquiry workflows are enabled only for explicit local capture testing;
+production staff writes remain disabled pending MFA. Other staff modules remain future work. No deployment,
 security certification or capacity claim is made by these local checks.
 
 ## Historical foundation verification (2026-11-23, before native setup)

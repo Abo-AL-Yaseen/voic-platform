@@ -59,5 +59,6 @@ class InquiryController {
   imports: [AuthModule, DatabaseModule],
   controllers: [InquiryController],
   providers: [InquiryService, InquiryBoundary, InquiryNotifications],
+  exports: [InquiryService, InquiryNotifications],
 })
 export class InquiryModule {}

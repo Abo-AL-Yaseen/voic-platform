@@ -64,6 +64,9 @@ test("real API read contracts: combined filters, normalization, three pages, bou
 test("real API: all 11 direct product links and quick views in Arabic and English", async ({
   page,
 }) => {
+  // This regression performs 44 full navigations; retain bounded per-assertion waits
+  // while allowing the complete two-language catalog sweep on a busy workstation.
+  test.setTimeout(120_000);
   for (const lang of ["ar", "en"])
     for (const p of baseline) {
       await page.goto(`/products/${p.slug}?lang=${lang}`);

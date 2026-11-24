@@ -58,6 +58,12 @@ try {
     applied.length === 2 ||
       (applied.length === 3 && applied[2].name === "CustomerInquiries1795521600000"),
   );
+  assert.ok(
+    source.migrations
+      .map((m) => m.name || m.constructor.name)
+      .filter((name) => !applied.some((a) => a.name === name))
+      .every((name) => name === "CustomerInquiries1795521600000"),
+  );
   const before = await fingerprint();
   stage = "additive inquiry migration";
   const migrations = await source.runMigrations();

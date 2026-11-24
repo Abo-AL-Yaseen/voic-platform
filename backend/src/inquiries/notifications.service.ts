@@ -8,7 +8,7 @@ import { type DataSource, In, LessThanOrEqual } from "typeorm";
 import { DATABASE_SOURCE } from "../database/database.service.js";
 import { MailService } from "../auth/mail.service.js";
 import { AUTH_CONFIG, type AuthConfig } from "../auth/auth.config.js";
-import { CustomerInquiry, InquiryLine, InquiryNotification } from "./inquiry.entities.js";
+import { CustomerInquiry, InquiryNotification } from "./inquiry.entities.js";
 
 @Injectable()
 export class InquiryNotifications implements OnModuleInit, BeforeApplicationShutdown {
@@ -69,25 +69,22 @@ export class InquiryNotifications implements OnModuleInit, BeforeApplicationShut
         const i = await this.source
           .getRepository(CustomerInquiry)
           .findOneByOrFail({ id: job.inquiryId });
-        const lines = await this.source
-          .getRepository(InquiryLine)
-          .find({ where: { inquiryId: i.id }, order: { position: "ASC" } });
-        const ar = i.lang === "ar",
-          link = new URL(`/account/inquiries/${i.id}`, this.config.appUrl);
+        const ar = i.lang === "ar";
+        const link = new URL(
+          `${job.audience === "customer" ? "/account" : "/staff"}/inquiries/${i.id}`,
+          this.config.appUrl,
+        );
         link.searchParams.set("lang", i.lang);
-        const subject = ar
-          ? `VOIC: استفسار توريد ${i.reference}`
-          : `VOIC: supply inquiry ${i.reference}`;
+        const subject = `VOIC: ${i.reference}`;
         const text = [
           subject,
-          ar
-            ? "حُفظ استفسارك للمراجعة. هذا ليس طلب شراء مقبولًا."
-            : "Your inquiry is saved for review. This is not an accepted order.",
-          `${i.fields.name}\n${i.fields.company}\n${i.fields.destination}\n${i.fields.phone}\n${i.fields.notes}`,
-          ...lines.map(
-            (l) =>
-              `${l.snapshot?.name}\n${l.snapshot?.package || (ar ? "مناقشة التعبئة مع المبيعات" : "Discuss packaging with sales")}\n${l.quantity ?? ""} ${l.unit === "packages" ? (ar ? "عبوة" : "packages") : l.unit === "kg" ? (ar ? "كيلوغرام" : "kg") : l.unit === "L" ? (ar ? "لتر" : "L") : ""}\n${l.requirements}`,
-          ),
+          job.kind === "submission"
+            ? ar
+              ? "حُفظ استفسار التوريد للمراجعة. ليس طلب شراء مقبولًا."
+              : "A supply inquiry was saved for review. This is not an accepted order."
+            : ar
+              ? "يوجد تحديث على استفسار التوريد. سجّل الدخول للاطلاع عليه."
+              : "There is an update to the supply inquiry. Sign in to review it.",
           link.href,
         ].join("\n\n");
         const state = await this.mail.deliver({

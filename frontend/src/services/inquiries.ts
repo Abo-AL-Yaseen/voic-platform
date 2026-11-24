@@ -1,4 +1,21 @@
 import { apiRequest } from "./api";
+export const submittedStatuses = [
+  "submitted",
+  "under_review",
+  "awaiting_customer",
+  "responded",
+  "closed",
+  "cancelled",
+] as const;
+export type InquiryStatus = "draft" | (typeof submittedStatuses)[number];
+export type DetailPages = { messagePage: number; historyPage: number };
+export type PageInfo = { page: number; total: number; totalPages: number };
+export type ConversationMessage = {
+  id: string;
+  sender: "customer" | "staff";
+  text: string;
+  createdAt: string;
+};
 export type InquiryFields = {
   kind: "individual" | "company";
   name: string;
@@ -18,7 +35,7 @@ export type InquiryItem = {
 export type Inquiry = {
   id: string;
   reference: string;
-  status: "draft" | "submitted";
+  status: InquiryStatus;
   revision: number;
   lang: "ar" | "en";
   fields: InquiryFields;
@@ -27,7 +44,10 @@ export type Inquiry = {
   createdAt: string;
   updatedAt: string;
   submittedAt: string | null;
-  history: { status: "submitted"; occurredAt: string }[];
+  history: { status: InquiryStatus; occurredAt: string }[];
+  historyPagination: PageInfo;
+  messages: ConversationMessage[];
+  messagePagination: PageInfo;
   notifications: {
     audience: "customer" | "company";
     state: "pending" | "sending" | "captured" | "sent" | "failed";
@@ -39,7 +59,7 @@ export type InquirySummary = Pick<
 > & { destination: string };
 export type InquiryFilters = {
   q: string;
-  status: "" | "draft" | "submitted";
+  status: "" | InquiryStatus;
   sort: "asc" | "desc";
   page: number;
   pageSize: number;
@@ -61,8 +81,16 @@ export const readInquiries = (filters: InquiryFilters, signal?: AbortSignal) =>
     `${path}?${new URLSearchParams(Object.entries(filters).map(([k, v]) => [k, String(v)]))}`,
     { signal },
   );
-export const readInquiry = (id: string, signal?: AbortSignal) =>
-  apiRequest<Inquiry>(base(), `${path}/${encodeURIComponent(id)}`, { signal });
+export const readInquiry = (
+  id: string,
+  signal?: AbortSignal,
+  pages: DetailPages = { messagePage: 1, historyPage: 1 },
+) =>
+  apiRequest<Inquiry>(
+    base(),
+    `${path}/${encodeURIComponent(id)}?${new URLSearchParams(Object.entries(pages).map(([k, v]) => [k, String(v)]))}`,
+    { signal },
+  );
 export const readInquiryCounts = (signal?: AbortSignal) =>
   apiRequest<InquiryCounts>(base(), `${path}/counts`, { signal });
 export function writeInquiry(

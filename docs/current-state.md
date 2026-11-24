@@ -4,6 +4,17 @@ Inspected: 2026-11-24. Application baseline:
 `9c9c0310b74c3df34a10ad2828104bf9bc94e897` (`chore: import VOIC frontend baseline`).
 Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
 
+## Staff inquiry workspace (2026-11-24)
+
+The current task implements administrator/sales submitted-only lists, real scoped dashboard
+counts, immutable inquiry details, canonical status transitions, customer/company conversation,
+verified owner replies, separate internal notes, server audit and event-scoped durable outbox.
+Staff writes require the explicit development/test capture setting; production staff business
+writes stay disabled pending staff MFA. Content editors/customers/anonymous users are denied
+by the backend; drafts remain owner-only. No real employee identity is created automatically.
+[Staff guide](staff-inquiries.md) records contracts, transition matrix, safe local provisioning,
+Git Bash commands and numbered two-session manual testing. Earlier records below are historical.
+
 ## Implemented and present
 
 - One platform repository: the existing application lives in `frontend/` and the backend
@@ -19,7 +30,8 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
   migration commands and disposable database checks exist. Four catalog entities and one
   explicit catalog migration are implemented. The authentication migration adds three account/session/token entities.
   The customer inquiry migration adds four draft/line/history/notification entities; eleven
-  entities and three explicit migrations are now present.
+  entities were present at customer-inquiry completion. The staff workflow adds four separate
+  action/message/internal-note/audit entities: fifteen entities and four explicit migrations now exist.
   Native MySQL Server, managed through the separate Workbench client,
   is the chosen local setup as of 2026-11-23. Legacy Compose files are retained but unused;
   do not operate Docker or containers/volumes for this setup.
@@ -30,7 +42,7 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
 - Public product reads use native MySQL through NestJS, Services and product React Query
   hooks across all public consumers. Recipes and other page content remain local, with
   original assets/fonts. The old product records are explicit backend seed input; only
-  disconnected staff previews retain a separate local fixture.
+  disconnected non-inquiry staff previews retain a separate local fixture.
 - Supported interfaces are Arabic (default, RTL) and English (LTR) only. Unsupported locale
   links fall back to Arabic without changing the product route or other query parameters.
   Brand names retain approved Arabic names and official Latin spellings. Commercial and
@@ -47,12 +59,12 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
   records the implemented contracts and current verification. Staff workspace access has a
   backend role check. Customer inquiries now implement owned drafts, revisioned saves,
   verified/idempotent submission, snapshots/history, account reads and durable notifications;
-  [the inquiry guide](customer-inquiries.md) records contracts and manual steps. Staff business
-  CRUD, MFA and staff data remain unimplemented.
+  [the inquiry guide](customer-inquiries.md) records contracts and manual steps. Staff inquiry operations are now connected as described above; employee/content management
+  and staff MFA remain unimplemented.
 - `services/api.ts` and `services/products.ts` connect public catalog reads to `/api/v1`
   through same-origin requests (local Vite proxy to port 3000) or `VITE_API_BASE_URL`.
-  Authentication/account and inquiry services use that same HTTP boundary. Staff business
-  operations remain disconnected.
+  Authentication/account and inquiry services use that same HTTP boundary. Staff inquiry operations use the same boundary and their own role-scoped hooks; unrelated
+  staff modules remain disconnected.
 - Product, auth and account feature hooks use the existing QueryClient. Private data uses
   identity/session scope and cancellation/removal on account transitions; public catalog
   cache remains intact. Inquiry hooks now implement private reads/writes/cache management;
@@ -65,6 +77,60 @@ Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
   excluded from production. Route guards alone would not secure a future server API.
 - There is no verified production deployment, database restoration test, security validation,
   load test, proven capacity, or legal compliance result in this baseline.
+
+## Staff workflow verification (2026-11-24)
+
+- Work began clean on permanent `mahmoud` at `2d89755d73148b2b8ff117b0ae49e188db3a56ec`.
+  No branch, Docker operation, dependency upgrade, publication change or deployment was made.
+  Existing catalog/auth/customer inquiry data and original assets/fonts/recipe links are preserved.
+- Backend `pnpm.cmd test` passed 19/19 and frontend `pnpm.cmd test` passed 13/13.
+  Both typechecks and builds passed. Backend build used
+  `pnpm.cmd build --outDir .tmp/staff-build` (the checker uses `.tmp/auth-build`), preserving
+  the normal watched `dist/`. No production server or ordinary development server was launched.
+- Disposable native operator evidence: staff scope `passed:true` at
+  `2026-11-24T18:37:13.820Z`; regression scope `passed:true` at
+  `2026-11-24T18:41:25.844Z`, with matching operator success. Administrator credentials
+  were entered locally only; random test credentials stayed in operator/child process memory.
+  Both scopes ran all real MySQL/HTTP checks, with browser groups split to keep execution bounded.
+- Four migrations applied and repeated as a no-op. Workflow-only revert/reapply preserved
+  catalog, an existing auth row, a legacy submitted request, its snapshot/history/submission
+  outbox job. Rollback after any workflow action was refused. All destructive DDL stayed in
+  the operator-owned disposable database; synchronization remained disabled.
+- Real API tests passed administrator/sales authorization; anonymous/customer/editor rejection;
+  owner isolation and draft privacy; bounded search/filtering and tied-date pagination; workflow
+  transitions, closed read-only, injection/CSRF/length/rate restrictions; concurrent revisions;
+  compatible/incompatible receipt retries and resolution; separate private notes; atomic
+  action/message/history/audit/outbox counts; capture failure/retry without duplicate business
+  actions; frozen snapshots after catalog edits; development provisioning, preserved existing
+  password/profile, session revocation, genuine verification and fail-closed production settings.
+- Real Chrome staff/customer journeys passed Arabic RTL and English LTR, administrator and
+  sales, desktop and 390px mobile: submit → review → request information → owner reply →
+  respond → private note → cancel/confirm close. Background polling, retained unsent conflict
+  text, private cache cleanup on account switch/revocation and late-response cancellation passed.
+  Staff desktop/mobile and customer screenshots were inspected. The existing authentication,
+  customer draft/submission/lost-response browser suites and all nine catalog regressions passed.
+  The legacy auth test now checks editor denial rather than a raw role label; the 44-navigation
+  catalog sweep has its own bounded 120-second total budget (individual assertions stay bounded).
+- `node scripts/apply-native-staff.mjs` applied exactly one additive development migration at
+  `2026-11-24T18:42:13.813Z`, followed by a no-op repeat. Private in-memory fingerprints
+  confirmed every existing value in all eleven catalog/account/inquiry tables remained unchanged
+  (only new outbox metadata columns excluded). The isolated probe disabled its notification
+  worker and reconfirmed preservation after HTTP checks. Native MySQL is 8.0.44:3306; liveness
+  and readiness returned 200, the catalog retained all 11 products, and anonymous staff access
+  returned 401. Native connection/InnoDB passed again; migration show reported no pending work.
+- Only `STAFF_INQUIRY_WRITES=true` was added to the existing ignored backend `.env` for
+  local capture testing; credentials remained private/ignored. No actual employee, test
+  customer or test inquiry was created in development. The user must choose/provision a real
+  local staff identity interactively using the [staff guide](staff-inquiries.md).
+- The operator received `finish`, removed only its own disposable database/user and exited;
+  its ready marker disappeared. Own test APIs/frontends/browsers closed. Final inspection found
+  ports 3000/8443/8444 free and native MySQL still PID 6616:3306. No unrelated process was stopped.
+  The only remaining Node process was the existing Codex computer-use runtime.
+- Staged review covered 53 source/test/documentation files: no actual local secret values,
+  private-key/GitHub-token patterns, runtime/capture/session files or unintended asset/dependency
+  changes. Captures, screenshots and verification evidence remain ignored. These are local
+  capture tests, not SMTP delivery, production security certification or deployment approval.
+  Production staff writes remain disabled until staff MFA; other staff modules remain disconnected.
 
 ## Customer inquiry verification (2026-11-24)
 

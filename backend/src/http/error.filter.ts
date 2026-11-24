@@ -50,6 +50,11 @@ export class ApiErrorFilter implements ExceptionFilter {
           "INQUIRY_CONFLICT",
           "IDEMPOTENCY_CONFLICT",
           "EMAIL_UNVERIFIED",
+          "STAFF_FORBIDDEN",
+          "STAFF_WRITES_DISABLED",
+          "WORKFLOW_FIELDS",
+          "WORKFLOW_TRANSITION",
+          "WORKFLOW_CLOSED",
         ].includes(String(detail.code))
       )
         code = String(detail.code);

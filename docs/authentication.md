@@ -2,8 +2,9 @@
 
 Authorized scope: 2026-11-24, on permanent `mahmoud`. Native MySQL, NestJS/TypeORM and
 the existing React/React Query application are retained. This implements customer accounts
-and the foundation for staff authorization. Inquiry submission, staff business CRUD,
-staff provisioning, MFA and deployment are separate work. No default staff accounts exist.
+and the foundation for staff authorization. Later accepted inquiry submission and staff
+workflow/provisioning are documented in their feature guides. Staff MFA, general employee
+management and deployment remain future work. No default staff accounts exist.
 
 ## Storage and identity
 
@@ -193,3 +194,22 @@ Actual results and any pending checks are recorded in [current state](current-st
 
 These references guide implementation; successful local tests are not production security
 certification, external delivery proof or deployment approval.
+
+## Local staff provisioning and inquiry permissions (2026-11-24)
+
+[Staff guide](staff-inquiries.md) provides the interactive native-only local create/promote
+command. It reuses Argon2id, preserves an existing account's password/profile, confirms the
+specific identity/change and revokes existing sessions on role changes. Verification uses
+genuine captured tokens unless the operator explicitly confirms development verification.
+There is no public employee registration or default staff identity. Automated staff accounts
+exist only in the disposable native test database. Only administrator/sales can read submitted
+inquiries; verified accounts may act only when STAFF_INQUIRY_WRITES=true in development/test
+with capture mail. Production rejects that setting and keeps writes disabled pending MFA.
+Private staff query keys include identity, role and session generation. Role revocation clears
+private data and aborts old requests while preserving public catalog cache.
+
+The disposable checker now verifies the fourth workflow migration up/idempotence/revert before
+workflow actions, preserving a legacy submitted snapshot and catalog/account rows; rollback
+with workflow history is refused. The old “latest inquiry migration” description above refers
+to the previous customer-only phase. `--staff-test` is the current operator alias, sharing the
+same owned disposable database mechanism and cleanup as `--auth-test`/`--inquiries-test`.

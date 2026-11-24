@@ -283,7 +283,11 @@ export async function runAuthUi({
         await page.getByRole("button", { name: "Sign in", exact: true }).click();
         await page.waitForURL((url) => url.pathname === "/staff");
         await page.getByRole("heading", { name: "Staff workspace", exact: true }).waitFor();
-        await page.getByText("content_editor", { exact: true }).waitFor();
+        await page.getByText("Content management is not connected yet.", { exact: true }).waitFor();
+        await page.goto("/staff/inquiries?lang=en");
+        await page
+          .getByRole("heading", { name: "You do not have access to this workspace", exact: true })
+          .waitFor();
         await source.getRepository(AuthUser).update({ id: employee.id }, { role: "customer" });
       }
       await context.close();
@@ -375,6 +379,7 @@ export async function runAuthUi({
       .waitFor();
     await failureContext.close();
     return {
+      passed: true,
       locales: checked,
       flows:
         "registration, capture verification/reload, sign-in/redirect/selection, profile/save/reload, logout/private cache cancellation, capture recovery/reset/reload, password change, role restriction/staff redirect, expiry, account switching, mobile RTL/LTR, pending, service failure/recovery, expired/used/invalid tokens, rate-limit feedback",

@@ -1,20 +1,19 @@
 import type { ReactNode } from "react";
-import { useAuth, useLogout, authFailure } from "../hooks/auth/queries";
-import { useStaffAccess } from "../hooks/account/queries";
+import { useAuth } from "../hooks/auth/queries";
 import { msg, withLang, type Lang } from "../i18n";
 import AppLink from "./AppLink";
-import { StaffLayout } from "./WorkspaceLayouts";
-import { IntegrationNotice } from "./Feedback";
 
 export default function SessionGate({
   lang,
   go,
   staff = false,
+  inquiries = false,
   children,
 }: {
   lang: Lang;
   go: (href: string) => void;
   staff?: boolean;
+  inquiries?: boolean;
   children: ReactNode;
 }) {
   const auth = useAuth(),
@@ -50,7 +49,11 @@ export default function SessionGate({
         </div>
       </main>
     );
-  if (staff ? user.role === "customer" : user.role !== "customer")
+  if (
+    staff
+      ? user.role === "customer" || (inquiries && user.role === "content_editor")
+      : user.role !== "customer"
+  )
     return (
       <main className="access-page access-denied section-pad" aria-labelledby="access-denied-title">
         <section className="access-denied-card">
@@ -79,55 +82,5 @@ export default function SessionGate({
         </section>
       </main>
     );
-  return <div key={`${user.id}:${auth.epoch}`}>{children}</div>;
-}
-export function StaffWorkspace({
-  lang,
-  go,
-  path,
-}: {
-  lang: Lang;
-  go: (href: string) => void;
-  path: string;
-}) {
-  const access = useStaffAccess(),
-    logout = useLogout();
-  return (
-    <StaffLayout lang={lang} go={go} active={path}>
-      <header className="workspace-page-heading">
-        <h1>{msg(lang, { ar: "مساحة الموظفين", en: "Staff workspace" })}</h1>
-        <button
-          className="text-link"
-          disabled={logout.isPending}
-          onClick={async () => {
-            try {
-              await logout.mutateAsync();
-              go(withLang("/login", lang));
-            } catch {}
-          }}
-        >
-          {msg(lang, { ar: "تسجيل الخروج", en: "Log out" })}
-        </button>
-      </header>
-      {logout.error && <p role="alert">{authFailure(logout.error, lang)}</p>}
-      {access.isPending ? (
-        <p role="status">{msg(lang, { ar: "جارٍ تحميل الصلاحيات…", en: "Loading permissions…" })}</p>
-      ) : access.error ? (
-        <p role="alert">
-          {msg(lang, { ar: "تعذّر تحميل الصلاحيات", en: "Permissions could not be loaded" })}
-          <button onClick={() => access.refetch()}>
-            {msg(lang, { ar: "إعادة المحاولة", en: "Retry" })}
-          </button>
-        </p>
-      ) : (
-        <p>{access.data?.role}</p>
-      )}
-      <IntegrationNotice lang={lang}>
-        {msg(lang, {
-          ar: "الدخول إلى المساحة محمي بالخادم. بيانات الموظفين وإدارة المنتجات والاستفسارات غير متصلة بعد، ولا تُحفظ تعديلات هنا.",
-          en: "Workspace access is enforced by the server. Staff data, catalog editing and inquiry management are not connected; no changes are saved here.",
-        })}
-      </IntegrationNotice>
-    </StaffLayout>
-  );
+  return <div key={`${user.id}:${user.role}:${auth.epoch}`}>{children}</div>;
 }

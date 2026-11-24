@@ -1,4 +1,5 @@
 import { Column, Entity, PrimaryColumn } from "typeorm";
+import type { InquiryStatus, SubmittedStatus } from "./workflow.entities.js";
 
 export type InquiryFields = {
   kind: "individual" | "company";
@@ -22,7 +23,7 @@ export class CustomerInquiry {
   @Column({ type: "varchar", length: 36 }) userId!: string;
   @Column({ type: "varchar", length: 36 }) creationKey!: string;
   @Column({ type: "varchar", length: 32, unique: true }) reference!: string;
-  @Column({ type: "varchar", length: 24 }) status!: "draft" | "submitted";
+  @Column({ type: "varchar", length: 24 }) status!: InquiryStatus;
   @Column({ type: "int" }) revision!: number;
   @Column({ type: "varchar", length: 2 }) lang!: "ar" | "en";
   @Column({ type: "json" }) fields!: InquiryFields;
@@ -49,7 +50,7 @@ export class InquiryLine {
 export class InquiryHistory {
   @PrimaryColumn({ type: "varchar", length: 36 }) id!: string;
   @Column({ type: "varchar", length: 36 }) inquiryId!: string;
-  @Column({ type: "varchar", length: 24 }) status!: "submitted";
+  @Column({ type: "varchar", length: 24 }) status!: SubmittedStatus;
   @Column({ type: "datetime", precision: 3 }) occurredAt!: Date;
 }
 @Entity("inquiry_notifications")
@@ -57,6 +58,11 @@ export class InquiryNotification {
   @PrimaryColumn({ type: "varchar", length: 36 }) id!: string;
   @Column({ type: "varchar", length: 36 }) inquiryId!: string;
   @Column({ type: "varchar", length: 12 }) audience!: "customer" | "company";
+  @Column({ type: "varchar", length: 36, default: "submission" }) eventId!: string;
+  @Column({ type: "varchar", length: 24, default: "submission" }) kind!:
+    | "submission"
+    | "staff_update"
+    | "customer_reply";
   @Column({ type: "varchar", length: 254 }) recipient!: string;
   @Column({ type: "varchar", length: 16 }) state!:
     | "pending"

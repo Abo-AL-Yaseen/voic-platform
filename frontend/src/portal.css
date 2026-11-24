@@ -357,9 +357,17 @@
   position: static;
   overflow-wrap: anywhere;
 }
-.workspace-page-heading h1 { line-height: 1.5; }
-.route-heading:focus:not(:focus-visible) { outline: none; }
-.route-heading:focus-visible { outline: 2px dashed #78845d; outline-offset: 7px; border-radius: 4px; }
+.workspace-page-heading h1 {
+  line-height: 1.5;
+}
+.route-heading:focus:not(:focus-visible) {
+  outline: none;
+}
+.route-heading:focus-visible {
+  outline: 2px dashed #78845d;
+  outline-offset: 7px;
+  border-radius: 4px;
+}
 .access-denied-card {
   display: grid;
   gap: 24px;
@@ -370,14 +378,92 @@
   background: #fffdf4;
   box-shadow: 0 8px 36px #4b5b3512;
 }
-.access-denied-card h1, .access-denied-card p { margin: 0; }
-.inquiry-fields { border: 0; padding: 0; margin: 24px 0; min-width: 0; }
-.inquiry-line-list { display: grid; gap: 20px; }
-.inquiry-detail-line { padding: 20px 0; border-bottom: 1px solid #dddfcc; overflow-wrap: anywhere; }
-.inquiry-detail-fields { display: grid; gap: 18px; }
-.inquiry-detail-fields dt { color: #727463; margin-bottom: 6px; }
-.inquiry-detail-fields dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-.workspace-content > .list-toolbar { margin-top: 28px; }
+.access-denied-card h1,
+.access-denied-card p {
+  margin: 0;
+}
+.inquiry-fields {
+  border: 0;
+  padding: 0;
+  margin: 24px 0;
+  min-width: 0;
+}
+.inquiry-line-list {
+  display: grid;
+  gap: 20px;
+}
+.inquiry-detail-line {
+  padding: 20px 0;
+  border-bottom: 1px solid #dddfcc;
+  overflow-wrap: anywhere;
+}
+.inquiry-detail-fields {
+  display: grid;
+  gap: 18px;
+}
+.inquiry-detail-fields dt {
+  color: #727463;
+  margin-bottom: 6px;
+}
+.inquiry-detail-fields dd {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.workspace-content > .list-toolbar {
+  margin-top: 28px;
+}
+.inquiry-conversation > ol {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 18px;
+}
+.inquiry-message {
+  padding: 20px;
+  border-radius: 10px;
+  background: #fffdf4;
+  overflow-wrap: anywhere;
+}
+.inquiry-message.staff {
+  border-inline-start: 3px solid #4b5b35;
+}
+.inquiry-message p {
+  white-space: pre-wrap;
+  margin-top: 12px;
+  line-height: 1.9;
+}
+.inquiry-message time {
+  display: block;
+  font-size: 12px;
+  color: #727463;
+  margin-top: 8px;
+}
+.workflow-dialog {
+  width: min(92vw, 620px);
+  margin: auto;
+  max-height: 85vh;
+  overflow: auto;
+  border: 0;
+  border-radius: 18px;
+  padding: 32px;
+  background: #faf7e8;
+  color: #4b5b35;
+}
+.workflow-dialog::backdrop {
+  background: #1d251b88;
+}
+.workflow-dialog h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+.workflow-dialog p {
+  line-height: 1.9;
+}
+.inquiry-record-grid p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .workspace-page-heading h1 {
   font-size: clamp(30px, 3vw, 43px);
 }

@@ -22,11 +22,13 @@ if (Object.keys(process.env).some((key) => key.startsWith("DB_") || key === "NOD
 }
 
 const catalogTest = process.argv.slice(2).join(" ") === "--catalog-test";
-const authTest = ["--auth-test", "--inquiries-test"].includes(process.argv.slice(2).join(" "));
+const authTest = ["--auth-test", "--inquiries-test", "--staff-test"].includes(
+  process.argv.slice(2).join(" "),
+);
 const testOnly = authTest || catalogTest || process.argv.slice(2).join(" ") === "--test-only";
 if (process.argv.length > 2 && !testOnly) {
   process.stderr.write(
-    "Only --test-only, --catalog-test, --auth-test or --inquiries-test is supported.\n",
+    "Only --test-only, --catalog-test, --auth-test, --inquiries-test or --staff-test is supported.\n",
   );
   process.exit(1);
 }
@@ -142,7 +144,7 @@ try {
       const result = execFileSync(process.execPath, args, {
         env: { ...env, ...overrides },
         stdio: "pipe",
-        timeout: authTest ? 300000 : 120000,
+        timeout: authTest ? 600000 : 120000,
       });
       process.stdout.write(result);
     } catch (error) {

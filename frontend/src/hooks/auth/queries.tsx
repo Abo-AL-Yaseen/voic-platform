@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [transitionError, setTransitionError] = useState<Error | null>(null);
   const generation = useRef(0);
   const previousUser = useRef<string | null | undefined>(undefined);
+  const previousRole = useRef<string | null>(null);
   const channel = useRef<BroadcastChannel | null>(null);
   const key = authKeys.current(epoch);
   const query = useQuery({
@@ -58,18 +59,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void expire();
     };
     window.addEventListener("voic:session-expired", listener);
+    window.addEventListener("voic:permissions-changed", listener);
     if (typeof BroadcastChannel !== "undefined") {
       channel.current = new BroadcastChannel("voic-session");
       channel.current.onmessage = listener;
     }
     return () => {
       window.removeEventListener("voic:session-expired", listener);
+      window.removeEventListener("voic:permissions-changed", listener);
       channel.current?.close();
     };
   }, []);
   const userId = query.data?.user?.id ?? null;
   useEffect(() => {
     if (!query.data) return;
+    const role = query.data.user?.role || null;
+    if (previousUser.current === userId && previousRole.current && previousRole.current !== role)
+      void expire();
     if (previousUser.current && previousUser.current !== userId) {
       const oldId = previousUser.current;
       const predicate = (q: { meta?: Record<string, unknown>; queryKey: readonly unknown[] }) =>
@@ -82,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     previousUser.current = userId;
+    previousRole.current = role;
   }, [userId, query.data]);
   async function transition<T>(
     operation: () => Promise<T>,

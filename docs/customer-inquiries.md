@@ -1,3 +1,9 @@
+> Updated 2026-11-24: the accepted staff phase extends submitted inquiries with canonical
+> under_review/awaiting_customer/responded/closed states, owner replies and paginated public
+> conversation/history. See [staff inquiry contracts and manual testing](staff-inquiries.md).
+> The draft/submission baseline below remains historical where it describes later staff work
+> as disconnected. Immutable submitted fields/snapshots and owner/draft privacy remain in force.
+
 # Customer supply inquiries
 
 Authorized 2026-11-24 on `mahmoud`. Native MySQL only. This slice preserves catalog and
@@ -192,3 +198,14 @@ documented development command after applying the migration if it still runs the
 
 Actual verification results are recorded in [current state](current-state.md); planned checks
 above are not themselves evidence of success.
+
+## Staff-phase integration
+
+Customer `GET /account/inquiries/:id` accepts messagePage/historyPage (20/page), returns plain
+public messages with sender `customer`/`staff`, safe history and pagination. It never includes
+internal notes/audit/employee identity. Lists support all canonical statuses; submitted counts
+include every non-draft state. Verified owners reply through the documented revision/key endpoint
+only while open. Replies in awaiting_customer return status to under_review; closed/cancelled
+are read-only. Retry of original submission after later staff actions returns the current
+record without resetting workflow state. Submission-notification acknowledgments remain scoped
+to original jobs; later outbox events are not exposed as internal delivery metadata.

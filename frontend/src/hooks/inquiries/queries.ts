@@ -26,15 +26,19 @@ async function privateCall<T>(fn: () => Promise<T>) {
     throw e;
   }
 }
-export function useInquiry(id: string) {
+export function useInquiry(
+  id: string,
+  pages: api.DetailPages = { messagePage: 1, historyPage: 1 },
+) {
   const s = useScope();
   return useQuery({
-    queryKey: inquiryKeys.customerDetail(s.id, s.epoch, id),
-    queryFn: ({ signal }) => privateCall(() => api.readInquiry(id, signal)),
+    queryKey: inquiryKeys.customerDetail(s.id, s.epoch, id, pages),
+    queryFn: ({ signal }) => privateCall(() => api.readInquiry(id, signal, pages)),
     enabled: s.enabled && !!id,
     meta: { private: true },
     retry: false,
     staleTime: 0,
+    refetchInterval: 15000,
   });
 }
 export function useInquiries(filters: api.InquiryFilters) {
@@ -128,6 +132,22 @@ export function inquiryFailure(error: unknown, lang: "ar" | "en") {
       : "A product or package is unavailable. Reload options, then remove the product or choose an available package and save again.";
   if (code === "EMAIL_UNVERIFIED")
     return ar ? "أكد بريد حسابك قبل الإرسال." : "Verify your account email before submission.";
+  if (code === "WORKFLOW_FIELDS")
+    return ar
+      ? "أدخل نصًا توضيحيًا حتى 4000 محرف في الحقل المناسب."
+      : "Enter explanatory text up to 4000 characters in the appropriate field.";
+  if (code === "WORKFLOW_TRANSITION")
+    return ar
+      ? "هذا الانتقال غير متاح من الحالة الحالية. حدّث السجل وراجعه."
+      : "This transition is unavailable from the current state. Refresh and review.";
+  if (code === "WORKFLOW_CLOSED")
+    return ar ? "الاستفسار مغلق وللقراءة فقط." : "This inquiry is closed and read-only.";
+  if (code === "STAFF_WRITES_DISABLED")
+    return ar
+      ? "إجراءات الموظفين غير مفعلة في هذه البيئة."
+      : "Staff business actions are disabled in this environment.";
+  if (code === "STAFF_FORBIDDEN")
+    return ar ? "لا تملك صلاحية إدارة الاستفسارات." : "You do not have inquiry management permission.";
   if (code === "INQUIRY_FIELDS")
     return ar
       ? "راجع الاسم والوجهة والشركة والمنتجات والكميات أو متطلبات التعبئة."

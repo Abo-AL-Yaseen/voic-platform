@@ -4,6 +4,7 @@ import type { Environment } from "../config/environment.js";
 import { catalogEntities } from "../catalog/catalog.entities.js";
 import { authEntities } from "../auth/auth.entities.js";
 import { inquiryEntities } from "../inquiries/inquiry.entities.js";
+import { workflowEntities } from "../inquiries/workflow.entities.js";
 
 export function databaseOptions(env: Environment): DataSourceOptions {
   return {
@@ -18,7 +19,7 @@ export function databaseOptions(env: Environment): DataSourceOptions {
     synchronize: false,
     dropSchema: false,
     migrationsRun: false,
-    entities: [...catalogEntities, ...authEntities, ...inquiryEntities],
+    entities: [...catalogEntities, ...authEntities, ...inquiryEntities, ...workflowEntities],
     migrations: [join(import.meta.dirname, "migrations", "*.js")],
     migrationsTableName: "voic_migrations",
     migrationsTransactionMode: "each",

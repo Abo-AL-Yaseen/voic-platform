@@ -43,7 +43,8 @@ import {
   InquiryListPage,
   InquiryDetailPage,
 } from "./pages/AccountPages";
-import SessionGate, { StaffWorkspace } from "./components/SessionGate";
+import SessionGate from "./components/SessionGate";
+import { StaffWorkspace } from "./pages/StaffSalesPages";
 import { useAuth, authFailure } from "./hooks/auth/queries";
 import NewInquiryPage from "./pages/NewInquiryPage";
 import PrivacyPage from "./pages/PrivacyPage";
@@ -323,8 +324,8 @@ export default function App() {
     );
   } else if (path === "/staff" || path.startsWith("/staff/")) {
     page = (
-      <SessionGate lang={lang} go={go} staff>
-        <StaffWorkspace lang={lang} go={go} path={path} />
+      <SessionGate lang={lang} go={go} staff inquiries={path.startsWith("/staff/inquiries")}>
+        <StaffWorkspace lang={lang} go={go} path={path} search={url.search} />
       </SessionGate>
     );
   } else if (path === "/privacy") {

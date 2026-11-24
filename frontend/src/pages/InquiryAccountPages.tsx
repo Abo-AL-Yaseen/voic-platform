@@ -8,7 +8,14 @@ import {
   useInquiryCounts,
   inquiryFailure,
 } from "../hooks/inquiries/queries";
-import type { InquiryFilters } from "../services/inquiries";
+import { submittedStatuses, type InquiryFilters } from "../services/inquiries";
+import { inquiryStatus } from "../utils/inquiryLabels";
+import {
+  InquiryConversation,
+  RecordPager,
+  WorkflowComposer,
+} from "../components/InquiryConversation";
+import { useAuth } from "../hooks/auth/queries";
 import { msg, productName, withLang, type Lang } from "../i18n";
 import { useSelectedProducts, visibleData } from "../hooks/products/queries";
 import CatalogStatus from "../components/CatalogStatus";
@@ -20,8 +27,7 @@ type Props = {
   search?: string;
   preview?: boolean;
 };
-export const inquiryStatus = (status: string, lang: Lang) =>
-  status === "draft" ? t(lang, "مسودة", "Draft") : t(lang, "مرسل للمراجعة", "Submitted for review");
+export { inquiryStatus } from "../utils/inquiryLabels";
 const date = (value: string, lang: Lang) =>
   new Date(value).toLocaleString(lang === "ar" ? "ar-PS" : "en-GB");
 export function AccountHeading({ title, description }: { title: string; description: string }) {
@@ -69,7 +75,10 @@ export function InquiryListPage({ lang, go, search = "" }: Props) {
     status = params.get("status");
   const [filters, setFilters] = useState<InquiryFilters>({
     q: "",
-    status: status === "draft" || status === "submitted" ? status : "",
+    status:
+      status === "draft" || submittedStatuses.includes(status as (typeof submittedStatuses)[number])
+        ? (status as InquiryFilters["status"])
+        : "",
     sort: "desc",
     page: 1,
     pageSize: 10,
@@ -112,7 +121,7 @@ export function InquiryListPage({ lang, go, search = "" }: Props) {
           onChange={(e) => set({ status: e.target.value as InquiryFilters["status"] })}
         >
           <option value="">{t(lang, "كل الحالات", "All statuses")}</option>
-          {["draft", "submitted"].map((s) => (
+          {["draft", ...submittedStatuses].map((s) => (
             <option value={s} key={s}>
               {inquiryStatus(s, lang)}
             </option>
@@ -215,7 +224,9 @@ export function InquiryListPage({ lang, go, search = "" }: Props) {
   );
 }
 export function InquiryDetailPage({ lang, go, inquiryId = "" }: Props) {
-  const query = useInquiry(inquiryId),
+  const [pages, setPages] = useState({ messagePage: 1, historyPage: 1 });
+  const user = useAuth().session?.user;
+  const query = useInquiry(inquiryId, pages),
     i = query.data;
   const currentProducts = useSelectedProducts(
     i?.status === "draft" ? i.items.map((x) => x.productId) : [],
@@ -348,7 +359,41 @@ export function InquiryDetailPage({ lang, go, inquiryId = "" }: Props) {
                   ))}
                 </ol>
               )}
+              <RecordPager
+                info={i.historyPagination}
+                lang={lang}
+                onPage={(historyPage) => setPages({ ...pages, historyPage })}
+              />
             </section>
+            {i.status !== "draft" && (
+              <>
+                <InquiryConversation
+                  record={i}
+                  lang={lang}
+                  onPage={(messagePage) => setPages({ ...pages, messagePage })}
+                />
+                {user?.emailVerified ? (
+                  <WorkflowComposer
+                    key={i.id}
+                    record={i}
+                    lang={lang}
+                    refresh={() => query.refetch()}
+                    onApplied={() => setPages({ messagePage: 1, historyPage: 1 })}
+                  />
+                ) : (
+                  <AppLink
+                    className="button button-secondary"
+                    go={go}
+                    href={withLang(
+                      `/verify-email?returnTo=${encodeURIComponent(`/account/inquiries/${i.id}`)}`,
+                      lang,
+                    )}
+                  >
+                    {t(lang, "أكد البريد للرد", "Verify email to reply")}
+                  </AppLink>
+                )}
+              </>
+            )}
             {!!i.notifications.length && (
               <section className="workspace-section">
                 <h2>{t(lang, "الإشعارات", "Notifications")}</h2>
