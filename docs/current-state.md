@@ -26,7 +26,9 @@ The browser sweep passed 66 navigations, 12 axe scans and nine catalog regressio
 text contrast was corrected without changing original assets/fonts/composition.
 The test operator and owned servers were closed; native MySQL remains running. Combined
 human acceptance and production prerequisites remain open; no deployment or production-write
-enablement occurred. Hosted CI is defined and its observed result belongs in release readiness.
+enablement occurred. Hosted Ubuntu/native MySQL CI passed on code commit `8db7aa0`, including
+the full suite, actual restore/load and standalone catalog seven-migration rollback/reapply;
+the [readiness report](release-readiness.md) links the run and separates hosted/local results.
 
 ## Staff security and administration — completed locally (2026-11-25)
 

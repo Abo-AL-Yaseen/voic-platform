@@ -55,7 +55,7 @@ Combined human acceptance follows this phase; do not substitute it for automated
 | Bounded public/authenticated load | Passed: 244 requests, 3.976 s, 61.37 requests/s, p50 93.16 ms / p95 193.18 ms / p99 362.33 ms, zero unexpected errors; 6 task workers, measured peak 11 HTTP requests |
 | Browser accessibility/responsive sweep | Passed: 66 public route/locale/width navigations; 10 public + 2 staff axe WCAG 2 A/AA/2.1 AA scans without exclusions; 9 catalog regressions; 360/768/1365 px, AR/EN, keyboard/reduced motion and lazy-image loading. Reviewed safe AR-mobile/EN-desktop screenshots. |
 | Runtime grants/native seventh migration | Passed on disposable resources; native additive migration then applied once with all 26 existing business/security tables unchanged. Runtime audit UPDATE/DELETE and DDL denied. Native built manager check and real updated NestJS live/ready 200 at 20:52:33 UTC; 11 products, 4 recipes, 7 pages and anonymous staff 401. |
-| Hosted GitHub Actions | Defined; no hosted result claimed before push/run observation |
+| Hosted GitHub Actions | [Run 45699642123 passed](https://github.com/Abo-AL-Yaseen/voic-platform/actions/runs/45699642123), completed 2026-11-25 21:01:54 UTC on code commit `8db7aa0ce0c557fef5e3f98eb6cc05d6b858df2e`: frozen install, unit/type/build/audit/exposure checks, real isolated journeys/production/load/restore, standalone catalog apply/idempotence/full seven-migration rollback/restoration and restricted runtime audit grants. No private artifacts uploaded. |
 
 Environment for local checks: Windows, Node.js 22.20.0, pnpm 10.23.0, installed Chrome;
 native MySQL Server 8.0.44/3306, InnoDB/utf8mb4. No user servers were running at initial
@@ -76,6 +76,14 @@ Actual query plans used session PRIMARY, customer inquiry_owner_date (backward c
 scan), and notification_due (range/covering scan with filesort across the two eligible states).
 Validate notification sorting and large-dataset pool/query behavior under representative
 production traffic; no new business index was justified by this tiny fixture dataset.
+
+The independent hosted Ubuntu 24.04 run used Node 22.20.0, native MySQL 8.0.46 and Chrome,
+AMD EPYC 7763 / four logical CPUs / 15.6 GiB RAM. Its same 244-request scenario passed
+in 0.880 s (277.27 requests/s, p50 16.77 / p95 57.55 / p99 77.34 ms, peak 11, zero errors).
+Its separate restore verified 28 tables, seven migrations and six media files from a
+302,809-byte dump. These CI figures are separate warm, very short measurements, not a
+production capacity guarantee. The follow-up evidence commit changes documentation only;
+the fully verified application/CI code remains the commit linked above.
 
 ## Findings and release blockers
 
