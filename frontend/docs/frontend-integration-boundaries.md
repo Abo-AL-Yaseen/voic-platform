@@ -5,9 +5,11 @@ contracts, CSRF, private-cache behavior and local email setup are in
 [authentication](../../docs/authentication.md). Staff workspace access is server-authorized,
 and administrators/sales now use real inquiry lists, counts, frozen details, conversation,
 status actions and separate internal notes. Writes require the explicit local development
-setting; production writes remain disabled pending staff MFA. Product/category/use/recipe/page/media
+setting; production writes remain disabled pending operational approval. Product/category/use/recipe/page/media
 workspaces now use real private editorial APIs; see [content contracts](../../docs/content-management.md).
-The staff customer directory, employee management and the general audit screen remain disconnected designs.
+Employee management, mandatory staff MFA and the general audit screen use real APIs;
+see [staff security](../../docs/staff-security.md). The standalone staff customer directory
+remains an explicit disconnected design.
 [Staff inquiry contracts and testing](../../docs/staff-inquiries.md).
 Customer inquiry drafts,
 submission, counts/list/detail and notification states now use real owner-checked endpoints;
@@ -19,7 +21,7 @@ actions create the documented inquiry records.
 
 Before integrating remaining business features, the backend contract must define:
 
-- Staff MFA (customer sessions, CSRF, registration, verification and recovery are implemented).
+- Mandatory staff MFA, customer sessions, CSRF, registration, verification and recovery are implemented.
 - Server-provisioned employee permissions (`administrator`, `sales`, `content_editor`) with authorization
   enforced on every protected operation.
 - Inquiry reads/ownership, package validation, transactional submission/idempotency and
@@ -29,7 +31,7 @@ Before integrating remaining business features, the backend contract must define
   with private drafts, optimistic versions, review and explicit administrator publication.
 - For features beyond catalog: pagination, filtering, locale, sorting, error and cancellation contracts.
   The implemented catalog contract is in `docs/catalog-implementation.md` at the repository root.
-- Platform-wide audit management remains future work; inquiry audit rows are server-generated
+- Consolidated administrator audit reads are implemented; audit rows are server-generated
   and have no editing or customer read endpoint.
 
 Private React Query entries must use `meta.private = true`, include the user scope in their query keys,

@@ -18,6 +18,10 @@ export class LocalMediaStorage {
   private active = 0;
   root() {
     const test = process.env.NODE_ENV === "test";
+    if (!test && process.env.MEDIA_ROOT) {
+      if (!path.isAbsolute(process.env.MEDIA_ROOT)) throw new Error("Media root must be absolute");
+      return path.resolve(process.env.MEDIA_ROOT);
+    }
     const name = process.env.MEDIA_TEST_NAME || "default";
     if (test && !/^[a-zA-Z0-9_-]{1,60}$/.test(name))
       throw new Error("Invalid isolated media directory");
@@ -177,7 +181,7 @@ export class ContentMediaService {
     this.content.staff(req);
     if (!this.content.permissions(req).canWrite)
       throw new BadRequestException({ code: "STAFF_WRITES_DISABLED" });
-    this.content.limits.take("media-upload", this.content.staff(req).id, 20);
+    await this.content.limits.take("media-upload", this.content.staff(req).id, 20);
     const data = await this.storage.process(input);
     let written: string | undefined;
     try {

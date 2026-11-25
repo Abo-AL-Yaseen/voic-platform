@@ -4,6 +4,7 @@ import { chromium } from "@playwright/test";
 import { provisionLocalStaff } from "../../backend/.tmp/auth-build/auth/local-staff.js";
 import { loadEnvironment } from "../../backend/.tmp/auth-build/config/environment.js";
 import { totp } from "../../backend/scripts/test-staff-mfa.mjs";
+import { scanAccessibility } from "./release-quality.mjs";
 export async function runSecurityUi({ front, base, password, source, AuthUser, mailDir }) {
   const browser = await chromium.launch({ channel: "chrome", headless: true });
   let stage = "start",
@@ -209,6 +210,8 @@ export async function runSecurityUi({ front, base, password, source, AuthUser, m
       for (const c of codes) assert.ok(!(await page.content()).includes(c));
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       await page.screenshot({ path: `.tmp/security-ui-${lang}.png`, fullPage: true });
+      if (process.env.RELEASE_VERIFICATION === "yes")
+        await scanAccessibility(page, `audit-${lang}`);
       await page.goto(`/staff/security?lang=${lang}`);
       await page.getByRole("button", { name: t("Log out", "تسجيل الخروج"), exact: true }).click();
       await login();
@@ -238,14 +241,14 @@ export async function runSecurityUi({ front, base, password, source, AuthUser, m
       assert.equal(await page.locator(".audit-list li").count(), 0);
       await context.close();
     }
-    fs.rmSync(".tmp/security-ui-failure.json",{force:true});
+    fs.rmSync(".tmp/security-ui-failure.json", { force: true });
     return {
       passed: true,
       languages: ["en", "ar"],
       enrollment: true,
       challengeRecovery: true,
       invitation: true,
-      employeeRoleStatus:true,
+      employeeRoleStatus: true,
       audit: true,
       revocation: true,
       mobileKeyboard: true,

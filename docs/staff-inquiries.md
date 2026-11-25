@@ -1,5 +1,7 @@
 # Staff inquiry and sales workspace
 
+Current operational commands, seven-migration state, shared production limits and separate runtime/migration grants are in [operations](operations.md). Older phase-specific migration/apply commands below are historical; do not rerun them against the current development database. Use [combined manual acceptance](manual-acceptance.md) for current role/MFA journeys.
+
 Current staff authentication/permissions are superseded by the implemented [staff security and administration guide](staff-security.md). Mandatory MFA now protects every staff endpoint; employee and audit workspaces are connected. Production business writes remain disabled pending explicit operational approval. Earlier phase verification below is historical.
 
 Update 2026-11-25: [content workspaces](content-management.md) are connected separately for

@@ -1,5 +1,7 @@
 # Public catalog implementation
 
+Current operational commands, seven-migration state, shared production limits and separate runtime/migration grants are in [operations](operations.md). Older phase-specific migration/apply commands below are historical; do not rerun them against the current development database. Use [combined manual acceptance](manual-acceptance.md) for current role/MFA journeys.
+
 Decision date: 2026-11-23. This task authorizes the public read slice in
 [the catalog requirements](product-catalog.md); it does not authorize accounts, staff writes,
 inquiry submission or deployment. Native MySQL only; work remains on `mahmoud`.

@@ -124,7 +124,7 @@ test("registration/profile reject privilege, identity and unknown field injectio
     ).length > 0,
   );
 });
-test("public user projection cannot expose internal fields and rate counters are bounded", () => {
+test("public user projection cannot expose internal fields and rate counters are bounded", async () => {
   const value = publicUser({
     id: "id",
     email: "a@example.test",
@@ -145,8 +145,8 @@ test("public user projection cannot expose internal fields and rate counters are
   assert.ok(!JSON.stringify(value).includes("private"));
   assert.ok(!("securityVersion" in value));
   const limiter = new AuthRateLimit();
-  limiter.take("a", "id", 2);
-  limiter.take("a", "id", 2);
-  assert.throws(() => limiter.take("a", "id", 2));
-  limiter.take("a", "different", 2);
+  await limiter.take("a", "id", 2);
+  await limiter.take("a", "id", 2);
+  await assert.rejects(() => limiter.take("a", "id", 2));
+  await limiter.take("a", "different", 2);
 });

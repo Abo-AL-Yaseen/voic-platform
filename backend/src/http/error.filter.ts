@@ -85,6 +85,12 @@ export class ApiErrorFilter implements ExceptionFilter {
       .json({ statusCode, code, message, requestId: response.getHeader("X-Request-Id") });
     // Deliberately excludes exception, SQL, URLs, headers, cookies and request bodies.
     if (statusCode >= 500)
-      process.stderr.write(JSON.stringify({ event: "request_failed", statusCode }) + "\n");
+      process.stderr.write(
+        JSON.stringify({
+          event: "request_failed",
+          statusCode,
+          requestId: response.getHeader("X-Request-Id"),
+        }) + "\n",
+      );
   }
 }

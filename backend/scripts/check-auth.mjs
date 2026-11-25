@@ -1,4 +1,6 @@
 import { runSecurityUi } from "../../frontend/e2e/staff-security.mjs";
+import { checkRelease } from "./check-release.mjs";
+import { runReleaseUi } from "../../frontend/e2e/release-quality.mjs";
 import { checkSecurity } from "./check-security.mjs";
 import { completeStaff } from "./test-staff-mfa.mjs";
 import { randomBytes as securityRandom } from "node:crypto";
@@ -53,7 +55,7 @@ const front = "http://127.0.0.1:8444";
 const scope = fs.existsSync(".tmp/verification-scope.json")
   ? JSON.parse(fs.readFileSync(".tmp/verification-scope.json", "utf8")).scope
   : "all";
-if (!["all", "staff", "regression", "content", "security"].includes(scope))
+if (!["all", "staff", "regression", "content", "security", "release-probe"].includes(scope))
   throw new Error("Invalid verification scope");
 process.env.APP_URL = front;
 process.env.CORS_ORIGINS = front;
@@ -93,6 +95,8 @@ try {
   assert.match(env.dbDatabase, /^voic_test_[a-f0-9]{16}$/);
   assert.equal(env.dbUsername, env.dbDatabase);
   assert.equal(process.env.CONFIRM_DISPOSABLE_DATABASE, "yes");
+  // Test factors use a fresh process-only key, independent of the developer's .env key.
+  process.env.MFA_ENCRYPTION_KEY = randomBytes(32).toString("base64");
   fs.rmSync(".tmp/auth-verification.json", { force: true });
   source = new DataSource(databaseOptions(env));
   await source.initialize();
@@ -104,6 +108,7 @@ try {
     )
   ).map((r) => r.name);
   const owned = [
+    "operational_rate_limits",
     "staff_recovery_codes",
     "staff_mfa_factors",
     "staff_invitations",
@@ -135,7 +140,7 @@ try {
   assert.ok(names.every((n) => owned.includes(n)));
   for (const name of owned) if (names.includes(name)) await source.query(`DROP TABLE \`${name}\``);
   phase("migrations and catalog preservation");
-  assert.equal((await source.runMigrations()).length, 6);
+  assert.equal((await source.runMigrations()).length, 7);
   assert.equal((await source.runMigrations()).length, 0);
   assert.deepEqual(await seedCatalog(source), { inserted: 11, skipped: 0 });
   await source.query(
@@ -199,9 +204,10 @@ try {
     await source.getRepository(InquiryLine).findOneBy({ inquiryId: preserveId }),
   );
   await source.undoLastMigration();
+  await source.undoLastMigration();
   assert.equal(Number((await source.query("SELECT COUNT(*) AS n FROM auth_users"))[0].n), 1);
   assert.equal(Number((await source.query("SELECT COUNT(*) AS n FROM catalog_products"))[0].n), 11);
-  assert.equal((await source.runMigrations()).length, 1);
+  assert.equal((await source.runMigrations()).length, 2);
   assert.equal(
     JSON.stringify(await source.getRepository(CustomerInquiry).findOneBy({ id: preserveId })),
     legacyBefore,
@@ -479,137 +485,196 @@ try {
   await sharp({ create: { width: 96, height: 64, channels: 4, background: "#78845d" } })
     .png()
     .toFile(".tmp/content-upload.png");
-  phase("real browser flows and private cache isolation");
-  // New app resets only its in-memory limits. The disposable database remains intact.
-  await app.close();
-  app = undefined;
-  base = await openApp();
-  assert.equal((await (await fetch(base + "/products?pageSize=50")).json()).total, 11);
-  const frontendDir = path.resolve("../frontend");
-  const checkPort = await import("node:net");
-  await new Promise((resolve, reject) => {
-    const probe = checkPort.createServer();
-    probe.once("error", reject);
-    probe.listen(8444, "127.0.0.1", () => probe.close(resolve));
-  });
-  const output = fs.openSync(".tmp/auth-web.log", "w");
-  webProcess = spawn("cmd.exe", ["/c", "pnpm.cmd dev --host 127.0.0.1 --port 8444"], {
-    cwd: frontendDir,
-    env: { ...process.env, VITE_API_BASE_URL: base.replace(/\/api\/v1$/, ""), PORT: "8444" },
-    stdio: ["ignore", output, output],
-    windowsHide: true,
-  });
-  fs.closeSync(output);
-  for (let i = 0; i < 100; i++) {
-    try {
-      if ((await fetch(front)).ok) break;
-    } catch {}
-    await new Promise((r) => setTimeout(r, 200));
-  }
-  const browserResult = ["staff", "content", "security"].includes(scope)
-    ? undefined
-    : await runAuthUi({
-        front,
-        base,
-        mailDir,
-        captured,
-        password,
-        source,
-        AuthSession,
-        AuthUser,
-      });
-  await app.close();
-  app = undefined;
-  base = await openApp(Number(new URL(base).port));
-  phase("real inquiry browser flows");
-  const inquiryBrowserResult = ["staff", "content", "security"].includes(scope)
-    ? undefined
-    : await runInquiryUi({
-        front,
-        base,
-        captured,
-        password,
-        source,
-        AuthUser,
-      });
-  await app.close();
-  app = undefined;
-  base = await openApp(Number(new URL(base).port));
-  phase("staff customer browser workflow");
-  const staffBrowserResult = ["regression", "content", "security"].includes(scope)
-    ? undefined
-    : await runStaffUi({ front, base, password, source, AuthUser });
-  await app.close();
-  app = undefined;
-  base = await openApp(Number(new URL(base).port));
-  phase("content browser workflow");
-  const contentBrowserResult =
-    scope === "content" || scope === "all"
-      ? await runContentUi({
-          front,
-          base,
-          password,
-          source,
-          AuthUser,
-          persistedMediaUrl: contentResult.mediaPersistenceUrl,
-        })
-      : undefined;
-  phase("staff security real browser");
-  const securityBrowserResult = ["security", "all"].includes(scope)
-    ? await runSecurityUi({ front, base, password, source, AuthUser, mailDir })
-    : undefined;
-  phase("public catalog browser regression");
-  await new Promise((resolve, reject) => {
-    const runner = spawn(
+  if (scope === "release-probe") {
+    assert.equal(process.env.RELEASE_VERIFICATION, "yes");
+    phase("targeted release diagnostic probe; no browser or restore acceptance");
+    await app.close();
+    app = undefined;
+    base = await openApp();
+    const result = await checkRelease({
+      app,
+      source,
+      base,
+      front,
+      password,
+      mediaRoot: ownedMediaRoot,
+      restoreRequired: false,
+    });
+    fs.writeFileSync(
+      ".tmp/release-probe-verification.json",
+      JSON.stringify({
+        checkedAt: new Date().toISOString(),
+        result,
+        completeAcceptance: false,
+      }),
+    );
+    process.stdout.write(
+      "PASS: targeted diagnostic probe only; full browser/restore acceptance still required.\n",
+    );
+  } else {
+    phase("real browser flows and private cache isolation");
+    // New app resets only its in-memory limits. The disposable database remains intact.
+    await app.close();
+    app = undefined;
+    base = await openApp();
+    assert.equal((await (await fetch(base + "/products?pageSize=50")).json()).total, 11);
+    const frontendDir = path.resolve("../frontend");
+    const checkPort = await import("node:net");
+    await new Promise((resolve, reject) => {
+      const probe = checkPort.createServer();
+      probe.once("error", reject);
+      probe.listen(8444, "127.0.0.1", () => probe.close(resolve));
+    });
+    const output = fs.openSync(".tmp/auth-web.log", "w");
+    webProcess = spawn(
       process.execPath,
       [
-        path.join(frontendDir, "node_modules/@playwright/test/cli.js"),
-        "test",
-        "e2e/catalog.spec.ts",
+        path.join(frontendDir, "node_modules/vite/bin/vite.js"),
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8444",
       ],
       {
         cwd: frontendDir,
-        env: {
-          ...process.env,
-          VOIC_E2E_EXTERNAL_SERVERS: "yes",
-          VOIC_E2E_FRONTEND_URL: front,
-          VOIC_E2E_API_URL: base.replace(/\/api\/v1$/, ""),
-        },
-        stdio: "ignore",
+        env: { ...process.env, VITE_API_BASE_URL: base.replace(/\/api\/v1$/, ""), PORT: "8444" },
+        stdio: ["ignore", output, output],
         windowsHide: true,
       },
     );
-    runner.once("error", reject);
-    runner.once("exit", (code) =>
-      code === 0 ? resolve() : reject(new Error("Catalog regression failed")),
+    fs.closeSync(output);
+    for (let i = 0; i < 100; i++) {
+      try {
+        if ((await fetch(front)).ok) break;
+      } catch {}
+      await new Promise((r) => setTimeout(r, 200));
+    }
+    const browserResult = ["staff", "content", "security"].includes(scope)
+      ? undefined
+      : await runAuthUi({
+          front,
+          base,
+          mailDir,
+          captured,
+          password,
+          source,
+          AuthSession,
+          AuthUser,
+        });
+    await app.close();
+    app = undefined;
+    base = await openApp(Number(new URL(base).port));
+    phase("real inquiry browser flows");
+    const inquiryBrowserResult = ["staff", "content", "security"].includes(scope)
+      ? undefined
+      : await runInquiryUi({
+          front,
+          base,
+          captured,
+          password,
+          source,
+          AuthUser,
+        });
+    await app.close();
+    app = undefined;
+    base = await openApp(Number(new URL(base).port));
+    phase("staff customer browser workflow");
+    const staffBrowserResult = ["regression", "content", "security"].includes(scope)
+      ? undefined
+      : await runStaffUi({ front, base, password, source, AuthUser });
+    await app.close();
+    app = undefined;
+    base = await openApp(Number(new URL(base).port));
+    phase("content browser workflow");
+    const contentBrowserResult =
+      scope === "content" || scope === "all"
+        ? await runContentUi({
+            front,
+            base,
+            password,
+            source,
+            AuthUser,
+            persistedMediaUrl: contentResult.mediaPersistenceUrl,
+          })
+        : undefined;
+    phase("staff security real browser");
+    const securityBrowserResult = ["security", "all"].includes(scope)
+      ? await runSecurityUi({ front, base, password, source, AuthUser, mailDir })
+      : undefined;
+    phase("public catalog browser regression");
+    await new Promise((resolve, reject) => {
+      const runner = spawn(
+        process.execPath,
+        [
+          path.join(frontendDir, "node_modules/@playwright/test/cli.js"),
+          "test",
+          "e2e/catalog.spec.ts",
+        ],
+        {
+          cwd: frontendDir,
+          env: {
+            ...process.env,
+            VOIC_E2E_EXTERNAL_SERVERS: "yes",
+            VOIC_E2E_FRONTEND_URL: front,
+            VOIC_E2E_API_URL: base.replace(/\/api\/v1$/, ""),
+          },
+          stdio: "ignore",
+          windowsHide: true,
+        },
+      );
+      runner.once("error", reject);
+      runner.once("exit", (code) =>
+        code === 0 ? resolve() : reject(new Error("Catalog regression failed")),
+      );
+    });
+    let releaseResult, releaseBrowserResult;
+    if (process.env.RELEASE_VERIFICATION === "yes") {
+      phase("integrated public responsive and accessibility sweep");
+      releaseBrowserResult = await runReleaseUi({ front });
+      phase("integrated production load and restore rehearsal");
+      await app.close();
+      app = undefined;
+      base = await openApp(Number(new URL(base).port));
+      releaseResult = await checkRelease({
+        app,
+        source,
+        base,
+        front,
+        password,
+        mediaRoot: ownedMediaRoot,
+      });
+    }
+    fs.writeFileSync(
+      ".tmp/auth-verification.json",
+      JSON.stringify({
+        passed: true,
+        checkedAt: new Date().toISOString(),
+        scope,
+        securityResult,
+        securityBrowserResult,
+        browserResult,
+        inquiryResult,
+        inquiryBrowserResult,
+        staffResult,
+        staffBrowserResult,
+        contentResult,
+        contentBrowserResult,
+        catalogBrowserTests: 9,
+        releaseResult,
+        releaseBrowserResult,
+      }),
     );
-  });
-  fs.writeFileSync(
-    ".tmp/auth-verification.json",
-    JSON.stringify({
-      passed: true,
-      checkedAt: new Date().toISOString(),
-      scope,
-      securityResult,
-      securityBrowserResult,
-      browserResult,
-      inquiryResult,
-      inquiryBrowserResult,
-      staffResult,
-      staffBrowserResult,
-      contentResult,
-      contentBrowserResult,
-      catalogBrowserTests: 9,
-    }),
-  );
-  fs.copyFileSync(".tmp/auth-verification.json", `.tmp/${scope}-verification.json`);
-  fs.rmSync(".tmp/auth-failure.json", { force: true });
-  fs.rmSync(".tmp/auth-ui-failure.json", { force: true });
-  fs.rmSync(".tmp/inquiry-ui-failure.json", { force: true });
-  fs.rmSync(".tmp/staff-ui-failure.json", { force: true });
-  process.stdout.write(
-    "PASS: disposable auth migrations, unique registration, Argon2id, sessions/CSRF/roles/ownership, token expiry/single use, capture email, recovery/password/session revocation, rate limits and real browser flows.\n",
-  );
+    fs.copyFileSync(".tmp/auth-verification.json", `.tmp/${scope}-verification.json`);
+    fs.rmSync(".tmp/auth-failure.json", { force: true });
+    fs.rmSync(".tmp/auth-ui-failure.json", { force: true });
+    fs.rmSync(".tmp/inquiry-ui-failure.json", { force: true });
+    fs.rmSync(".tmp/staff-ui-failure.json", { force: true });
+    if (releaseResult?.restore?.passed)
+      fs.rmSync(".tmp/accessibility-findings.json", { force: true });
+    process.stdout.write(
+      "PASS: disposable auth migrations, unique registration, Argon2id, sessions/CSRF/roles/ownership, token expiry/single use, capture email, recovery/password/session revocation, rate limits and real browser flows.\n",
+    );
+  }
 } catch (error) {
   fs.writeFileSync(
     ".tmp/auth-failure.json",
@@ -627,9 +692,14 @@ try {
 } finally {
   if (webProcess?.pid && webProcess.exitCode === null) {
     try {
-      execFileSync("taskkill.exe", ["/PID", String(webProcess.pid), "/T", "/F"], {
-        stdio: "ignore",
-      });
+      if (process.platform === "win32")
+        execFileSync("taskkill.exe", ["/PID", String(webProcess.pid), "/T", "/F"], {
+          stdio: "ignore",
+        });
+      else {
+        webProcess.kill("SIGTERM");
+        await new Promise((resolve) => webProcess.once("exit", resolve));
+      }
     } catch {}
   }
   if (app) await app.close();

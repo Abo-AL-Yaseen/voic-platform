@@ -1,5 +1,7 @@
 # Staff administration and MFA
 
+Current operational commands, seven-migration state, shared production limits and separate runtime/migration grants are in [operations](operations.md). Older phase-specific migration/apply commands below are historical; do not rerun them against the current development database. Use [combined manual acceptance](manual-acceptance.md) for current role/MFA journeys.
+
 This phase is explicitly authorized on permanent branch `mahmoud`. It extends the
 existing native MySQL/NestJS/session application. No deployment, external email,
 automatic employee enrollment, password replacement or business publication is authorized.

@@ -27,7 +27,7 @@ export function authConfiguration(env: Environment, input = process.env) {
   const mode = input.MAIL_MODE || (env.nodeEnv === "production" ? "smtp" : "capture");
   if (
     env.nodeEnv === "production" &&
-    env.corsOrigins.some((origin) => !origin.startsWith("https://"))
+    env.corsOrigins.some((origin) => origin !== app.origin || !origin.startsWith("https://"))
   )
     return fail();
   if (!["capture", "smtp"].includes(mode) || (mode === "capture" && env.nodeEnv === "production"))

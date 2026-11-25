@@ -179,11 +179,11 @@ function StaffDashboard({ lang, go }: { lang: Lang; go: Props["go"] }) {
       <button className="button button-secondary" onClick={() => query.refetch()}>
         {t(lang, "تحديث الإحصاءات", "Refresh statistics")}
       </button>
-      <IntegrationNotice lang={lang}>
+      <IntegrationNotice lang={lang} title={t(lang, "حدود الإحصاءات", "Statistics scope")}>
         {t(
           lang,
-          "إدارة الموظفين وواجهة التدقيق العامة غير متصلتين. لا توجد أرقام مبيعات أو مخزون.",
-          "Employee management and the general audit UI remain disconnected. No revenue or stock figures are shown.",
+          "الإحصاءات تخص الاستفسارات الفعلية فقط. لا توجد أرقام مبيعات أو مخزون.",
+          "These statistics describe actual inquiries only. Revenue and stock figures are not available.",
         )}
       </IntegrationNotice>
     </>

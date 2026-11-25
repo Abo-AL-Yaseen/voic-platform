@@ -8,6 +8,12 @@ existing frontend. Customer authentication/accounts now use server-side sessions
 inquiry reads and development-only business actions now use real APIs. Customer supply inquiries use owned drafts,
 atomic idempotent submission, account tracking and a durable notification outbox; see
 [customer inquiries](../docs/customer-inquiries.md) for schema, contracts, commands and manual tests.
+
+Current release verification, production shared limits, logging, TLS/proxy configuration,
+cleanup, backup/restore, process-manager/proxy examples and CI are documented in
+[operations](../docs/operations.md), [release readiness](../docs/release-readiness.md) and
+[combined manual acceptance](../docs/manual-acceptance.md). Local production-mode tests
+do not enable production business writes or approve company/legal content.
 The [staff inquiry guide](../docs/staff-inquiries.md) documents the fourth migration,
 local staff provisioning, two-session manual tests, and the production write restriction.
 See [authentication](../docs/authentication.md)
@@ -164,14 +170,16 @@ on Unix. Graceful shutdown requires the process manager to deliver supported sig
 
 ## API conventions and implemented protections
 
-- Application endpoints use `/api/v1`: health, public catalog, authentication/account reads
-  and writes, and the foundational staff-access check. Business staff CRUD is not implemented.
+- Application endpoints use `/api/v1`: health, public catalog/content, authentication/account,
+  customer/staff inquiries, editorial/media, employee/security and administrator audit APIs.
 - DTO validation is global: decorated class DTOs, `whitelist`, `forbidNonWhitelisted`,
   `forbidUnknownValues`, transformation with implicit scalar coercion disabled. Unexpected
   fields or invalid types return 400. The test-only DTO route is never shipped in the build.
 - JSON and URL-encoded request bodies are capped at 64 KiB; URL-encoded parameters at 100.
   Helmet headers, disabled `X-Powered-By`, and bounded HTTP request/header/keepalive timeouts
-  are installed. No file upload or multipart parser is enabled.
+  are installed. Raster uploads use the authorized JSON/base64 endpoint with a separate
+  7 MB parser bound, a 5 MiB decoded limit and signature/decode/dimension/re-encoding checks;
+  no multipart parser is enabled.
 - `CORS_ORIGINS` requires explicit HTTP(S) origins, including ports. Credentials are allowed
   only for exact configured origins. Wildcards, userinfo and paths are rejected. Requests
   without an Origin header remain usable by local tools. CORS is not authentication.
@@ -184,8 +192,8 @@ on Unix. Graceful shutdown requires the process manager to deliver supported sig
 
 ## Explicit migrations
 
-The catalog, authentication and inquiry workflow have fifteen entities and four explicit
-migrations, ending with `StaffInquiryWorkflow1795525200000`.
+The current application has seven explicit migrations, ending with
+`OperationalLimits1795611600000`; the last adds the shared production limiter table.
 `synchronize`, `dropSchema` and `migrationsRun` are all false. Startup never applies migrations.
 `voic_migrations` records operator-run migrations. Inspect the target before applying changes;
 never test rollback on development. Full DDL/import behavior is in [the catalog guide](../docs/catalog-implementation.md).
@@ -207,6 +215,10 @@ future tables. MySQL DDL implicitly commits: a transaction setting does not make
 changes automatically reversible. Backups, restore verification, rollback approval and data
 compatibility review are required before real data changes. No reset/schema-drop command
 is provided. Do not run destructive commands against an existing database for testing.
+
+The runtime user now has no DDL or migration-history writes. Run actual migrations through
+the separately authorized schema operator, using a private environment; do not broaden the
+running API user's grants. Native release apply also verifies existing-row fingerprints.
 
 ## Verification
 

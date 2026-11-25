@@ -422,7 +422,7 @@ export async function checkStaffWorkflow({ app, source, base, front, password })
     } finally {
       await rollbackProbe.release();
     }
-    assert.equal(Number((await source.query("SELECT COUNT(*) n FROM voic_migrations"))[0].n), 6);
+    assert.equal(Number((await source.query("SELECT COUNT(*) n FROM voic_migrations"))[0].n), 7);
     const ordered = await source
       .getRepository(CustomerInquiry)
       .createQueryBuilder("i")

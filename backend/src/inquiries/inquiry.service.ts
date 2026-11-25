@@ -77,11 +77,11 @@ export class InquiryService {
     if (!i) throw new NotFoundException();
     return i;
   }
-  private writeLimit(req: AuthRequest) {
-    this.limits.take("inquiry-write", this.auth.require(req, ["customer"]).id, 120);
+  private async writeLimit(req: AuthRequest) {
+    await this.limits.take("inquiry-write", this.auth.require(req, ["customer"]).id, 120);
   }
   async create(req: AuthRequest, dto: CreateInquiryDto) {
-    this.writeLimit(req);
+    await this.writeLimit(req);
     return this.source.transaction(async (m) => {
       const u = await this.current(m, req);
       const old = await m.findOneBy(CustomerInquiry, {
@@ -89,7 +89,7 @@ export class InquiryService {
         creationKey: dto.creationKey,
       });
       if (old) return this.project(m, old);
-      this.limits.take("inquiry-create", u.id, 30);
+      await this.limits.take("inquiry-create", u.id, 30, 15 * 60_000, m);
       const now = new Date(),
         id = randomUUID();
       const i = m.create(CustomerInquiry, {
@@ -191,8 +191,10 @@ export class InquiryService {
     return snapshots;
   }
   async save(req: AuthRequest, id: string, dto: SaveInquiryDto) {
-    this.writeLimit(req);
-    return this.source.transaction(async (m) => {
+    await this.writeLimit(req);
+    // Current account/inquiry and referenced catalog records remain explicitly locked.
+    // READ COMMITTED avoids overlapping empty-range gap locks while replacing draft lines.
+    return this.source.transaction("READ COMMITTED", async (m) => {
       const u = await this.current(m, req),
         i = await this.owned(m, id, u.id, true);
       if (i.status !== "draft" || i.revision !== dto.revision)
@@ -229,7 +231,7 @@ export class InquiryService {
     });
   }
   async submit(req: AuthRequest, id: string, dto: SubmitInquiryDto) {
-    this.writeLimit(req);
+    await this.writeLimit(req);
     return this.source.transaction(async (m) => {
       const u = await this.current(m, req);
       if (!u.emailVerifiedAt) throw new ForbiddenException({ code: "EMAIL_UNVERIFIED" });

@@ -77,8 +77,8 @@ export class AuthService {
   }
   async boundary(req: AuthRequest, allowQuery = false) {
     await this.ready();
-    const ip = req.socket.remoteAddress || "unknown";
-    this.limits.take("all", ip, 1000);
+    const ip = req.ip || req.socket.remoteAddress || "unknown";
+    await this.limits.take("all", ip, 1000);
     if (!allowQuery && Object.keys(req.query).length) throw new BadRequestException();
     const raw = req.headers.cookie
       ?.split(";")
@@ -230,7 +230,7 @@ export class AuthService {
   }
   async current(req: AuthRequest, res: Response) {
     if (!req.auth) {
-      this.limits.take("session", req.socket.remoteAddress || "unknown", 120);
+      await this.limits.take("session", req.ip || req.socket.remoteAddress || "unknown", 120);
       // Bounded indexed expiry cleanup; no existing user/catalog data is touched.
       await this.source.query(
         "DELETE FROM auth_sessions WHERE expiresAt < UTC_TIMESTAMP() LIMIT 100",
@@ -241,9 +241,9 @@ export class AuthService {
     }
     return this.sessionView(req.auth, !!req.sessionExpired);
   }
-  private rate(req: Request, action: string, email: string, perIp: number, perEmail: number) {
-    this.limits.take(`${action}:ip`, req.socket.remoteAddress || "unknown", perIp);
-    this.limits.take(`${action}:email`, emailIdentity(email), perEmail);
+  private async rate(req: Request, action: string, email: string, perIp: number, perEmail: number) {
+    await this.limits.take(`${action}:ip`, req.ip || req.socket.remoteAddress || "unknown", perIp);
+    await this.limits.take(`${action}:email`, emailIdentity(email), perEmail);
   }
   private profile(dto: ProfileDto) {
     if (dto.kind === "company" && !dto.company?.trim()) throw new BadRequestException();
@@ -269,7 +269,7 @@ export class AuthService {
   }
   async register(req: AuthRequest, dto: RegisterDto) {
     const email = emailIdentity(dto.email);
-    this.rate(req, "register", email, 10, 5);
+    await this.rate(req, "register", email, 10, 5);
     const profile = this.profile(dto);
     const passwordHash = await argon2.hash(dto.password, passwordOptions);
     const id = randomUUID();
@@ -303,7 +303,7 @@ export class AuthService {
   }
   async login(req: AuthRequest, res: Response, dto: LoginDto) {
     const email = emailIdentity(dto.email);
-    this.rate(req, "login", email, 30, 10);
+    await this.rate(req, "login", email, 30, 10);
     const found = await this.source.getRepository(AuthUser).findOneBy({ email });
     if (!found) {
       await argon2.verify(await this.dummyHash, dto.password);
@@ -333,7 +333,7 @@ export class AuthService {
   }
   async requestMail(req: AuthRequest, dto: EmailDto, purpose: "verify" | "reset") {
     const email = emailIdentity(dto.email);
-    this.rate(req, purpose, email, 10, 3);
+    await this.rate(req, purpose, email, 10, 3);
     const found = await this.source.getRepository(AuthUser).findOneBy({ email });
     if (found) {
       const token = await this.source.transaction(async (manager) => {
@@ -384,14 +384,14 @@ export class AuthService {
     });
   }
   async verify(req: AuthRequest, token: string) {
-    this.limits.take("verify-token", req.socket.remoteAddress || "unknown", 30);
+    await this.limits.take("verify-token", req.ip || req.socket.remoteAddress || "unknown", 30);
     await this.consume(token, "verify", async (manager, user) => {
       await manager.update(AuthUser, { id: user.id }, { emailVerifiedAt: new Date() });
     });
     return { ok: true };
   }
   async reset(req: AuthRequest, dto: ResetDto) {
-    this.limits.take("reset-token", req.socket.remoteAddress || "unknown", 10);
+    await this.limits.take("reset-token", req.ip || req.socket.remoteAddress || "unknown", 10);
     const passwordHash = await argon2.hash(dto.password, passwordOptions);
     await this.consume(dto.token, "reset", async (manager, user) => {
       await manager.update(
@@ -439,7 +439,7 @@ export class AuthService {
   }
   async changePassword(req: AuthRequest, dto: ChangePasswordDto, res: Response) {
     const current = this.require(req, ["customer"]);
-    this.limits.take("password", current.id, 5);
+    await this.limits.take("password", current.id, 5);
     await this.source.transaction(async (manager) => {
       const user = await this.lockCurrent(manager, req, current.id);
       if (!(await argon2.verify(user.passwordHash, dto.currentPassword)))

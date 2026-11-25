@@ -84,7 +84,7 @@ export class MfaService {
     fn: (m: EntityManager, u: AuthUser, f: StaffFactor) => Promise<any>,
   ) {
     const current = this.staffIdentity(req);
-    this.limits.take("mfa-operation", current.id, 40);
+    await this.limits.take("mfa-operation", current.id, 40);
     const result = await this.source.transaction("READ COMMITTED", async (m) => {
       const u = await this.auth.lockCurrent(m, req, current.id, true);
       if (u.role === "customer") throw new ForbiddenException();

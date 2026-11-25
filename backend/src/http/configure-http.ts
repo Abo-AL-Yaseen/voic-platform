@@ -5,15 +5,54 @@ import express from "express";
 import helmet from "helmet";
 import type { Environment } from "../config/environment.js";
 import { ApiErrorFilter } from "./error.filter.js";
+import { AuthRateLimit } from "../auth/rate-limit.js";
+import { DatabaseService } from "../database/database.service.js";
+import { ServiceUnavailableException } from "@nestjs/common";
 
 export function configureHttp(app: NestExpressApplication, env: Environment): void {
   app.setGlobalPrefix("api/v1");
   app.getHttpAdapter().getInstance().disable("x-powered-by");
-  app.use((_request: express.Request, response: express.Response, next: express.NextFunction) => {
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .set("trust proxy", [...env.trustProxy]);
+  app.use((request: express.Request, response: express.Response, next: express.NextFunction) => {
+    const started = performance.now();
     response.setHeader("X-Request-Id", randomUUID());
     response.setHeader("Cache-Control", "no-store");
+    if (env.nodeEnv === "production")
+      response.once("finish", () => {
+        // No URL, route parameter, IP, identity, query, body or header values are logged.
+        process.stdout.write(
+          JSON.stringify({
+            event: "http_complete",
+            requestId: response.getHeader("X-Request-Id"),
+            method: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"].includes(
+              request.method,
+            )
+              ? request.method
+              : "OTHER",
+            statusCode: response.statusCode,
+            durationMs: Math.round(performance.now() - started),
+          }) + "\n",
+        );
+      });
     next();
   });
+  if (env.nodeEnv === "production") {
+    const limits = app.get(AuthRateLimit),
+      database = app.get(DatabaseService);
+    app.use(async (req: express.Request, _res: express.Response, next: express.NextFunction) => {
+      if (/^\/api\/v1\/health\/(live|ready)$/.test(req.path)) return next();
+      try {
+        if (!(await database.isReady())) throw new ServiceUnavailableException();
+        await limits.take("http", req.ip || req.socket.remoteAddress || "unknown", 600, 60_000);
+        next();
+      } catch (error) {
+        next(error);
+      }
+    });
+  }
   app.use(helmet({ strictTransportSecurity: env.nodeEnv === "production" ? undefined : false }));
   app.enableCors({
     credentials: true,

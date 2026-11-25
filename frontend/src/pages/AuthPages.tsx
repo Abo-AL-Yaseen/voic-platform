@@ -314,8 +314,8 @@ export function RegisterPage({ lang, go, search = "" }: AuthPageProps) {
         <p className="form-hint">
           {text(
             lang,
-            "يجب تأكيد البريد قبل إرسال استفسار توريد. إرسال الاستفسارات لم يُربط بعد.",
-            "Verify your email before supply inquiry submission. Submission is not connected yet.",
+            "يجب تأكيد البريد قبل إرسال استفسار توريد، ثم يمكنك حفظه وإرساله ومتابعته من حسابك.",
+            "Verify your email before sending a supply inquiry, then save, submit and track it from your account.",
           )}
         </p>
         <AppLink className="text-link" href={withLang("/privacy", lang)} go={go}>

@@ -37,7 +37,7 @@ export class InquiryNotifications implements OnModuleInit, BeforeApplicationShut
     if (this.running) return this.running;
     this.running = this.batch()
       .catch(() => {
-        /* No SQL, message or recipient logging. */
+        process.stderr.write('{"event":"notification_batch_failed"}\n');
       })
       .finally(() => {
         this.running = undefined;
@@ -97,6 +97,9 @@ export class InquiryNotifications implements OnModuleInit, BeforeApplicationShut
           .getRepository(InquiryNotification)
           .update({ id: job.id, state: "sending", attempts: job.attempts }, { state });
       } catch {
+        process.stderr.write(
+          JSON.stringify({ event: "notification_retry", attempt: job.attempts }) + "\n",
+        );
         await this.source.getRepository(InquiryNotification).update(
           { id: job.id, state: "sending", attempts: job.attempts },
           {

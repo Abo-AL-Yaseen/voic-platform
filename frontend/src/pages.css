@@ -25,7 +25,7 @@
 }
 .page-intro > p:last-child,
 .lead {
-  color: #727463;
+  color: #626653;
   font-size: 17px;
   line-height: 1.9;
 }
@@ -49,7 +49,7 @@
 }
 .page-section-heading > p:last-child {
   max-width: 760px;
-  color: #727463;
+  color: #626653;
   line-height: 1.8;
 }
 .three-grid {
@@ -103,7 +103,7 @@
   height: 440px;
 }
 .secondary-title {
-  color: #727463;
+  color: #626653;
   font-size: 14px;
 }
 .detail-block {
@@ -127,7 +127,7 @@
   margin-top: 34px;
 }
 .product-page-actions small {
-  color: #727463;
+  color: #626653;
   font-size: 11px;
 }
 .related-section {
@@ -159,7 +159,7 @@
 .chooser-progress {
   max-width: 820px;
   margin: 0 auto 18px;
-  color: #727463;
+  color: #626653;
   font-size: 12px;
 }
 .chooser-progress > div {
@@ -240,7 +240,7 @@
 }
 .no-match p {
   margin-bottom: 25px;
-  color: #727463;
+  color: #626653;
   line-height: 1.8;
 }
 .no-match > div {
@@ -332,7 +332,7 @@
   color: #4b5b35;
 }
 .professional-row span {
-  color: #727463;
+  color: #626653;
   font-size: 12px;
 }
 .inquiry-section {
@@ -414,7 +414,7 @@
 .form-hint,
 .copy-status {
   margin-top: 10px;
-  color: #727463;
+  color: #626653;
   font-size: 11px;
 }
 .copy-status {
@@ -436,7 +436,7 @@
 .faq-list p {
   max-width: 850px;
   margin-top: 12px;
-  color: #727463;
+  color: #626653;
   line-height: 1.9;
 }
 
@@ -501,7 +501,7 @@
   padding-top: 24px;
 }
 .purpose-section p:last-child {
-  color: #727463;
+  color: #626653;
   line-height: 1.9;
 }
 .quality-section {
@@ -551,7 +551,7 @@
   padding: 22px 0;
 }
 .contact-details article > span {
-  color: #727463;
+  color: #626653;
   font-size: 11px;
 }
 .contact-details a:not(.text-link) {
@@ -560,7 +560,7 @@
   font-family: "Alexandria:Medium", sans-serif;
 }
 .secondary-contact {
-  color: #727463;
+  color: #626653;
 }
 .contact-form-wrap > h2 {
   color: #4b5b35;
@@ -627,7 +627,7 @@
   font-size: 24px;
 }
 .recipe-card p {
-  color: #727463;
+  color: #626653;
   line-height: 1.8;
 }
 .recipe-card small {
@@ -718,7 +718,7 @@
 .quantity-switch legend {
   width: 100%;
   margin-bottom: 8px;
-  color: #727463;
+  color: #626653;
   font-size: 11px;
 }
 .quantity-switch button {
@@ -816,7 +816,7 @@
 }
 .not-found-page p {
   margin: 14px 0 28px;
-  color: #727463;
+  color: #626653;
   line-height: 1.8;
 }
 .not-found-page > div > div {

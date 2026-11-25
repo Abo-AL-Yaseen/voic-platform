@@ -1,4 +1,6 @@
 > Updated 2026-11-24: the accepted staff phase extends submitted inquiries with canonical
+
+Current operational commands, seven-migration state, shared production limits and separate runtime/migration grants are in [operations](operations.md). Older phase-specific migration/apply commands below are historical; do not rerun them against the current development database. Use [combined manual acceptance](manual-acceptance.md) for current role/MFA journeys.
 > under_review/awaiting_customer/responded/closed states, owner replies and paginated public
 > conversation/history. See [staff inquiry contracts and manual testing](staff-inquiries.md).
 > The draft/submission baseline below remains historical where it describes later staff work

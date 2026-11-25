@@ -25,6 +25,39 @@ export default defineConfig(({ mode }) => {
       figmaReactRefreshBoundaryFallback(),
       figmaMakeKitPlugin({ storiesGlob: "/src/**/*.stories.{ts,tsx,js,jsx}" }),
       figmaLinkedPackageSourcemaps(),
+      {
+        name: "voic-indexing-gate",
+        transformIndexHtml: {
+          order: "post",
+          handler(html) {
+            const origin = process.env.VITE_PUBLIC_ORIGIN || "";
+            const indexable = process.env.VITE_PUBLIC_INDEXABLE === "true";
+            if (indexable && (!/^https:\/\//.test(origin) || new URL(origin).origin !== origin))
+              throw new Error("Indexing requires an approved HTTPS VITE_PUBLIC_ORIGIN");
+            return {
+              html: html.replace(/<meta[^>]+name="robots"[^>]*>/g, ""),
+              tags: [
+                {
+                  tag: "meta",
+                  attrs: {
+                    name: "robots",
+                    content: indexable ? "index, follow" : "noindex, nofollow",
+                  },
+                  injectTo: "head",
+                },
+              ],
+            };
+          },
+        },
+        generateBundle() {
+          if (process.env.VITE_PUBLIC_INDEXABLE !== "true")
+            this.emitFile({
+              type: "asset",
+              fileName: "robots.txt",
+              source: "User-agent: *\nDisallow: /\n",
+            });
+        },
+      },
     ],
     resolve: {
       alias: {
@@ -33,7 +66,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       proxy: { "/api/v1": { target: "http://127.0.0.1:3000" } },
-      host: process.env.FIGMA_DEV_SERVER_HOST || "0.0.0.0",
+      host: process.env.FIGMA_DEV_SERVER_HOST || "127.0.0.1",
       port: parseInt(process.env.PORT || "8443"),
       strictPort: true,
       watch: {
@@ -41,7 +74,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     preview: {
-      host: process.env.FIGMA_DEV_SERVER_HOST || "0.0.0.0",
+      host: process.env.FIGMA_DEV_SERVER_HOST || "127.0.0.1",
       port: parseInt(process.env.PORT || "8443"),
     },
   };

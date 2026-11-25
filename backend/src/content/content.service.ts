@@ -104,7 +104,7 @@ export class ContentService {
       throw new ForbiddenException({
         code: !u.emailVerifiedAt ? "EMAIL_UNVERIFIED" : "STAFF_WRITES_DISABLED",
       });
-    this.limits.take("content-write", u.id, 60);
+    await this.limits.take("content-write", u.id, 60);
     try {
       // Authentication reads precede the editorial lock. READ COMMITTED prevents their
       // earlier snapshot from hiding a concurrent commit after we acquire that lock.

@@ -1,5 +1,7 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { loadEnvFile } from "node:process";
+import { isIP } from "node:net";
+import { isAbsolute } from "node:path";
 
 export type Environment = Readonly<{
   nodeEnv: "development" | "test" | "production";
@@ -12,6 +14,9 @@ export type Environment = Readonly<{
   dbUsername: string;
   dbPassword: string;
   dbTimeoutMs: number;
+  trustProxy: readonly string[];
+  dbTls: boolean;
+  dbTlsCa?: string;
 }>;
 
 export class ConfigurationError extends Error {}
@@ -49,6 +54,48 @@ export function validateEnvironment(input: NodeJS.ProcessEnv): Environment {
   if (dbPassword.length < 16 || /^(replace-|change|<)/i.test(dbPassword))
     errors.push("DB_PASSWORD must replace the placeholder and contain at least 16 characters");
   const dbTimeoutMs = number("DB_TIMEOUT_MS", 500, 10000);
+  if (
+    (nodeEnv === "production" && !input.MEDIA_ROOT) ||
+    (input.MEDIA_ROOT && !isAbsolute(input.MEDIA_ROOT))
+  )
+    errors.push("MEDIA_ROOT must be an explicit absolute persistent directory in production");
+  if (input.DB_TLS && !["true", "false"].includes(input.DB_TLS))
+    errors.push("DB_TLS must be true or false");
+  const dbTls = input.DB_TLS === "true";
+  if (nodeEnv === "production" && dbTls && isIP(dbHost) && !["127.0.0.1", "::1"].includes(dbHost))
+    errors.push("Remote MySQL TLS requires a certificate-matching DNS hostname");
+  if (nodeEnv === "production" && !["127.0.0.1", "::1", "localhost"].includes(dbHost) && !dbTls)
+    errors.push("Production remote MySQL requires DB_TLS=true with certificate verification");
+  let dbTlsCa: string | undefined;
+  if (input.DB_TLS_CA_FILE) {
+    try {
+      if (!dbTls) throw new Error();
+      const ca = readFileSync(input.DB_TLS_CA_FILE);
+      if (ca.length > 1024 * 1024 || !ca.includes("-----BEGIN CERTIFICATE-----")) throw new Error();
+      dbTlsCa = ca.toString("utf8");
+    } catch {
+      errors.push("DB_TLS_CA_FILE must be a readable CA certificate used with DB_TLS=true");
+    }
+  }
+  const trustProxy = (input.TRUST_PROXY_CIDRS || "")
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+  if (
+    trustProxy.some((v) => {
+      const [ip, prefix, ...rest] = v.split("/");
+      const family = isIP(ip!);
+      return (
+        !family ||
+        rest.length ||
+        (prefix !== undefined &&
+          (!/^\d+$/.test(prefix) ||
+            Number(prefix) < 1 ||
+            Number(prefix) > (family === 4 ? 32 : 128)))
+      );
+    })
+  )
+    errors.push("TRUST_PROXY_CIDRS must contain explicit proxy IP addresses or bounded CIDRs");
   const corsOrigins = required("CORS_ORIGINS")
     .split(",")
     .map((value) => value.trim());
@@ -84,6 +131,9 @@ export function validateEnvironment(input: NodeJS.ProcessEnv): Environment {
     dbUsername,
     dbPassword,
     dbTimeoutMs,
+    trustProxy: Object.freeze(trustProxy),
+    dbTls,
+    dbTlsCa,
   });
 }
 

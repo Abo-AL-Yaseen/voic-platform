@@ -1,9 +1,7 @@
-import { StaffSecurityPage, StaffInvitationPage } from "./pages/StaffSecurityPages";
-import { EmployeesPage, AuditPage } from "./pages/StaffAdministrationPages";
-import EditorialWorkspace from "./pages/EditorialPages";
 import { queryClient } from "./services/queryClient";
 import { usePublishedPage } from "./hooks/content/queries";
 import ContentStatus from "./components/ContentStatus";
+import { updatePageMetadata } from "./utils/pageMetadata";
 import { sizeLabel } from "./utils/productLabels";
 import { lazy, Suspense, useEffect, useRef, useState, type ComponentType } from "react";
 import { assets } from "./catalog";
@@ -35,25 +33,55 @@ import { useFeaturedProducts } from "./hooks/products/queries";
 import CatalogStatus, { ProductTranslation } from "./components/CatalogStatus";
 import { decodeRouteSegment } from "./utils/productScope";
 
-import {
-  ForgotPasswordPage,
-  LoginPage,
-  RegisterPage,
-  ResetPasswordPage,
-  VerifyEmailPage,
-} from "./pages/AuthPages";
-import {
-  AccountOverviewPage,
-  ProfilePage,
-  SecurityPage,
-  InquiryListPage,
-  InquiryDetailPage,
-} from "./pages/AccountPages";
 import SessionGate from "./components/SessionGate";
-import { StaffWorkspace } from "./pages/StaffSalesPages";
 import { useAuth, authFailure } from "./hooks/auth/queries";
-import NewInquiryPage from "./pages/NewInquiryPage";
-import PrivacyPage from "./pages/PrivacyPage";
+
+const StaffSecurityPage = lazy(() =>
+  import("./pages/StaffSecurityPages").then((m) => ({ default: m.StaffSecurityPage })),
+);
+const StaffInvitationPage = lazy(() =>
+  import("./pages/StaffSecurityPages").then((m) => ({ default: m.StaffInvitationPage })),
+);
+const EmployeesPage = lazy(() =>
+  import("./pages/StaffAdministrationPages").then((m) => ({ default: m.EmployeesPage })),
+);
+const AuditPage = lazy(() =>
+  import("./pages/StaffAdministrationPages").then((m) => ({ default: m.AuditPage })),
+);
+const ForgotPasswordPage = lazy(() =>
+  import("./pages/AuthPages").then((m) => ({ default: m.ForgotPasswordPage })),
+);
+const LoginPage = lazy(() => import("./pages/AuthPages").then((m) => ({ default: m.LoginPage })));
+const RegisterPage = lazy(() =>
+  import("./pages/AuthPages").then((m) => ({ default: m.RegisterPage })),
+);
+const ResetPasswordPage = lazy(() =>
+  import("./pages/AuthPages").then((m) => ({ default: m.ResetPasswordPage })),
+);
+const VerifyEmailPage = lazy(() =>
+  import("./pages/AuthPages").then((m) => ({ default: m.VerifyEmailPage })),
+);
+const AccountOverviewPage = lazy(() =>
+  import("./pages/AccountPages").then((m) => ({ default: m.AccountOverviewPage })),
+);
+const ProfilePage = lazy(() =>
+  import("./pages/AccountPages").then((m) => ({ default: m.ProfilePage })),
+);
+const SecurityPage = lazy(() =>
+  import("./pages/AccountPages").then((m) => ({ default: m.SecurityPage })),
+);
+const InquiryListPage = lazy(() =>
+  import("./pages/AccountPages").then((m) => ({ default: m.InquiryListPage })),
+);
+const InquiryDetailPage = lazy(() =>
+  import("./pages/AccountPages").then((m) => ({ default: m.InquiryDetailPage })),
+);
+const StaffWorkspace = lazy(() =>
+  import("./pages/StaffSalesPages").then((m) => ({ default: m.StaffWorkspace })),
+);
+const EditorialWorkspace = lazy(() => import("./pages/EditorialPages"));
+const NewInquiryPage = lazy(() => import("./pages/NewInquiryPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 
 type PreviewProps = { lang: Lang; go: (href: string) => void; search: string };
 const previewModulePath = "/src/pages/PreviewPage.tsx";
@@ -94,6 +122,51 @@ function AppLink({
   );
 }
 
+function RouteContent({
+  children,
+  path,
+  lang,
+  focus,
+}: {
+  children: React.ReactNode;
+  path: string;
+  lang: Lang;
+  focus: { current: boolean };
+}) {
+  useEffect(() => {
+    const apply = () => {
+      const main = document.querySelector("main");
+      main?.setAttribute("id", "main-content");
+      if (!focus.current || path === "/") {
+        focus.current = false;
+        return !!main;
+      }
+      const heading = main?.querySelector<HTMLElement>("h1");
+      if (!heading) return false;
+      heading.tabIndex = -1;
+      heading.classList.add("route-heading");
+      heading.focus({ preventScroll: true });
+      focus.current = false;
+      return true;
+    };
+    if (apply()) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const observer = new MutationObserver(() => {
+      if (apply()) {
+        observer.disconnect();
+        clearTimeout(timer);
+      }
+    });
+    observer.observe(document.getElementById("root")!, { childList: true, subtree: true });
+    timer = setTimeout(() => observer.disconnect(), 10000);
+    return () => {
+      observer.disconnect();
+      clearTimeout(timer);
+    };
+  }, [path, lang, focus]);
+  return <>{children}</>;
+}
+
 export default function App() {
   const auth = useAuth();
   useEffect(() => {
@@ -108,6 +181,7 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [location, setLocation] = useState(() => window.location.pathname + window.location.search);
   const homeScroll = useRef(0);
+  const routeFocus = useRef(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const url = new URL(location, window.location.origin);
@@ -134,6 +208,7 @@ export default function App() {
   useEffect(() => {
     document.documentElement.lang = lang;
     document.documentElement.dir = direction(lang);
+    updatePageMetadata(path, lang);
     document.querySelector("main")?.setAttribute("id", "main-content");
     const routeTitle =
       path === "/"
@@ -207,6 +282,7 @@ export default function App() {
   }, [menuOpen]);
 
   function go(href: string) {
+    routeFocus.current = href.split("?")[0] !== path;
     if (path === "/") homeScroll.current = window.scrollY;
     window.history.pushState(null, "", href);
     setLocation(window.location.pathname + window.location.search);
@@ -216,12 +292,6 @@ export default function App() {
         top: href.split("?")[0] === "/" ? homeScroll.current : 0,
         behavior: "instant",
       });
-      const heading = document.querySelector<HTMLElement>("main h1");
-      if (heading && href.split("?")[0] !== "/") {
-        heading.tabIndex = -1;
-        heading.classList.add("route-heading");
-        heading.focus({ preventScroll: true });
-      }
     });
   }
 
@@ -321,10 +391,12 @@ export default function App() {
           <SecurityPage lang={lang} go={go} />
         ) : path === "/account/inquiries" ? (
           <InquiryListPage lang={lang} go={go} search={url.search} />
-        ) : path.startsWith("/account/inquiries/") ? (
+        ) : /^\/account\/inquiries\/[a-f0-9-]{36}$/.test(path) ? (
           <InquiryDetailPage lang={lang} go={go} inquiryId={path.split("/").at(-1)} />
-        ) : (
+        ) : path === "/account" ? (
           <AccountOverviewPage lang={lang} go={go} />
+        ) : (
+          <NotFoundPage lang={lang} go={go} />
         )}
       </SessionGate>
     );
@@ -447,7 +519,17 @@ export default function App() {
           </button>
         </div>
       </header>
-      {page}
+      <Suspense
+        fallback={
+          <main className="section-pad" role="status">
+            {pick(lang, "جارٍ التحميل…", "Loading…")}
+          </main>
+        }
+      >
+        <RouteContent path={path} lang={lang} focus={routeFocus}>
+          {page}
+        </RouteContent>
+      </Suspense>
       <SiteFooter lang={lang} go={go} />
     </div>
   );

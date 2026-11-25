@@ -182,7 +182,7 @@ test("unexpected and not-found errors do not expose exception details or sensiti
     assert.ok(!JSON.stringify(body).match(/SELECT|password|secret|stack|sensitive-sentinel/));
     assert.deepEqual(
       logs.map((line) => JSON.parse(line)),
-      [{ event: "request_failed", statusCode: 500 }],
+      [{ event: "request_failed", statusCode: 500, requestId: body.requestId }],
     );
     const missing = await fetch(base + "/api/v1/missing?secret=sensitive-sentinel");
     assert.equal(missing.status, 404);

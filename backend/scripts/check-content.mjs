@@ -15,6 +15,7 @@ import {
 import { importDevelopmentContent } from "../.tmp/auth-build/content/import.js";
 import { ContentService } from "../.tmp/auth-build/content/content.service.js";
 import { CatalogService } from "../.tmp/auth-build/catalog/catalog.service.js";
+import { ContentWorkspace1795532400000 } from "../.tmp/auth-build/database/migrations/1795532400000-ContentWorkspace.js";
 export async function checkContent({ app, source, base, front, password }) {
   let stage = "editor identities and role guards";
   let http;
@@ -355,7 +356,13 @@ export async function checkContent({ app, source, base, front, password }) {
       JSON.stringify((await get(editor, "products", "ghazal")).draft.body),
       beforeImport,
     );
-    await assert.rejects(source.undoLastMigration());
+    // Exercise the content retention guard directly, independently of newer migrations.
+    const rollbackProbe = source.createQueryRunner();
+    try {
+      await assert.rejects(new ContentWorkspace1795532400000().down(rollbackProbe));
+    } finally {
+      await rollbackProbe.release();
+    }
     stage = "real image upload safety private preview and references";
     const data = (
       await sharp({ create: { width: 80, height: 60, channels: 4, background: "#78845d" } })

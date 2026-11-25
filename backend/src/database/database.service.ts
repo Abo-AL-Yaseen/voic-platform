@@ -41,6 +41,10 @@ export class DatabaseService implements OnApplicationShutdown {
     if (!this.source.isInitialized) await this.source.initialize();
     if (this.stopping) return false;
     await this.source.query("SELECT 1");
+    if (this.env.nodeEnv === "production") {
+      await this.source.query("SELECT bucket FROM operational_rate_limits LIMIT 0");
+      if (await this.source.showMigrations()) return false;
+    }
     return !this.stopping;
   }
 

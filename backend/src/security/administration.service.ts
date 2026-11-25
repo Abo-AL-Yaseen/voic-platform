@@ -18,7 +18,7 @@ import { AUTH_CONFIG, type AuthConfig } from "../auth/auth.config.js";
 import { AuthRateLimit } from "../auth/rate-limit.js";
 import { StaffAudit, StaffFactor, StaffRecovery, StaffInvitation } from "./security.entities.js";
 import { administrationLock, audit } from "./audit.js";
-import {hasPermission} from "./permissions.js";
+import { hasPermission } from "./permissions.js";
 import { exact, text, bad } from "../content/content.validation.js";
 const uuid = (v: unknown) =>
   typeof v === "string" &&
@@ -143,14 +143,14 @@ export class AdministrationService {
     this.auth.recent(req);
     if (!uuid(input.key)) bad();
     const reason = this.reason(input.reason);
-    this.limits.take("administration-write", actor.id, 30);
+    await this.limits.take("administration-write", actor.id, 30);
     const fingerprint = createHash("sha256")
       .update(JSON.stringify({ target, input }))
       .digest("hex");
     return this.source.transaction("READ COMMITTED", async (m) => {
       await administrationLock(m);
       const locked = await this.auth.lockCurrent(m, req, actor.id);
-      if (!hasPermission(locked.role,"employees:manage")) throw new ForbiddenException();
+      if (!hasPermission(locked.role, "employees:manage")) throw new ForbiddenException();
       this.auth.recent(req);
       const old = await m
         .getRepository(StaffAudit)
@@ -279,7 +279,7 @@ export class AdministrationService {
     exact(input, ["key", "email", "role", "reason", "lang"]);
     const email = this.email(input.email);
     if (!roles.includes(input.role)) bad();
-    this.limits.take("staff-invite", this.auth.require(req).id, 10);
+    await this.limits.take("staff-invite", this.auth.require(req).id, 10);
     const token = randomBytes(32).toString("hex"),
       id = randomUUID();
     const result = await this.write(req, input, "invitation", async (m, actor) => {
@@ -308,7 +308,11 @@ export class AdministrationService {
       });
       await m.insert(StaffInvitation, invitation);
       const { tokenHash: _, ...safe } = invitation;
-      return { invitation: safe, auditTarget:`invitation:${id}`,audit: { role: invitation.role, invitationId: id } };
+      return {
+        invitation: safe,
+        auditTarget: `invitation:${id}`,
+        audit: { role: invitation.role, invitationId: id },
+      };
     });
     return {
       ...result,
@@ -320,7 +324,7 @@ export class AdministrationService {
   async invitationAction(req: AuthRequest, id: string, input: any) {
     exact(input, ["key", "action", "reason", "lang"]);
     if (!uuid(id) || !["resend", "revoke"].includes(input.action)) bad();
-    this.limits.take("staff-invite", this.auth.require(req).id, 10);
+    await this.limits.take("staff-invite", this.auth.require(req).id, 10);
     const token = randomBytes(32).toString("hex");
     const result = await this.write(req, input, `invitation:${id}`, async (m) => {
       const invitation = await m.findOneBy(StaffInvitation, { id });
@@ -368,7 +372,11 @@ export class AdministrationService {
       !input.country.trim()
     )
       bad();
-    this.limits.take("invitation-accept", req.socket.remoteAddress || "unknown", 10);
+    await this.limits.take(
+      "invitation-accept",
+      req.ip || req.socket.remoteAddress || "unknown",
+      10,
+    );
     const passwordHash = await argon2.hash(input.password, passwordOptions);
     try {
       return await this.source.transaction("READ COMMITTED", async (m) => {

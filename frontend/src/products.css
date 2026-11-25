@@ -31,7 +31,7 @@
   align-items: center;
   gap: 14px;
   margin-bottom: 42px;
-  color: #727463;
+  color: #626653;
   font-size: 12px;
 }
 .breadcrumb button {
@@ -46,7 +46,7 @@
   line-height: 1.6;
 }
 .catalog-intro > p:not(.eyebrow) {
-  color: #727463;
+  color: #626653;
   font-size: 16px;
   line-height: 1.8;
 }
@@ -56,7 +56,7 @@
   align-items: center;
   gap: 10px 16px;
   margin-top: 26px;
-  color: #727463;
+  color: #626653;
   font-size: 12px;
   line-height: 1.8;
 }
@@ -98,7 +98,7 @@
   font-size: 14px;
 }
 .catalog-toolbar input::placeholder {
-  color: #727463;
+  color: #626653;
 }
 .catalog-sort {
   width: 235px;
@@ -109,7 +109,7 @@
   align-items: center;
   gap: 20px;
   margin: 24px 0;
-  color: #727463;
+  color: #626653;
   font-size: 13px;
 }
 .text-link:disabled {
@@ -179,7 +179,7 @@
 }
 .filter-subheading {
   margin: 8px 0 4px;
-  color: #727463;
+  color: #626653;
   font-family: "Alexandria:Medium", sans-serif;
   font-size: 11px;
   font-weight: 500;
@@ -223,7 +223,7 @@
   border-radius: 10px;
   padding: 24px;
   background: #f6f3e4;
-  color: #727463;
+  color: #626653;
   font-size: 12px;
   line-height: 1.8;
   text-align: center;
@@ -232,7 +232,7 @@
   font-size: 20px;
 }
 .product-english-name {
-  color: #727463;
+  color: #626653;
   font-size: 11px;
   line-height: 1.5;
   text-align: right;
@@ -279,7 +279,7 @@
   font-size: 24px;
 }
 .catalog-empty p {
-  color: #727463;
+  color: #626653;
   font-size: 14px;
 }
 .comparison-bar {
@@ -397,7 +397,7 @@
 }
 .detail-english-name {
   margin-top: 4px;
-  color: #727463;
+  color: #626653;
   font-size: 13px;
   text-align: right;
 }
@@ -436,7 +436,7 @@
 }
 .product-inquiry p {
   margin-top: 9px;
-  color: #727463;
+  color: #626653;
   font-size: 11px;
   text-align: center;
 }
@@ -451,7 +451,7 @@
 }
 .comparison-intro {
   margin: 24px 0;
-  color: #727463;
+  color: #626653;
   font-size: 14px;
   line-height: 1.8;
 }

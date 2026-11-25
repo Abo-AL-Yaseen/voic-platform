@@ -4,6 +4,30 @@ Inspected: 2026-11-25. Application baseline:
 `9c9c0310b74c3df34a10ad2828104bf9bc94e897` (`chore: import VOIC frontend baseline`).
 Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
 
+## Integrated QA and release preparation — verified locally (2026-11-25)
+
+The user authorized final integrated QA, confirmed fixes, native disposable restore/load
+verification, CI and deployment preparation on `mahmoud`, without deploying or enabling
+production business writes. Baseline is `9b88686`. The [release-readiness report](release-readiness.md)
+records actual database/browser/load/restore evidence and
+external production prerequisites. [Operations](operations.md), [route/action inventory](route-action-inventory.md)
+and [combined manual acceptance](manual-acceptance.md) record the reviewed workflow.
+
+Current independent checks: backend 26/26 and frontend 14/14, both typechecks/builds passed;
+dependency audits report zero after the targeted Vite update. Shared production MySQL
+limits add a seventh explicit migration, applied once to native development after the fresh
+full disposable pass at 20:51:52 UTC. Native manager check and real updated NestJS live/ready
+returned 200 at 20:52:33 UTC, with 11 products, four recipes, seven pages and restricted grants.
+All 26 existing business/security tables, accounts and MFA factors were preserved.
+The real restore matched 28 tables/seven migrations/six media files in separate new resources.
+Bounded load passed 244 requests with zero errors (p95 193.18 ms; six workers/peak 11 requests).
+A forced concurrent empty-draft save reproduced and verified the gap-lock deadlock fix.
+The browser sweep passed 66 navigations, 12 axe scans and nine catalog regressions; muted
+text contrast was corrected without changing original assets/fonts/composition.
+The test operator and owned servers were closed; native MySQL remains running. Combined
+human acceptance and production prerequisites remain open; no deployment or production-write
+enablement occurred. Hosted CI is defined and its observed result belongs in release readiness.
+
 ## Staff security and administration — completed locally (2026-11-25)
 
 The explicitly requested phase builds on `fb3a549`: mandatory TOTP for all three staff

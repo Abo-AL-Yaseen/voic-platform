@@ -9,6 +9,13 @@ import { inquiryEntities } from "../inquiries/inquiry.entities.js";
 import { workflowEntities } from "../inquiries/workflow.entities.js";
 
 export function databaseOptions(env: Environment): DataSourceOptions {
+  const ssl = env.dbTls
+    ? {
+        rejectUnauthorized: true,
+        verifyIdentity: true,
+        ...(env.dbTlsCa ? { ca: env.dbTlsCa } : {}),
+      }
+    : undefined;
   return {
     type: "mysql",
     host: env.dbHost,
@@ -16,6 +23,7 @@ export function databaseOptions(env: Environment): DataSourceOptions {
     database: env.dbDatabase,
     username: env.dbUsername,
     password: env.dbPassword,
+    ssl,
     charset: "utf8mb4",
     timezone: "Z",
     synchronize: false,

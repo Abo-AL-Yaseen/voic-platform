@@ -268,7 +268,7 @@
 }
 
 .hero-description {
-  color: #727463;
+  color: #626653;
   font-family: "Alexandria:Regular", sans-serif;
   font-size: 18px;
   font-weight: 400;
@@ -281,7 +281,7 @@
 }
 
 .hero-note {
-  color: #727463;
+  color: #626653;
   font-family: "Alexandria:Regular", sans-serif;
   font-size: 12px;
   line-height: 1.55;
@@ -348,7 +348,7 @@
 }
 
 .hero-caption span {
-  color: #727463;
+  color: #626653;
   font-size: 11px;
   line-height: 1.55;
 }
@@ -381,7 +381,7 @@
 }
 
 .section-heading p {
-  color: #727463;
+  color: #626653;
   font-family: "Alexandria:Regular", sans-serif;
   font-size: 14px;
   line-height: 1.55;
@@ -430,7 +430,7 @@
 }
 
 .usage-card span {
-  color: #727463;
+  color: #626653;
   font-size: 12px;
   line-height: 1.55;
 }
@@ -501,7 +501,7 @@
 }
 
 .product-card p {
-  color: #727463;
+  color: #626653;
   font-size: 12px;
   line-height: 1.55;
 }
@@ -550,7 +550,7 @@
 }
 
 .story-copy > p:not(.eyebrow) {
-  color: #727463;
+  color: #626653;
   font-size: 17px;
   line-height: 1.55;
 }
@@ -697,7 +697,7 @@
 }
 
 .footer-bottom p {
-  color: #727463;
+  color: #626653;
   font-size: 11px;
 }
 

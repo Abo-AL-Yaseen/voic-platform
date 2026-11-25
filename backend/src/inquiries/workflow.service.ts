@@ -203,7 +203,7 @@ export class InquiryWorkflowService {
     const current = customer ? this.auth.require(req, ["customer"]) : this.staff(req);
     if (!customer && !this.config.writesEnabled)
       throw new ForbiddenException({ code: "STAFF_WRITES_DISABLED" });
-    this.limits.take(customer ? "inquiry-reply" : "staff-inquiry-action", current.id, 60);
+    await this.limits.take(customer ? "inquiry-reply" : "staff-inquiry-action", current.id, 60);
     const type = customer ? "reply" : (dto as WorkflowActionDto).type,
       fingerprint = this.fingerprint(id, dto, type),
       text = dto.text?.trim() || "";

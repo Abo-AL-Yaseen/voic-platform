@@ -37,6 +37,12 @@ test("required configuration fails clearly without including supplied secrets", 
     { CORS_ORIGINS: "https://*.example.com" },
     { CORS_ORIGINS: "https://user:secret@example.com" },
     { CORS_ORIGINS: "http://localhost:8443/path" },
+    { TRUST_PROXY_CIDRS: "0.0.0.0/0" },
+    { TRUST_PROXY_CIDRS: "true" },
+    { TRUST_PROXY_CIDRS: "127.0.0.1/99" },
+    { DB_TLS: "false-unsafe" },
+    { DB_TLS_CA_FILE: "missing-private-ca-sentinel" },
+    { MEDIA_ROOT: "relative-unsafe-root" },
   ]) {
     assert.throws(
       () => validateEnvironment({ ...validEnvironment, ...patch }),
@@ -49,6 +55,39 @@ test("required configuration fails clearly without including supplied secrets", 
       },
     );
   }
+});
+
+test("production remote databases require verified TLS and proxy trust stays explicit", () => {
+  assert.throws(() =>
+    validateEnvironment({
+      ...validEnvironment,
+      NODE_ENV: "production",
+      MEDIA_ROOT: tmpdir(),
+      DB_HOST: "192.0.2.10",
+      DB_TLS: "true",
+    }),
+  );
+  assert.throws(() =>
+    validateEnvironment({
+      ...validEnvironment,
+      NODE_ENV: "production",
+      MEDIA_ROOT: tmpdir(),
+      DB_HOST: "mysql.example",
+    }),
+  );
+  const env = validateEnvironment({
+    ...validEnvironment,
+    NODE_ENV: "production",
+    MEDIA_ROOT: tmpdir(),
+    DB_HOST: "mysql.example",
+    DB_TLS: "true",
+    TRUST_PROXY_CIDRS: "127.0.0.1,::1/128",
+  });
+  assert.deepEqual(env.trustProxy, ["127.0.0.1", "::1/128"]);
+  assert.deepEqual(
+    databaseOptions(env).type === "mysql" && (databaseOptions(env) as { ssl?: unknown }).ssl,
+    { rejectUnauthorized: true, verifyIdentity: true },
+  );
 });
 
 test("database options never synchronize or run migrations on startup", () => {
@@ -89,6 +128,7 @@ test("production bootstrap fails closed without an external MFA key before liste
       ...process.env,
       ...validEnvironment,
       NODE_ENV: "production",
+      MEDIA_ROOT: cwd,
       APP_URL: "https://voic.example",
       CORS_ORIGINS: "https://voic.example",
       MAIL_MODE: "smtp",

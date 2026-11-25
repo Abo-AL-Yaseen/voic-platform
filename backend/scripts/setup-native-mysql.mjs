@@ -28,11 +28,12 @@ const authTest = [
   "--staff-test",
   "--content-test",
   "--administration-test",
+  "--release-test",
 ].includes(process.argv.slice(2).join(" "));
 const testOnly = authTest || catalogTest || process.argv.slice(2).join(" ") === "--test-only";
 if (process.argv.length > 2 && !testOnly) {
   process.stderr.write(
-    "Only --test-only, --catalog-test, --auth-test, --inquiries-test, --staff-test --content-test or --administration-test is supported.\n",
+    "Use --test-only, --catalog-test, --auth-test, --inquiries-test, --staff-test, --content-test, --administration-test or --release-test.\n",
   );
   process.exit(1);
 }
@@ -57,6 +58,10 @@ let createdUser = false;
 let testDatabaseCreated = false;
 let testUserCreated = false;
 const testName = `voic_test_${randomBytes(8).toString("hex")}`;
+const releaseTest = process.argv.includes("--release-test");
+let restoreName,
+  restoreDatabaseCreated = false,
+  restoreUserCreated = false;
 try {
   const adminUser =
     (await prompt.question("MySQL administrator username [root]: ")).trim() || "root";
@@ -148,7 +153,7 @@ try {
       const result = execFileSync(process.execPath, args, {
         env: { ...env, ...overrides },
         stdio: "pipe",
-        timeout: authTest ? 600000 : 120000,
+        timeout: authTest ? (releaseTest ? 1200000 : 600000) : 120000,
       });
       process.stdout.write(result);
     } catch (error) {
@@ -181,6 +186,30 @@ try {
     DB_PASSWORD: testPassword,
     CONFIRM_DISPOSABLE_DATABASE: "yes",
   };
+  if (releaseTest) {
+    restoreName = `voic_test_${randomBytes(8).toString("hex")}`;
+    const restorePassword = randomBytes(32).toString("hex");
+    await assertAbsent(restoreName, restoreName);
+    await admin.query(
+      `CREATE DATABASE \`${restoreName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`,
+    );
+    restoreDatabaseCreated = true;
+    await admin.query(
+      `CREATE USER '${restoreName}'@'localhost' IDENTIFIED BY '${restorePassword}'`,
+    );
+    restoreUserCreated = true;
+    await admin.query(
+      `GRANT ALL PRIVILEGES ON \`${grantTarget(restoreName)}\`.* TO '${restoreName}'@'localhost'`,
+    );
+    Object.assign(testOverrides, {
+      RELEASE_VERIFICATION: "yes",
+      RESTORE_DB_OWNED: "yes",
+      RESTORE_DB_DATABASE: restoreName,
+      RESTORE_DB_USERNAME: restoreName,
+      RESTORE_DB_PASSWORD: restorePassword,
+    });
+    fs.writeFileSync(".tmp/verification-scope.json", JSON.stringify({ scope: "all" }));
+  }
   if (authTest) {
     // An interactive operator grants access once. Credentials stay only in this process
     // and its test children. Safe file signals allow reruns without asking for a password.
@@ -209,7 +238,7 @@ try {
       stopping = true;
     };
     process.on("SIGINT", stop);
-    const until = Date.now() + 45 * 60_000;
+    const until = Date.now() + (releaseTest ? 120 : 45) * 60_000;
     try {
       while (!stopping && Date.now() < until) {
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -223,6 +252,20 @@ try {
         }
         fs.rmSync(commandPath, { force: true });
         if (command.action === "finish") break;
+        if (command.action === "apply-release" && releaseTest) {
+          try {
+            const { applyNativeRelease } = await import("./native-release-administration.mjs");
+            await applyNativeRelease(admin, {
+              local: parseEnv(fs.readFileSync(".env", "utf8")),
+              grantTarget,
+            });
+          } catch {
+            process.stderr.write(
+              "Native release apply stopped; inspect safe evidence and migration state. No reset attempted.\n",
+            );
+          }
+          continue;
+        }
         if (command.action === "apply-security") {
           try {
             const { applyNativeSecurity } = await import("./native-security-administration.mjs");
@@ -311,6 +354,8 @@ try {
   if (admin) {
     try {
       // Only resources successfully created by this invocation can be removed.
+      if (restoreDatabaseCreated) await admin.query(`DROP DATABASE \`${restoreName}\``);
+      if (restoreUserCreated) await admin.query(`DROP USER '${restoreName}'@'localhost'`);
       if (testDatabaseCreated) await admin.query(`DROP DATABASE \`${testName}\``);
       if (testUserCreated) await admin.query(`DROP USER '${testName}'@'localhost'`);
       if (testDatabaseCreated || testUserCreated)

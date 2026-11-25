@@ -1,0 +1,24 @@
+# Uninstalled Linux systemd example; reviewed Windows service/process managers are also possible.
+[Unit]
+Description=VOIC API
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=simple
+User=voic
+Group=voic
+WorkingDirectory=/srv/voic/current/backend
+EnvironmentFile=/etc/voic/backend.env
+ExecStart=/usr/bin/node dist/main.js
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=60
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0077
+# MEDIA_ROOT must name a real persistent absolute directory, e.g. /srv/voic/media.
+StandardOutput=journal
+StandardError=journal
+[Install]
+WantedBy=multi-user.target
