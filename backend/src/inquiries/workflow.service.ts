@@ -1,3 +1,4 @@
+import { hasPermission } from "../security/permissions.js";
 import {
   BadRequestException,
   ConflictException,
@@ -23,6 +24,7 @@ import {
 import { InquiryService, detailPages } from "./inquiry.service.js";
 import { CustomerReplyDto, WorkflowActionDto, workflowTransitions } from "./workflow.dto.js";
 import { WORKFLOW_CONFIG, type WorkflowConfig } from "./workflow.config.js";
+import { correlation } from "../security/audit.js";
 
 @Injectable()
 export class InquiryWorkflowService {
@@ -35,10 +37,7 @@ export class InquiryWorkflowService {
     @Inject(WORKFLOW_CONFIG) private readonly config: WorkflowConfig,
   ) {}
   staff(req: AuthRequest) {
-    const u = this.auth.require(req);
-    if (!["administrator", "sales"].includes(u.role))
-      throw new ForbiddenException({ code: "STAFF_FORBIDDEN" });
-    return u;
+    return this.auth.permission(req, "inquiries:manage");
   }
   private async record(m: EntityManager, id: string, owner?: string, lock = false) {
     if (!/^[a-f0-9-]{36}$/.test(id)) throw new NotFoundException();
@@ -217,7 +216,7 @@ export class InquiryWorkflowService {
       throw new BadRequestException({ code: "WORKFLOW_FIELDS" });
     return this.source.transaction(async (m) => {
       const user = await this.auth.lockCurrent(m, req, current.id);
-      if (customer ? user.role !== "customer" : !["administrator", "sales"].includes(user.role))
+      if (customer ? user.role !== "customer" : !hasPermission(user.role, "inquiries:manage"))
         throw new ForbiddenException({ code: "STAFF_FORBIDDEN" });
       if (!user.emailVerifiedAt) throw new ForbiddenException({ code: "EMAIL_UNVERIFIED" });
       const i = await this.record(m, id, customer ? user.id : undefined, true);
@@ -281,6 +280,7 @@ export class InquiryWorkflowService {
       i.updatedAt = now;
       await m.save(i);
       await m.insert(InquiryAudit, {
+        requestId: correlation(req),
         id: randomUUID(),
         inquiryId: id,
         actionId: action.id,

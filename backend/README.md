@@ -1,5 +1,7 @@
 # VOIC backend foundation
 
+Current staff authentication/permissions are superseded by the implemented [staff security and administration guide](../docs/staff-security.md). Mandatory MFA now protects every staff endpoint; employee and audit workspaces are connected. Production business writes remain disabled pending explicit operational approval. Earlier phase verification below is historical.
+
 This is a local development backend, not a production deployment. The public product
 catalog now uses explicit TypeORM entities/migrations and native MySQL, integrated with the
 existing frontend. Customer authentication/accounts now use server-side sessions; staff
@@ -7,7 +9,7 @@ inquiry reads and development-only business actions now use real APIs. Customer 
 atomic idempotent submission, account tracking and a durable notification outbox; see
 [customer inquiries](../docs/customer-inquiries.md) for schema, contracts, commands and manual tests.
 The [staff inquiry guide](../docs/staff-inquiries.md) documents the fourth migration,
-local staff provisioning, two-session manual tests, and the production MFA write restriction.
+local staff provisioning, two-session manual tests, and the production write restriction.
 See [authentication](../docs/authentication.md)
 for endpoints, CSRF, mail capture, SMTP settings and security/deployment limits.
 Arabic and English are the only product languages. Project rules: [project plan](../docs/project-plan.md).
@@ -259,8 +261,10 @@ availability targets, monitoring/alerts and redacted operational logs, backups a
 restore/rollback, dependency review, real load/security tests, and approved content/privacy.
 Customer sessions, CSRF, email verification, ownership and idempotent inquiries are implemented
 locally. Staff inquiry workflows are enabled only for explicit local capture testing;
-production staff writes remain disabled pending MFA. Editorial workspaces are now implemented;
-the staff customer directory, employee management and a general audit screen remain future work. No deployment,
+production staff writes remain disabled pending production operational approval. Editorial workspaces are now implemented;
+employee management, mandatory MFA and the general audit screen are implemented in the
+[staff security guide](../docs/staff-security.md). The standalone staff customer directory
+remains future work. No deployment,
 security certification or capacity claim is made by these local checks.
 
 ## Historical foundation verification (2026-11-23, before native setup)
@@ -342,7 +346,8 @@ unpublished. No local seed input is used as a frontend fallback. See the
 
 Administrator/content-editor APIs now support private drafts, review, controlled publication,
 products/categories/uses, recipes, structured pages and real raster uploads. Sales/customer
-access is denied. Employee management and staff MFA remain outside this phase. See the
+access is denied. The subsequent staff-security phase adds employee management and mandatory
+MFA, including these content endpoints. See the
 [content guide](../docs/content-management.md) for exact DTOs, migration/import commands,
 native disposable testing, local account provisioning and manual testing/restoration.
 
@@ -355,7 +360,7 @@ The explicit repeatable importer `node scripts/import-development-content.mjs` r
 
 Uploads persist in ignored `.local-data/media/`, outside build output. Back up this directory
 and the database together. Development uses local disk; production requires separately reviewed
-persistent storage/backup and staff MFA. The dry-run orphan tool is
+persistent storage/backup and operational security review. The dry-run orphan tool is
 `node scripts/cleanup-local-media.mjs`; `--apply` is explicit and restricted to owned, old,
 unreferenced upload files. Never delete original assets or manually reset existing databases.
 

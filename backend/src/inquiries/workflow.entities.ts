@@ -39,6 +39,7 @@ export class InquiryInternalNote {
 }
 @Entity("inquiry_audit_events")
 export class InquiryAudit {
+  @Column({ type: "varchar", length: 36, nullable: true }) requestId!: string | null;
   @PrimaryColumn({ type: "varchar", length: 36 }) id!: string;
   @Column({ type: "varchar", length: 36 }) inquiryId!: string;
   @Column({ type: "varchar", length: 36 }) actionId!: string;

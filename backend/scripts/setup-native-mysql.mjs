@@ -22,13 +22,17 @@ if (Object.keys(process.env).some((key) => key.startsWith("DB_") || key === "NOD
 }
 
 const catalogTest = process.argv.slice(2).join(" ") === "--catalog-test";
-const authTest = ["--auth-test", "--inquiries-test", "--staff-test", "--content-test"].includes(
-  process.argv.slice(2).join(" "),
-);
+const authTest = [
+  "--auth-test",
+  "--inquiries-test",
+  "--staff-test",
+  "--content-test",
+  "--administration-test",
+].includes(process.argv.slice(2).join(" "));
 const testOnly = authTest || catalogTest || process.argv.slice(2).join(" ") === "--test-only";
 if (process.argv.length > 2 && !testOnly) {
   process.stderr.write(
-    "Only --test-only, --catalog-test, --auth-test, --inquiries-test, --staff-test or --content-test is supported.\n",
+    "Only --test-only, --catalog-test, --auth-test, --inquiries-test, --staff-test --content-test or --administration-test is supported.\n",
   );
   process.exit(1);
 }
@@ -219,7 +223,47 @@ try {
         }
         fs.rmSync(commandPath, { force: true });
         if (command.action === "finish") break;
+        if (command.action === "apply-security") {
+          try {
+            const { applyNativeSecurity } = await import("./native-security-administration.mjs");
+            await applyNativeSecurity(admin, {
+              local: parseEnv(fs.readFileSync(".env", "utf8")),
+              grantTarget,
+            });
+          } catch {
+            process.stderr.write(
+              "Native security apply stopped. Review verification evidence, migration state and VOIC-only grants locally. No reset attempted.\n",
+            );
+          }
+          continue;
+        }
+        if (command.action === "audit-grants") {
+          try {
+            const { auditWriterGrants } = await import("./native-security-administration.mjs");
+            const result = await auditWriterGrants(admin, {
+              database: testName,
+              user: testName,
+              grantTarget,
+              local: { DB_PASSWORD: testPassword },
+            });
+            fs.writeFileSync(
+              ".tmp/audit-grants-verification.json",
+              JSON.stringify({ ...result, passed: true, checkedAt: new Date().toISOString() }),
+            );
+            process.stdout.write(
+              "PASS: disposable audit writer cannot UPDATE/DELETE audits or run DDL.\n",
+            );
+          } catch {
+            process.stderr.write("Disposable audit grant check failed.\n");
+          }
+          continue;
+        }
         if (command.action !== "run") continue;
+        // Restore DDL only on this invocation's disposable database for a corrected rerun.
+        await admin.query(
+          `GRANT ALL PRIVILEGES ON \`${grantTarget(testName)}\`.* TO '${testName}'@'localhost'`,
+        );
+
         let passed = false;
         try {
           run([

@@ -1,3 +1,4 @@
+import { completeStaff } from "./test-staff-mfa.mjs";
 import { StaffInquiryWorkflow1795525200000 } from "../.tmp/auth-build/database/migrations/1795525200000-StaffInquiryWorkflow.js";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -53,12 +54,15 @@ export async function checkStaffWorkflow({ app, source, base, front, password })
         if (Array.isArray(expected)) assert.ok(expected.includes(res.status));
         else assert.equal(res.status, expected);
         const result = await res.json();
+        if (result.session?.csrfToken) this.csrf = result.session.csrfToken;
         if (result.csrfToken) this.csrf = result.csrfToken;
         return result;
       },
       async login(email) {
         await this.call("/auth/session");
-        const r = await this.call("/auth/login", { email, password });
+        let r = await this.call("/auth/login", { email, password });
+        if (r.user.role !== "customer" && r.user.emailVerified)
+          r = await completeStaff((...args) => this.call(...args), email, password);
         this.user = r.user;
         return r;
       },
@@ -418,7 +422,7 @@ export async function checkStaffWorkflow({ app, source, base, front, password })
     } finally {
       await rollbackProbe.release();
     }
-    assert.equal(Number((await source.query("SELECT COUNT(*) n FROM voic_migrations"))[0].n), 5);
+    assert.equal(Number((await source.query("SELECT COUNT(*) n FROM voic_migrations"))[0].n), 6);
     const ordered = await source
       .getRepository(CustomerInquiry)
       .createQueryBuilder("i")
@@ -485,6 +489,7 @@ export async function checkStaffWorkflow({ app, source, base, front, password })
       403,
     );
     await promote.call("/auth/verification/confirm", { token: promoted.verificationToken });
+    await completeStaff((...args) => promote.call(...args), before.email, password);
     assert.ok(
       (await source.getRepository(AuthUser).findOneByOrFail({ id: before.id })).emailVerifiedAt,
     );

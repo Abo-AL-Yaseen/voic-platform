@@ -78,8 +78,8 @@ export function ContentDashboard({ lang, go }: { lang: Lang; go: Props["go"] }) 
       <p>
         {pick(
           lang,
-          "مسودات ومراجعة ونشر بإذن المسؤول. دليل العملاء للموظفين وإدارة الموظفين وواجهة التدقيق العامة غير متصلة.",
-          "Drafts, review and administrator publication. The staff customer directory, employee management and general audit UI remain disconnected.",
+          "مسودات ومراجعة ونشر بإذن المسؤول. دليل العملاء العام للموظفين غير متصل.",
+          "Drafts, review and administrator publication. The general staff customer directory remains disconnected.",
         )}
       </p>
       <div className="staff-overview-grid">

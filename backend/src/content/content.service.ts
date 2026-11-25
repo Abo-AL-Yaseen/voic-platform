@@ -1,3 +1,4 @@
+import { hasPermission } from "../security/permissions.js";
 import {
   Inject,
   Injectable,
@@ -34,6 +35,7 @@ import {
   type ContentBody,
 } from "./content.entities.js";
 import { bad, exact, identifier, validateContent, mediaUrls } from "./content.validation.js";
+import { correlation } from "../security/audit.js";
 export const contentKey = (kind: string, id: string) => `${kind}:${id}`;
 export async function editorLock(m: EntityManager) {
   await m.findOneOrFail(ContentWriteLock, {
@@ -74,10 +76,7 @@ export class ContentService {
     @Inject(AUTH_CONFIG) readonly mail: AuthConfig,
   ) {}
   staff(req: AuthRequest) {
-    const u = this.auth.require(req);
-    if (!["administrator", "content_editor"].includes(u.role))
-      throw new ForbiddenException({ code: "CONTENT_FORBIDDEN" });
-    return u;
+    return this.auth.permission(req, "content:edit");
   }
   async ready() {
     if (!(await this.database.isReady())) throw new ServiceUnavailableException();
@@ -92,7 +91,7 @@ export class ContentService {
       canWrite:
         !!u.emailVerifiedAt &&
         workflowConfiguration(this.env, process.env, this.mail.mode).writesEnabled,
-      canPublish: u.role === "administrator",
+      canPublish: hasPermission(u.role, "content:publish"),
       productionWrites: false,
     };
   }
@@ -111,7 +110,7 @@ export class ContentService {
       // earlier snapshot from hiding a concurrent commit after we acquire that lock.
       return await this.source.transaction("READ COMMITTED", async (m) => {
         const locked = await this.auth.lockCurrent(m, req, u.id);
-        if (!["administrator", "content_editor"].includes(locked.role) || !locked.emailVerifiedAt)
+        if (!hasPermission(locked.role, "content:edit") || !locked.emailVerifiedAt)
           throw new ForbiddenException({ code: "CONTENT_FORBIDDEN" });
         await editorLock(m);
         return fn(m, locked);
@@ -230,6 +229,7 @@ export class ContentService {
     input: any,
     version: number,
     revisionId: string | null,
+    requestId?: string,
   ) {
     await m.insert(EditorialEvent, {
       id: randomUUID(),
@@ -242,6 +242,7 @@ export class ContentService {
       version,
       revisionId,
       createdAt: new Date(),
+      requestId: requestId || null,
     });
   }
   async mutate(req: AuthRequest, kind: ContentKind, id: string, input: any) {
@@ -325,7 +326,7 @@ export class ContentService {
           d.reviewId = d.draftId;
           d.version++;
         } else {
-          if (u.role !== "administrator")
+          if (!hasPermission(u.role, "content:publish"))
             throw new ForbiddenException({ code: "CONTENT_FORBIDDEN" });
           if (input.action === "publish") {
             if (d.archived || d.reviewId !== d.draftId)
@@ -365,7 +366,7 @@ export class ContentService {
       }
       d.updatedAt = new Date();
       await m.save(d);
-      await this.audit(m, u, target, input, d.version, d.draftId);
+      await this.audit(m, u, target, input, d.version, d.draftId, correlation(req));
       return this.dto(m, d, req);
     });
   }

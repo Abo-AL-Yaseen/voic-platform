@@ -2,12 +2,12 @@ import "reflect-metadata";
 import { Writable } from "node:stream";
 import { createInterface } from "node:readline/promises";
 import { DataSource } from "typeorm";
-import { loadEnvironment } from "../.tmp/staff-build/config/environment.js";
-import { databaseOptions } from "../.tmp/staff-build/database/options.js";
-import { AuthUser } from "../.tmp/staff-build/auth/auth.entities.js";
-import { provisionLocalStaff } from "../.tmp/staff-build/auth/local-staff.js";
-import { authConfiguration } from "../.tmp/staff-build/auth/auth.config.js";
-import { MailService } from "../.tmp/staff-build/auth/mail.service.js";
+import { loadEnvironment } from "../.tmp/security-build/config/environment.js";
+import { databaseOptions } from "../.tmp/security-build/database/options.js";
+import { AuthUser } from "../.tmp/security-build/auth/auth.entities.js";
+import { provisionLocalStaff } from "../.tmp/security-build/auth/local-staff.js";
+import { authConfiguration } from "../.tmp/security-build/auth/auth.config.js";
+import { MailService } from "../.tmp/security-build/auth/mail.service.js";
 if (!process.stdin.isTTY || !process.stdout.isTTY || process.argv.length !== 2) {
   process.stderr.write(
     "Run locally in an interactive terminal (Git Bash: winpty node scripts/provision-local-staff.mjs). Do not pass identity/password arguments.\n",
@@ -101,7 +101,7 @@ try {
     result.verificationToken = null;
   }
   process.stdout.write(
-    `Local staff change completed. Email ${result.verified ? "explicitly verified for development" : "requires genuine verification; review the local capture privately or use resend"}. No password/token is printed or saved outside the existing private capture.\n`,
+    `Local staff change completed. Mandatory MFA enrollment/challenge is still required; no factor was granted. Email ${result.verified ? "explicitly verified for development" : "requires genuine verification; review the local capture privately or use resend"}. No password/token is printed or saved outside the existing private capture.\n`,
   );
 } catch (error) {
   muted = false;

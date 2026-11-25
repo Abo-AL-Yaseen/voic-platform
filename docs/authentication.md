@@ -1,15 +1,19 @@
 # Authentication and customer accounts
 
+Current staff authentication/permissions are superseded by the implemented [staff security and administration guide](staff-security.md). Mandatory MFA now protects every staff endpoint; employee and audit workspaces are connected. Production business writes remain disabled pending explicit operational approval. Earlier phase verification below is historical.
+
 Update 2026-11-25: local interactive provisioning also supports `content_editor`.
 [Content management](content-management.md) now implements that role's editorial workspace;
 sales/customer identities are denied its APIs. The development capture gate and production
-MFA restriction continue to apply. This does not add employee-management UI.
+operational restriction continue to apply. The subsequent staff-security phase adds mandatory
+MFA and the employee-management UI.
 
 Authorized scope: 2026-11-24, on permanent `mahmoud`. Native MySQL, NestJS/TypeORM and
 the existing React/React Query application are retained. This implements customer accounts
 and the foundation for staff authorization. Later accepted inquiry submission and staff
-workflow/provisioning are documented in their feature guides. Staff MFA, general employee
-management and deployment remain future work. No default staff accounts exist.
+workflow/provisioning are documented in their feature guides. Staff MFA and employee
+management are implemented in the linked staff-security guide. Deployment is not authorized.
+No default staff accounts exist.
 
 ## Storage and identity
 
@@ -93,12 +97,12 @@ backslashes, control characters, fragments and arbitrary parameters are rejected
 sign-in or missing/expired authenticated session. 403 is CSRF/role/verification rejection.
 429 includes Retry-After 900. Unknown routes return 404; database readiness failure is 503.
 
-Staff permissions are server-owned: administrator can access the workspace and is the
-future employee/catalog/inquiry administrator; sales has inquiry scope; content_editor has
-catalog scope. `/staff/access` establishes that foundation only, without business endpoints.
-The authenticated workspace retains its existing layout and clearly labels disconnected
-operations. `VerifiedCustomerGuard` is the extension point for future submission endpoints;
-it requires a real customer session and verified email. No submission endpoint exists now.
+Staff permissions are server-owned and rechecked against current account/session state:
+administrator manages employees, audit, inquiries and content; sales manages inquiries;
+content_editor edits content/media and requests review, without publishing. Every staff
+endpoint requires completed MFA. The standalone staff customer directory remains disconnected.
+`VerifiedCustomerGuard` protects customer inquiry operations with a real customer session
+and verified email. See the respective feature guides for implemented endpoints.
 
 ## Email and local configuration
 
@@ -152,7 +156,8 @@ password change 5/user; anonymous bootstrap 120/IP; auth-wide 1000/IP. The count
 bounded to 10000 hashed keys. Counters expire, restart clears them, and they are not shared
 across instances. Proxy headers are not trusted. Production needs a reviewed shared limiter,
 trusted proxy topology, HTTPS/same-site hosting, durable mail handling, retention/cleanup,
-backups/restoration, monitoring and staff MFA before enabling staff business operations.
+backups/restoration, monitoring and operational review of implemented staff MFA before
+enabling production staff business operations.
 
 ## Native verification workflow
 
@@ -209,7 +214,7 @@ genuine captured tokens unless the operator explicitly confirms development veri
 There is no public employee registration or default staff identity. Automated staff accounts
 exist only in the disposable native test database. Only administrator/sales can read submitted
 inquiries; verified accounts may act only when STAFF_INQUIRY_WRITES=true in development/test
-with capture mail. Production rejects that setting and keeps writes disabled pending MFA.
+with capture mail. Production rejects that setting and keeps writes disabled pending production operational approval.
 Private staff query keys include identity, role and session generation. Role revocation clears
 private data and aborts old requests while preserving public catalog cache.
 

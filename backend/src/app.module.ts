@@ -1,4 +1,5 @@
 import { ContentModule } from "./content/content.module.js";
+import { AdministrationModule } from "./security/administration.module.js";
 import { Module } from "@nestjs/common";
 import { ConfigurationModule } from "./config/configuration.module.js";
 import { HealthModule } from "./health/health.module.js";
@@ -16,6 +17,7 @@ import { InquiryWorkflowModule } from "./inquiries/workflow.module.js";
     InquiryModule,
     InquiryWorkflowModule,
     ContentModule,
+    AdministrationModule,
   ],
 })
 export class AppModule {}

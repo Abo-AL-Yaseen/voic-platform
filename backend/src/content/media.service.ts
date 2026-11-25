@@ -12,6 +12,7 @@ import { ContentService, editorLock } from "./content.service.js";
 import { ContentMedia, ContentMediaUsage } from "./content.entities.js";
 import { bad, exact, text } from "./content.validation.js";
 import type { AuthRequest } from "../auth/auth.service.js";
+import { correlation } from "../security/audit.js";
 @Injectable()
 export class LocalMediaStorage {
   private active = 0;
@@ -206,7 +207,7 @@ export class ContentMediaService {
           createdAt: new Date(),
         });
         await m.insert(ContentMedia, media);
-        await this.content.audit(m, u, target, body, 1, id);
+        await this.content.audit(m, u, target, body, 1, id, correlation(req));
         return media;
       });
     } catch (e) {
@@ -257,7 +258,7 @@ export class ContentMediaService {
           await m.save(media);
         }
       }
-      await this.content.audit(m, u, target, input, media.version, null);
+      await this.content.audit(m, u, target, input, media.version, null, correlation(req));
       return { completed: true };
     });
     if (removed) await this.storage.remove(removed);

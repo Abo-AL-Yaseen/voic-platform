@@ -8,7 +8,7 @@ export function workflowConfiguration(env: Environment, input = process.env, mai
     (setting === "true" && mailMode !== "capture")
   )
     throw new ConfigurationError(
-      "STAFF_INQUIRY_WRITES is development/test only and requires local capture mail; leave it unset in production until staff MFA is implemented.",
+      "STAFF_INQUIRY_WRITES is development/test only and requires local capture mail; leave it unset in production until production business operations are explicitly approved. MFA and permissions are always required.",
     );
   return { writesEnabled: env.nodeEnv !== "production" && setting === "true" };
 }

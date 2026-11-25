@@ -65,6 +65,15 @@ export class ApiErrorFilter implements ExceptionFilter {
           "WORKFLOW_FIELDS",
           "WORKFLOW_TRANSITION",
           "WORKFLOW_CLOSED",
+          "MFA_REQUIRED",
+          "MFA_INVALID",
+          "MFA_EXPIRED",
+          "MFA_SELF_RESET",
+          "STAFF_SUSPENDED",
+          "REAUTH_REQUIRED",
+          "LAST_ADMINISTRATOR",
+          "EMPLOYEE_CONFLICT",
+          "INVITATION_EXISTS",
         ].includes(String(detail.code))
       )
         code = String(detail.code);

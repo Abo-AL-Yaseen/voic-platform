@@ -1,4 +1,5 @@
-﻿import assert from "node:assert/strict";
+import { completeStaff } from "./test-staff-mfa.mjs";
+import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import sharp from "sharp";
@@ -43,12 +44,15 @@ export async function checkContent({ app, source, base, front, password }) {
         (Array.isArray(expected) ? expected : [expected]).includes(response.status),
         `Content HTTP mismatch during ${stage}: ${response.status}`,
       );
+      if (result.session?.csrfToken) this.csrf = result.session.csrfToken;
+      if (result.session?.csrfToken) this.csrf = result.session.csrfToken;
       if (result.csrfToken) this.csrf = result.csrfToken;
       return result;
     },
     async login(email) {
       await this.call("/auth/session");
       await this.call("/auth/login", { email, password });
+      await completeStaff((...args) => this.call(...args), email, password);
     },
   });
   try {

@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [transitionError, setTransitionError] = useState<Error | null>(null);
   const generation = useRef(0);
   const previousUser = useRef<string | null | undefined>(undefined);
+  const previousAssurance = useRef<string | undefined>(undefined);
   const previousRole = useRef<string | null>(null);
   const channel = useRef<BroadcastChannel | null>(null);
   const key = authKeys.current(epoch);
@@ -87,6 +88,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mutation.meta?.private === true) queryClient.getMutationCache().remove(mutation);
       }
     }
+    if (
+      previousUser.current === userId &&
+      previousAssurance.current &&
+      previousAssurance.current !== query.data.staffAuth
+    )
+      void expire();
+    previousAssurance.current = query.data.staffAuth;
     previousUser.current = userId;
     previousRole.current = role;
   }, [userId, query.data]);

@@ -31,7 +31,12 @@ async function checked<T>(read: () => Promise<T>) {
   } catch (e) {
     if (
       e instanceof ApiError &&
-      (e.status === 401 || (e.details as any)?.code === "CONTENT_FORBIDDEN")
+      (e.status === 401 ||
+        (e.status === 403 &&
+          ["MFA_REQUIRED", "STAFF_SUSPENDED", "STAFF_FORBIDDEN"].includes(
+            (e.details as any)?.code,
+          )) ||
+        (e.details as any)?.code === "CONTENT_FORBIDDEN")
     )
       window.dispatchEvent(
         new Event(e.status === 401 ? "voic:session-expired" : "voic:permissions-changed"),

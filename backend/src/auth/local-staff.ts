@@ -1,3 +1,5 @@
+import { administrationLock, audit } from "../security/audit.js";
+import { preserveLastAdministrator } from "../security/administration.service.js";
 import * as argon2 from "argon2";
 import { randomUUID, randomBytes } from "node:crypto";
 import { isEmail } from "class-validator";
@@ -54,7 +56,8 @@ export async function provisionLocalStaff(
     throw new Error("Invalid new staff profile");
   const passwordHash =
     input.mode === "create" ? await argon2.hash(input.password!, passwordOptions) : undefined;
-  return source.transaction(async (m) => {
+  return source.transaction("READ COMMITTED", async (m) => {
+    await administrationLock(m);
     let user = await m
       .getRepository(AuthUser)
       .findOne({ where: { email }, lock: { mode: "pessimistic_write" } });
@@ -73,12 +76,16 @@ export async function provisionLocalStaff(
         phone: null,
         emailVerifiedAt: input.verifyDevelopment ? now : null,
         securityVersion: 0,
+        suspendedAt: null,
+        staffRevision: 0,
         createdAt: now,
       });
       await m.insert(AuthUser, user);
     } else {
       if (!user || user.id !== input.expectedId || user.role !== input.expectedRole)
         throw new Error("Identity changed; review again");
+      await preserveLastAdministrator(m, user, input.role, !!user.suspendedAt);
+      await m.getRepository(AuthUser).increment({ id: user.id }, "staffRevision", 1);
       // Explicit updates never save the omitted password hash or alter profile fields.
       await m.getRepository(AuthUser).increment({ id: user.id }, "securityVersion", 1);
       await m.update(
@@ -91,6 +98,10 @@ export async function provisionLocalStaff(
       user.role = input.role;
       if (input.verifyDevelopment) user.emailVerifiedAt = now;
     }
+    await audit(m, null, `operator.staff_${input.mode}`, user.id, {
+      role: input.role,
+      local: true,
+    });
     let verificationToken: string | null = null;
     if (!user.emailVerifiedAt) {
       verificationToken = randomBytes(32).toString("hex");

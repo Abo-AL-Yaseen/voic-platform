@@ -1,3 +1,5 @@
+import { StaffSecurityPage, StaffInvitationPage } from "./pages/StaffSecurityPages";
+import { EmployeesPage, AuditPage } from "./pages/StaffAdministrationPages";
 import EditorialWorkspace from "./pages/EditorialPages";
 import { queryClient } from "./services/queryClient";
 import { usePublishedPage } from "./hooks/content/queries";
@@ -326,17 +328,26 @@ export default function App() {
         )}
       </SessionGate>
     );
+  } else if (path === "/staff-invitation") {
+    page = <StaffInvitationPage lang={lang} go={go} />;
+  } else if (path === "/staff/security") {
+    page = <StaffSecurityPage lang={lang} go={go} />;
   } else if (path === "/staff" || path.startsWith("/staff/")) {
     page = (
       <SessionGate
         lang={lang}
         go={go}
         staff
+        administration={/^\/staff\/(employees|audit-log)(\/|$)/.test(path)}
         inquiries={path.startsWith("/staff/inquiries")}
         content={/^\/staff\/(products|categories|uses|recipes|content|media)(\/|$)/.test(path)}
       >
         {/^\/staff\/(products|categories|uses|recipes|content|media)(\/|$)/.test(path) ? (
           <EditorialWorkspace lang={lang} go={go} path={path} search={url.search} />
+        ) : path === "/staff/employees" ? (
+          <EmployeesPage lang={lang} go={go} />
+        ) : path === "/staff/audit-log" ? (
+          <AuditPage lang={lang} go={go} />
         ) : (
           <StaffWorkspace lang={lang} go={go} path={path} search={url.search} />
         )}

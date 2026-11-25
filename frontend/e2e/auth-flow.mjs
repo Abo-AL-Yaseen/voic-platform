@@ -1,3 +1,4 @@
+import { completeBrowserMfa } from "../../backend/scripts/test-staff-mfa.mjs";
 import assert from "node:assert/strict";
 import { randomBytes, createHash } from "node:crypto";
 import fs from "node:fs";
@@ -276,12 +277,12 @@ export async function runAuthUi({
           .findOneByOrFail({ email: switchEmail });
         await source
           .getRepository(AuthUser)
-          .update({ id: employee.id }, { role: "content_editor" });
+          .update({ id: employee.id }, { role: "content_editor", emailVerifiedAt: new Date() });
         await page.goto("/login?lang=en");
         await page.getByLabel("Email", { exact: true }).fill(switchEmail);
         await page.getByLabel("Password", { exact: true }).fill(password);
         await page.getByRole("button", { name: "Sign in", exact: true }).click();
-        await page.waitForURL((url) => url.pathname === "/staff");
+        await completeBrowserMfa(page, base, switchEmail, password, "en");
         await page.getByRole("heading", { name: "Content management", exact: true }).waitFor();
         await page.getByRole("link", { name: "Products", exact: true }).last().waitFor();
         await page.goto("/staff/inquiries?lang=en");

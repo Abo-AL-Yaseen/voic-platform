@@ -137,6 +137,8 @@ test("public user projection cannot expose internal fields and rate counters are
     emailVerifiedAt: null,
     passwordHash: "private",
     securityVersion: 2,
+    suspendedAt: null,
+    staffRevision: 0,
     createdAt: new Date(),
   });
   assert.equal(value.emailVerified, false);

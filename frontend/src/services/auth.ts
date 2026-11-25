@@ -10,7 +10,13 @@ export type User = {
   role: "customer" | "administrator" | "sales" | "content_editor";
   emailVerified: boolean;
 };
-export type Session = { user: User | null; csrfToken: string; sessionExpired: boolean };
+export type Session = {
+  user: User | null;
+  csrfToken: string;
+  sessionExpired: boolean;
+  staffAuth?: "none" | "suspended" | "verify_email" | "complete" | "challenge" | "enroll";
+  permissions?: string[];
+};
 export type ProfileInput = Pick<User, "name" | "kind" | "country"> & {
   company?: string;
   phone?: string;

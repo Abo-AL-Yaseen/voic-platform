@@ -10,6 +10,8 @@ import { ENVIRONMENT } from "../src/config/configuration.module.js";
 import { validateEnvironment } from "../src/config/environment.js";
 import { DATABASE_SOURCE } from "../src/database/database.service.js";
 import { configureHttp } from "../src/http/configure-http.js";
+import { randomBytes } from "node:crypto";
+import { MFA_KEY } from "../src/security/mfa.service.js";
 
 class ProbeDto {
   @IsString() @MinLength(2) name!: string;
@@ -63,6 +65,8 @@ before(async () => {
     .useValue(env)
     .overrideProvider(DATABASE_SOURCE)
     .useValue(source)
+    .overrideProvider(MFA_KEY)
+    .useValue(randomBytes(32))
     .compile();
   app = module.createNestApplication<NestExpressApplication>({ bodyParser: false, logger: false });
   configureHttp(app, env);

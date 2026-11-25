@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import AppLink from "./AppLink";
 import { msg, ui, withLang, type Lang } from "../i18n";
-import { useLogout, authFailure } from "../hooks/auth/queries";
+import { useLogout, useAuth, authFailure } from "../hooks/auth/queries";
 
 type NavItem = { href: string; label: string };
 
@@ -85,6 +85,7 @@ export const staffNavigation: NavItem[] = [
   { href: "/staff/customers", label: "Customers" },
   { href: "/staff/employees", label: "Employees" },
   { href: "/staff/audit-log", label: "Audit log" },
+  { href: "/staff/security", label: "Staff security" },
 ];
 
 export function StaffLayout({
@@ -100,6 +101,18 @@ export function StaffLayout({
   children: ReactNode;
   preview?: boolean;
 }) {
+  const permissions = useAuth().session?.permissions || [];
+  const visible = (href: string) =>
+    href === "/staff/security" ||
+    (href === "/staff"
+      ? permissions.includes("staff:access")
+      : href === "/staff/employees"
+        ? permissions.includes("employees:manage")
+        : href === "/staff/audit-log"
+          ? permissions.includes("audit:read")
+          : /^\/staff\/(inquiries|customers)/.test(href)
+            ? permissions.includes("inquiries:manage")
+            : permissions.includes("content:edit"));
   return (
     <main className="workspace-shell staff-shell">
       <aside className="workspace-sidebar staff-sidebar">
@@ -113,44 +126,47 @@ export function StaffLayout({
             en: "Staff navigation",
           })}
         >
-          {staffNavigation.map((item) => (
-            <AppLink
-              key={item.href}
-              href={
-                preview
-                  ? withLang(
-                      `/__preview?screen=${encodeURIComponent(item.href.slice(1).split("/").join("-"))}`,
-                      lang,
-                    )
-                  : withLang(item.href, lang)
-              }
-              go={go}
-              className={active === item.href ? "active" : undefined}
-            >
-              {msg(
-                lang,
-                (
-                  {
-                    Dashboard: { ar: "لوحة الموظفين", en: "Dashboard" },
-                    Inquiries: { ar: "الاستفسارات", en: "Inquiries" },
-                    Products: { ar: "المنتجات", en: "Products" },
-                    Categories: { ar: "الفئات", en: "Categories" },
-                    Uses: { ar: "الاستخدامات", en: "Uses" },
-                    Recipes: { ar: "الوصفات", en: "Recipes" },
-                    "Page content": { ar: "محتوى الصفحات", en: "Page content" },
-                    Media: { ar: "الوسائط", en: "Media" },
-                    Customers: { ar: "العملاء", en: "Customers" },
-                    "Employees & permissions": {
-                      ar: "الموظفون والصلاحيات",
-                      en: "Employees & permissions",
-                    },
-                    Employees: { ar: "الموظفون", en: "Employees" },
-                    "Audit log": { ar: "سجل التدقيق", en: "Audit log" },
-                  } as Record<string, { ar: string; en: string }>
-                )[item.label] || { ar: "قسم غير متصل", en: item.label },
-              )}
-            </AppLink>
-          ))}
+          {staffNavigation
+            .filter((item) => preview || visible(item.href))
+            .map((item) => (
+              <AppLink
+                key={item.href}
+                href={
+                  preview
+                    ? withLang(
+                        `/__preview?screen=${encodeURIComponent(item.href.slice(1).split("/").join("-"))}`,
+                        lang,
+                      )
+                    : withLang(item.href, lang)
+                }
+                go={go}
+                className={active === item.href ? "active" : undefined}
+              >
+                {msg(
+                  lang,
+                  (
+                    {
+                      "Staff security": { ar: "أمان الموظف", en: "Staff security" },
+                      Dashboard: { ar: "لوحة الموظفين", en: "Dashboard" },
+                      Inquiries: { ar: "الاستفسارات", en: "Inquiries" },
+                      Products: { ar: "المنتجات", en: "Products" },
+                      Categories: { ar: "الفئات", en: "Categories" },
+                      Uses: { ar: "الاستخدامات", en: "Uses" },
+                      Recipes: { ar: "الوصفات", en: "Recipes" },
+                      "Page content": { ar: "محتوى الصفحات", en: "Page content" },
+                      Media: { ar: "الوسائط", en: "Media" },
+                      Customers: { ar: "العملاء", en: "Customers" },
+                      "Employees & permissions": {
+                        ar: "الموظفون والصلاحيات",
+                        en: "Employees & permissions",
+                      },
+                      Employees: { ar: "الموظفون", en: "Employees" },
+                      "Audit log": { ar: "سجل التدقيق", en: "Audit log" },
+                    } as Record<string, { ar: string; en: string }>
+                  )[item.label] || { ar: "قسم غير متصل", en: item.label },
+                )}
+              </AppLink>
+            ))}
         </nav>
       </aside>
       <div className="workspace-content staff-content">

@@ -1,3 +1,4 @@
+import { completeStaff, completeBrowserMfa } from "../../backend/scripts/test-staff-mfa.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { randomUUID } from "node:crypto";
@@ -30,6 +31,7 @@ export async function runStaffUi({ front, base, password, source, AuthUser }) {
         await p.getByLabel(t("Email", "البريد الإلكتروني"), { exact: true }).fill(email);
         await p.getByLabel(t("Password", "كلمة المرور"), { exact: true }).fill(password);
         await p.getByRole("button", { name: t("Sign in", "تسجيل الدخول"), exact: true }).click();
+        if (email.includes("workflow-")) await completeBrowserMfa(p, base, email, password, lang);
       };
       const navigate = async (p, url) =>
         p.evaluate((url) => {
@@ -112,6 +114,23 @@ export async function runStaffUi({ front, base, password, source, AuthUser }) {
       });
       assert.equal(signed.status(), 201);
       csrf = (await signed.json()).csrfToken;
+      await completeStaff(
+        async (route, body) => {
+          const r =
+            body === undefined
+              ? await c.request.get(base + route)
+              : await c.request.post(base + route, {
+                  headers: { Origin: front, "X-CSRF-Token": csrf },
+                  data: body,
+                });
+          assert.equal(r.status(), body === undefined ? 200 : 201);
+          const d = await r.json();
+          csrf = d.csrfToken || d.session?.csrfToken || csrf;
+          return d;
+        },
+        otherEmail,
+        password,
+      );
       const current = await (
         await c.request.get(`${base}/staff/inquiries/${id}`, { headers: { Origin: front } })
       ).json();

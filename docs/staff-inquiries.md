@@ -1,5 +1,7 @@
 # Staff inquiry and sales workspace
 
+Current staff authentication/permissions are superseded by the implemented [staff security and administration guide](staff-security.md). Mandatory MFA now protects every staff endpoint; employee and audit workspaces are connected. Production business writes remain disabled pending explicit operational approval. Earlier phase verification below is historical.
+
 Update 2026-11-25: [content workspaces](content-management.md) are connected separately for
 administrator/content_editor. Inquiry access remains administrator/sales only. Local provisioning
 supports content_editor as well. Inquiry cards/actions/heading spacing, bidi dates/references,
@@ -27,8 +29,8 @@ Native MySQL only; preserve accounts, products, submitted request fields/snapsho
 - Reuse the durable outbox with an event dimension; each visible action atomically stores its
   intent. Internal notes never notify customers. Emails link to records and omit private bodies.
 - Staff writes require `STAFF_INQUIRY_WRITES=true` in development/test with capture mail only.
-  Production rejects this development setting and keeps all staff business writes disabled until
-  the required staff MFA is implemented. Authorized production reads are separate from writes.
+  Production rejects this development setting and keeps staff business writes disabled pending
+  operational approval. This setting never bypasses mandatory staff MFA or current permissions.
 - A local interactive provisioner can create a staff identity or explicitly promote an existing
   identity after confirmation, without changing its password/profile. Role changes revoke
   sessions. Verification is genuine mail-token verification unless explicitly confirmed as a
@@ -107,9 +109,9 @@ These commands are for your own local development terminals, not deployment:
 
 ```bash
 cd /d/voic_website/VOIC/backend
-pnpm.cmd build --outDir .tmp/staff-build
-node .tmp/staff-build/database/manage.js check
-node .tmp/staff-build/database/manage.js show
+pnpm.cmd build --outDir .tmp/security-build
+node .tmp/security-build/database/manage.js check
+node .tmp/security-build/database/manage.js show
 # Apply the verified additive update, preserving existing rows; no-op when already applied:
 node scripts/apply-native-staff.mjs
 ```
@@ -120,7 +122,7 @@ to native `voic_development`/`voic_app`, permits only the fourth migration, chec
 existing catalog/account/inquiry table before/after in memory, and sets only the development
 write flag in ignored `.env`. It does not seed/reset or create a staff account. For a fresh
 operator checkout without local test evidence, review the exact native target, compile, and
-apply explicit migrations using `node .tmp/staff-build/database/manage.js run`; only set
+apply explicit migrations using `node .tmp/security-build/database/manage.js run`; only set
 `STAFF_INQUIRY_WRITES=true` privately in `.env` for local capture testing. Never set it in production.
 
 Provision your chosen real local identity interactively (no account is pre-created for you):

@@ -1,3 +1,4 @@
+import { completeBrowserMfa } from "../../backend/scripts/test-staff-mfa.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -54,7 +55,7 @@ export async function runContentUi({ front, base, password, source, AuthUser, pe
         await tab.getByLabel(t("Email", "البريد الإلكتروني"), { exact: true }).fill(email);
         await tab.getByLabel(t("Password", "كلمة المرور"), { exact: true }).fill(password);
         await tab.getByRole("button", { name: t("Sign in", "تسجيل الدخول"), exact: true }).click();
-        await tab.waitForURL((u) => u.pathname === "/staff");
+        await completeBrowserMfa(tab, base, email, password, lang);
       };
       phase(`${lang} editor product draft and conflict`);
       await login(a, "workflow-admin@example.test");

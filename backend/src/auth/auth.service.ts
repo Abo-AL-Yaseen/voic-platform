@@ -15,6 +15,8 @@ import { AuthUser, AuthSession, AuthActionToken, type Role } from "./auth.entiti
 import { AUTH_CONFIG, type AuthConfig } from "./auth.config.js";
 import { MailService } from "./mail.service.js";
 import { AuthRateLimit } from "./rate-limit.js";
+import { StaffFactor } from "../security/security.entities.js";
+import { hasPermission, permissionMatrix, type Permission } from "../security/permissions.js";
 import type {
   ChangePasswordDto,
   EmailDto,
@@ -108,11 +110,38 @@ export class AuthService {
         throw new ForbiddenException();
     }
   }
-  require(req: AuthRequest, roles?: readonly Role[]) {
+  identity(req: AuthRequest) {
     const user = req.auth?.user;
     if (!user) throw new UnauthorizedException();
+    if (user.suspendedAt) throw new ForbiddenException({ code: "STAFF_SUSPENDED" });
+    return user;
+  }
+  staffSession(user: AuthUser, session: AuthSession) {
+    if (user.suspendedAt) throw new ForbiddenException({ code: "STAFF_SUSPENDED" });
+    if (session.assurance !== "mfa" || !session.mfaAt || !session.authenticatedAt)
+      throw new ForbiddenException({ code: "MFA_REQUIRED" });
+  }
+  require(req: AuthRequest, roles?: readonly Role[]) {
+    const user = this.identity(req);
+    if (user.role !== "customer") this.staffSession(user, req.auth!.session);
     if (roles && !roles.includes(user.role)) throw new ForbiddenException();
     return user;
+  }
+  permission(req: AuthRequest, permission: Permission) {
+    const u = this.require(req);
+    if (!hasPermission(u.role, permission))
+      throw new ForbiddenException({ code: "STAFF_FORBIDDEN" });
+    return u;
+  }
+  recent(req: AuthRequest) {
+    this.permission(req, "employees:manage");
+    const session = req.auth!.session;
+    if (
+      !session.authenticatedAt ||
+      !session.mfaAt ||
+      Math.min(session.authenticatedAt.getTime(), session.mfaAt.getTime()) < Date.now() - 5 * 60_000
+    )
+      throw new ForbiddenException({ code: "REAUTH_REQUIRED" });
   }
   requireVerified(req: AuthRequest) {
     const user = this.require(req, ["customer"]);
@@ -128,18 +157,76 @@ export class AuthService {
       maxAge,
     });
   }
-  private async newSession(manager: EntityManager, user: AuthUser | null, old?: AuthContext) {
+  async newSession(
+    manager: EntityManager,
+    user: AuthUser | null,
+    old?: AuthContext,
+    assurance: "password" | "mfa" = "password",
+  ) {
     const token = randomBytes(32).toString("hex");
-    const maxAge = user ? 12 * 60 * 60_000 : 30 * 60_000;
+    const maxAge = user
+      ? user.role !== "customer" && assurance !== "mfa"
+        ? 5 * 60_000
+        : 12 * 60 * 60_000
+      : 30 * 60_000;
     if (old) await manager.delete(AuthSession, { tokenHash: old.session.tokenHash });
     const session = manager.create(AuthSession, {
       tokenHash: hashToken(token),
       userId: user?.id ?? null,
       securityVersion: user?.securityVersion ?? 0,
       expiresAt: new Date(Date.now() + maxAge),
+      assurance: user ? assurance : "anonymous",
+      authenticatedAt: user ? new Date() : null,
+      mfaAt: assurance === "mfa" ? new Date() : null,
+      attempts: 0,
     });
     await manager.insert(AuthSession, session);
     return { token, maxAge, session, user };
+  }
+  async sessionView(context: AuthContext, sessionExpired = false) {
+    const user = context.user;
+    const enrolled =
+      user && user.role !== "customer"
+        ? !!(await this.source.getRepository(StaffFactor).findOneBy({ userId: user.id }))
+            ?.confirmedAt
+        : false;
+    return {
+      user: user ? publicUser(user) : null,
+      csrfToken: csrfToken(context.token),
+      sessionExpired,
+      staffAuth:
+        !user || user.role === "customer"
+          ? "none"
+          : user.suspendedAt
+            ? "suspended"
+            : !user.emailVerifiedAt
+              ? "verify_email"
+              : context.session.assurance === "mfa" &&
+                  !!context.session.mfaAt &&
+                  !!context.session.authenticatedAt
+                ? "complete"
+                : enrolled
+                  ? "challenge"
+                  : "enroll",
+      permissions:
+        user &&
+        user.role !== "customer" &&
+        !user.suspendedAt &&
+        context.session.assurance === "mfa" &&
+        !!context.session.mfaAt &&
+        !!context.session.authenticatedAt
+          ? permissionMatrix[user.role]
+          : [],
+    };
+  }
+  async finishSession(
+    req: AuthRequest,
+    res: Response,
+    context: Awaited<ReturnType<AuthService["newSession"]>>,
+  ) {
+    this.cookie(res, context.token, context.maxAge);
+    req.auth = context;
+    return this.sessionView(context);
   }
   async current(req: AuthRequest, res: Response) {
     if (!req.auth) {
@@ -152,11 +239,7 @@ export class AuthService {
       this.cookie(res, context.token, context.maxAge);
       req.auth = context;
     }
-    return {
-      user: req.auth.user ? publicUser(req.auth.user) : null,
-      csrfToken: csrfToken(req.auth.token),
-      sessionExpired: !!req.sessionExpired,
-    };
+    return this.sessionView(req.auth, !!req.sessionExpired);
   }
   private rate(req: Request, action: string, email: string, perIp: number, perEmail: number) {
     this.limits.take(`${action}:ip`, req.socket.remoteAddress || "unknown", perIp);
@@ -232,14 +315,10 @@ export class AuthService {
         .getOne();
       if (!user || !(await argon2.verify(user.passwordHash, dto.password)))
         throw new UnauthorizedException();
+      if (user.suspendedAt) throw new ForbiddenException({ code: "STAFF_SUSPENDED" });
       return this.newSession(manager, user, req.auth);
     });
-    this.cookie(res, context.token, context.maxAge);
-    return {
-      user: publicUser(context.user!),
-      csrfToken: csrfToken(context.token),
-      sessionExpired: false,
-    };
+    return this.finishSession(req, res, context);
   }
   async logout(req: AuthRequest, res: Response) {
     if (req.body && Object.keys(req.body).length) throw new BadRequestException();
@@ -341,7 +420,7 @@ export class AuthService {
       return publicUser(Object.assign(user, fields));
     });
   }
-  async lockCurrent(manager: EntityManager, req: AuthRequest, id: string) {
+  async lockCurrent(manager: EntityManager, req: AuthRequest, id: string, allowRestricted = false) {
     const user = await this.userQuery(manager, id, true).setLock("pessimistic_write").getOne();
     const session = await manager.findOneBy(AuthSession, {
       tokenHash: req.auth!.session.tokenHash,
@@ -353,6 +432,9 @@ export class AuthService {
       user.securityVersion !== session.securityVersion
     )
       throw new UnauthorizedException();
+    if (user.suspendedAt) throw new ForbiddenException({ code: "STAFF_SUSPENDED" });
+    if (user.role !== "customer" && !allowRestricted) this.staffSession(user, session);
+    req.auth!.session = session;
     return user;
   }
   async changePassword(req: AuthRequest, dto: ChangePasswordDto, res: Response) {

@@ -9,6 +9,8 @@ export default function SessionGate({
   staff = false,
   inquiries = false,
   content = false,
+  administration = false,
+  security = false,
   children,
 }: {
   lang: Lang;
@@ -16,6 +18,8 @@ export default function SessionGate({
   staff?: boolean;
   inquiries?: boolean;
   content?: boolean;
+  administration?: boolean;
+  security?: boolean;
   children: ReactNode;
 }) {
   const auth = useAuth(),
@@ -51,11 +55,33 @@ export default function SessionGate({
         </div>
       </main>
     );
+  if (staff && user.role !== "customer" && !security && auth.session.staffAuth !== "complete")
+    return (
+      <main className="access-page section-pad">
+        <section>
+          <h1>{msg(lang, { ar: "أكمل التحقق بخطوتين", en: "Complete staff verification" })}</h1>
+          <p>
+            {msg(lang, {
+              ar: "الجلسة مقيدة. أكمل التحقق للوصول إلى مساحة الموظفين.",
+              en: "This session is restricted. Complete verification to access staff data.",
+            })}
+          </p>
+          <AppLink
+            className="button button-primary"
+            go={go}
+            href={withLang("/staff/security", lang)}
+          >
+            {msg(lang, { ar: "أمان الموظف", en: "Staff security" })}
+          </AppLink>
+        </section>
+      </main>
+    );
   if (
     staff
       ? user.role === "customer" ||
         (inquiries && user.role === "content_editor") ||
-        (content && user.role === "sales")
+        (content && user.role === "sales") ||
+        (administration && user.role !== "administrator")
       : user.role !== "customer"
   )
     return (

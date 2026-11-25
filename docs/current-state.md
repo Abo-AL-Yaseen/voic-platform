@@ -4,6 +4,85 @@ Inspected: 2026-11-25. Application baseline:
 `9c9c0310b74c3df34a10ad2828104bf9bc94e897` (`chore: import VOIC frontend baseline`).
 Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
 
+## Staff security and administration — completed locally (2026-11-25)
+
+The explicitly requested phase builds on `fb3a549`: mandatory TOTP for all three staff
+roles, restricted pre-MFA sessions, employee invitations/promotion/role/status/session
+administration, controlled recovery, consolidated audit and one backend permission matrix.
+[Staff security guide](staff-security.md) documents contracts, local key generation,
+Git Bash/operator recovery, database audit grants and manual role checks. Existing local
+employees must enroll themselves after restart; no automatic account/password/factor change.
+
+Implemented employee list/detail, single-use invitations, explicit existing-customer promotion,
+role/status changes, session revocation and controlled MFA reset. Sensitive administrator
+actions require recent password authentication and completed MFA, an explicit reason and
+concurrency checks. A transaction-wide administration lock protects the last active
+administrator even during concurrent changes. Public registration remains customer-only.
+
+Staff security includes confirmed TOTP enrollment, local QR/manual presentation, restricted
+five-minute challenges, replay rejection, encrypted factors with an external ignored key,
+hashed one-time recovery codes, replacement/regeneration and explicit operator recovery.
+Password reset preserves MFA. Existing cookies without valid MFA assurance cannot authorize
+staff reads or writes. Audit UI/API consolidate old and new events with bounded validated
+filters, safe minimal metadata and current administrator/MFA checks. Audit rows are append-only
+through the APIs and runtime database grants; database/host administrators remain able to
+tamper and this is not cryptographic immutability.
+
+### Final staff-security verification (2026-11-25, Asia/Jerusalem)
+
+- Backend `pnpm.cmd test`: 25/25; frontend `pnpm.cmd test`: 14/14. Both typechecks and
+  builds passed after the final application changes. Backend build used
+  `pnpm.cmd build --outDir .tmp/security-build`, preserving the existing `dist/`.
+  New direct runtime dependencies are otplib 13.6.0 and qrcode 1.5.4, with
+  `@types/qrcode` 1.5.6 for development. No frontend dependency or original asset changed.
+- Complete disposable native MySQL verification passed at `2026-11-25T16:31:20.971Z`
+  (18:31 local), following a new hidden interactive operator session after interruption.
+  Six migrations were exercised, including security apply/idempotence and safe empty
+  rollback/reapply; retained security data blocks destructive rollback. Tests covered all
+  role permissions, restricted/legacy sessions, missing encryption configuration, invalid/
+  expired/bounded challenges, TOTP replay, concurrent challenge/recovery consumption,
+  invitation expiry/resend/reuse/duplicates, promotion preserving profile/password/history,
+  immediate suspension/role/session revocation, recent authentication, replacement/reset,
+  password reset retaining MFA, concurrent last-administrator protection and safe audit output.
+- Real installed-Chrome security flows passed in Arabic RTL and English LTR, including
+  enrollment/QR, private once-displayed recovery codes, challenge/recovery, invitation
+  acceptance, employee role/status confirmation dialogs, audit filters, keyboard/mobile
+  layouts, logout/revocation and private-state cleanup. The same complete run also passed
+  authentication, customer inquiries, staff workflows, content/media API/browser regressions
+  and all nine public catalog browser tests. Screenshots were visually inspected.
+- Disposable audit-grant verification passed at `2026-11-25T16:31:23.063Z`: all three
+  audit tables permit runtime SELECT/INSERT but reject UPDATE/DELETE; runtime CREATE is denied.
+- At `2026-11-25T16:31:34.087Z`, exactly the sixth additive migration was applied to
+  native `voic_development`, and only its dedicated application's grants were narrowed.
+  Private before/after fingerprints of all 21 pre-existing business/account/content tables
+  matched. No existing account, password, factor, publication, inquiry, media or audit record
+  was changed. The interrupted disposable run was identified by its retained successful
+  verification's unique random media identity and matching schema/user/history/grants, with
+  no active connection, before removing only that proven-owned database/user.
+- Direct compiled database connection/InnoDB check passed. At
+  `2026-11-25T16:31:50.316Z`, the isolated updated NestJS build returned liveness/readiness
+  HTTP 200, 11 products, four recipes and seven pages. Anonymous staff endpoints returned
+  HTTP 401; all six migrations were applied and runtime audit UPDATE/DELETE remained denied.
+  Native MySQL Server is 8.0.44 on 3306, InnoDB; Workbench remains the separate client.
+- The operator received `finish`; its ready marker/process disappeared and its current
+  disposable resources were removed. Test API/Vite/browser processes closed. Ports 3000,
+  8443 and 8444 had no listeners; MySQL remained on 3306. No user server was stopped or
+  restarted. No Docker/container/volume operation occurred.
+- Staged review covers the 68 relevant files: actual ignored environment values are absent,
+  as are private environment files, runtime/mail/session/upload exports and encoding damage.
+  Original assets/fonts, LFS attributes and the frontend lockfile are unchanged. Script
+  syntax and staged whitespace checks passed. Work remains on permanent `mahmoud`, which
+  is also the GitHub default; no branch or history rewrite is involved.
+
+Existing administrators/sales/editors enroll themselves after starting the updated backend
+and signing in with their unchanged passwords; follow Staff security, confirm a genuine
+authenticator code and store recovery codes privately. Exact Git Bash setup/operator commands
+and role-by-role manual checks are in the linked guide. The encryption key is retained only
+in ignored `backend/.env`; it must be backed up privately before enrolling real factors.
+SMTP external delivery, production shared throttling/storage, backup/restore, penetration/load
+testing and operational approval remain outside these local checks. Production business
+operations remain disabled and no deployment or external email delivery occurred.
+
 ## Content management (2026-11-25)
 
 The explicitly requested phase adds administrator/content-editor workspaces for products,
@@ -20,7 +99,7 @@ Shared contact information has one published source. Existing inquiry snapshots 
 Inquiry fixes cover explicit known-package choice, compact cards/actions, bidi isolation,
 single-page pagination, overflow and retaining unsent text when an inquiry closes.
 
-Staff customer directory, employee-management UI, shared general-audit UI and MFA remain unsupported; connected content
+At the end of the historical content phase, the staff customer directory, employee UI, general audit UI and MFA were unsupported. The staff-security phase above supersedes employee/audit/MFA status; connected content
 and inquiry modules no longer display broad disconnected notices. Verification results below
 distinguish actual local checks from production approval.
 

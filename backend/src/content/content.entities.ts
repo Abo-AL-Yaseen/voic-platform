@@ -46,6 +46,7 @@ export class ContentMediaUsage {
 }
 @Entity("staff_editorial_events")
 export class EditorialEvent {
+  @Column({ type: "varchar", length: 36, nullable: true }) requestId!: string | null;
   @PrimaryColumn({ type: "varchar", length: 36 }) id!: string;
   @Column({ type: "varchar", length: 36 }) actorId!: string;
   @Column({ type: "varchar", length: 24 }) actorRole!: string;

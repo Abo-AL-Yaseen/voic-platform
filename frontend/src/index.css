@@ -991,3 +991,21 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+.security-panel { max-width: 48rem; margin-inline: auto; }
+.security-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,20rem),1fr)); gap:1.5rem; margin-block:1.5rem; }
+.security-panel img {max-width:100%;height:auto;}
+.private-secret,.recovery-codes code,.audit-list bdi,.employee-list bdi {overflow-wrap:anywhere;}
+.recovery-codes {display:grid;gap:.7rem;padding:1rem;list-style:none;}
+.employee-list,.audit-list {list-style:none;padding:0;display:grid;gap:1rem;}
+.employee-list li {border-block-end:1px solid #d7d5c8;padding-block:1rem;}
+.audit-list dl>div {display:flex;flex-wrap:wrap;gap:.5rem;}
+.audit-list dd {overflow-wrap:anywhere;margin:0;}
+.security-panel .text-link {margin:1rem;}
+
+.staff-administration-dialog:not([open]) {display:none;}
+
+.security-panel h1 { font-family:"Alexandria:Bold",sans-serif; font-size:clamp(1.6rem,3vw,2.3rem); line-height:1.5; margin-block-end:1rem; }
+.security-panel h2,.security-grid h2,.employee-list+h2 {font-family:"Alexandria:SemiBold",sans-serif;font-size:1.2rem;margin-block:1.3rem .7rem;}
+.audit-list h2 {font-family:"Alexandria:SemiBold",sans-serif;font-size:1.05rem;}
+.audit-list .workspace-card {border:1px solid #d7d5c8;border-radius:16px;padding:1.25rem;}

@@ -107,7 +107,13 @@ export function LoginPage({ lang, go, search = "", previewState }: AuthPageProps
       setPassword("");
       const user = result.user!;
       const destination =
-        user.role !== "customer" ? "/staff" : returnTo.startsWith("/staff") ? "/account" : returnTo;
+        user.role !== "customer"
+          ? result.staffAuth === "complete"
+            ? "/staff"
+            : "/staff/security"
+          : returnTo.startsWith("/staff")
+            ? "/account"
+            : returnTo;
       go(
         withLang(
           user.role === "customer" && !user.emailVerified

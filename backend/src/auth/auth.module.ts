@@ -1,3 +1,9 @@
+import { AuthBoundary } from "./auth.boundary.js";
+export { AuthBoundary } from "./auth.boundary.js";
+import { SecurityController } from "../security/security.controller.js";
+import { MfaService, MFA_KEY } from "../security/mfa.service.js";
+import { encryptionKey } from "../security/crypto.js";
+import { permissionMatrix } from "../security/permissions.js";
 import {
   Body,
   CanActivate,
@@ -31,14 +37,6 @@ import {
   TokenDto,
 } from "./auth.dto.js";
 
-@Injectable()
-export class AuthBoundary implements CanActivate {
-  constructor(private readonly auth: AuthService) {}
-  async canActivate(context: ExecutionContext) {
-    await this.auth.boundary(context.switchToHttp().getRequest());
-    return true;
-  }
-}
 // Future inquiry endpoints must use this guard, not frontend verification flags.
 @Injectable()
 export class VerifiedCustomerGuard implements CanActivate {
@@ -96,20 +94,18 @@ class AuthController {
     return this.auth.changePassword(r, d, s);
   }
   @Get("staff/access") staff(@Req() r: AuthRequest) {
-    const user = this.auth.require(r, ["administrator", "sales", "content_editor"]);
-    return { role: user.role, permissions: permissions[user.role] ?? [] };
+    const user = this.auth.permission(r, "staff:access");
+    return { role: user.role, permissions: permissionMatrix[user.role] ?? [] };
   }
 }
-export const permissions: Record<string, readonly string[]> = {
-  administrator: ["staff:access", "employees:manage", "catalog:manage", "inquiries:manage"],
-  sales: ["staff:access", "inquiries:manage"],
-  content_editor: ["staff:access", "catalog:manage"],
-};
+export const permissions = permissionMatrix;
 @Module({
   imports: [DatabaseModule],
-  controllers: [AuthController],
+  controllers: [AuthController, SecurityController],
   providers: [
     AuthService,
+    MfaService,
+    { provide: MFA_KEY, useFactory: () => encryptionKey() },
     AuthBoundary,
     VerifiedCustomerGuard,
     AuthRateLimit,

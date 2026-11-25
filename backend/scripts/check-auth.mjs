@@ -1,3 +1,8 @@
+import { runSecurityUi } from "../../frontend/e2e/staff-security.mjs";
+import { checkSecurity } from "./check-security.mjs";
+import { completeStaff } from "./test-staff-mfa.mjs";
+import { randomBytes as securityRandom } from "node:crypto";
+process.env.MFA_ENCRYPTION_KEY = securityRandom(32).toString("base64");
 import { checkContent } from "./check-content.mjs";
 import { runContentUi } from "../../frontend/e2e/content-workflow.mjs";
 import sharp from "sharp";
@@ -48,7 +53,7 @@ const front = "http://127.0.0.1:8444";
 const scope = fs.existsSync(".tmp/verification-scope.json")
   ? JSON.parse(fs.readFileSync(".tmp/verification-scope.json", "utf8")).scope
   : "all";
-if (!["all", "staff", "regression", "content"].includes(scope))
+if (!["all", "staff", "regression", "content", "security"].includes(scope))
   throw new Error("Invalid verification scope");
 process.env.APP_URL = front;
 process.env.CORS_ORIGINS = front;
@@ -99,6 +104,11 @@ try {
     )
   ).map((r) => r.name);
   const owned = [
+    "staff_recovery_codes",
+    "staff_mfa_factors",
+    "staff_invitations",
+    "staff_audit_events",
+    "staff_administration_lock",
     "content_media_usage",
     "staff_editorial_events",
     "content_revisions",
@@ -125,7 +135,7 @@ try {
   assert.ok(names.every((n) => owned.includes(n)));
   for (const name of owned) if (names.includes(name)) await source.query(`DROP TABLE \`${name}\``);
   phase("migrations and catalog preservation");
-  assert.equal((await source.runMigrations()).length, 5);
+  assert.equal((await source.runMigrations()).length, 6);
   assert.equal((await source.runMigrations()).length, 0);
   assert.deepEqual(await seedCatalog(source), { inserted: 11, skipped: 0 });
   await source.query(
@@ -239,6 +249,7 @@ try {
         if (c.startsWith("voic_session=")) this.cookie = c.split(";")[0];
       assert.equal(response.status, expected);
       const result = await response.json();
+      if (result.session?.csrfToken) this.csrf = result.session.csrfToken;
       if (result.csrfToken) this.csrf = result.csrfToken;
       return result;
     },
@@ -408,6 +419,8 @@ try {
   await users.update({ id: u.id }, { role: "sales" });
   await a.request("/auth/session");
   await a.request("/auth/login", { email, password });
+  await a.request("/staff/access", undefined, 403);
+  await completeStaff((...args) => a.request(...args), email, password);
   assert.equal((await a.request("/staff/access")).role, "sales");
   await a.request("/account/profile", undefined, 403);
   await users.update({ id: u.id }, { role: "customer" });
@@ -445,6 +458,11 @@ try {
   for (let i = 0; i < 3; i++)
     await rate.request("/auth/password/forgot", { email: "limited-forgot@example.test" });
   await rate.request("/auth/password/forgot", { email: "limited-forgot@example.test" }, 429);
+  phase("staff MFA administration and audit security");
+  await app.close();
+  app = undefined;
+  base = await openApp();
+  const securityResult = await checkSecurity({ source, base, front, password, mailDir });
   phase("inquiry ownership concurrency snapshots and notifications");
   await app.close();
   app = undefined;
@@ -488,7 +506,7 @@ try {
     } catch {}
     await new Promise((r) => setTimeout(r, 200));
   }
-  const browserResult = ["staff", "content"].includes(scope)
+  const browserResult = ["staff", "content", "security"].includes(scope)
     ? undefined
     : await runAuthUi({
         front,
@@ -504,7 +522,7 @@ try {
   app = undefined;
   base = await openApp(Number(new URL(base).port));
   phase("real inquiry browser flows");
-  const inquiryBrowserResult = ["staff", "content"].includes(scope)
+  const inquiryBrowserResult = ["staff", "content", "security"].includes(scope)
     ? undefined
     : await runInquiryUi({
         front,
@@ -518,7 +536,7 @@ try {
   app = undefined;
   base = await openApp(Number(new URL(base).port));
   phase("staff customer browser workflow");
-  const staffBrowserResult = ["regression", "content"].includes(scope)
+  const staffBrowserResult = ["regression", "content", "security"].includes(scope)
     ? undefined
     : await runStaffUi({ front, base, password, source, AuthUser });
   await app.close();
@@ -536,6 +554,10 @@ try {
           persistedMediaUrl: contentResult.mediaPersistenceUrl,
         })
       : undefined;
+  phase("staff security real browser");
+  const securityBrowserResult = ["security", "all"].includes(scope)
+    ? await runSecurityUi({ front, base, password, source, AuthUser, mailDir })
+    : undefined;
   phase("public catalog browser regression");
   await new Promise((resolve, reject) => {
     const runner = spawn(
@@ -568,6 +590,8 @@ try {
       passed: true,
       checkedAt: new Date().toISOString(),
       scope,
+      securityResult,
+      securityBrowserResult,
       browserResult,
       inquiryResult,
       inquiryBrowserResult,
