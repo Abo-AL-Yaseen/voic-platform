@@ -15,6 +15,7 @@ import { productKeys } from "./keys";
 
 const policy = {
   staleTime: 30_000,
+  refetchInterval: 30_000,
   refetchOnWindowFocus: true,
   retry: (count: number, error: Error) =>
     !(error instanceof ApiError && error.status >= 400 && error.status < 500) && count < 1,

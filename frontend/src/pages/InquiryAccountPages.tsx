@@ -29,14 +29,21 @@ type Props = {
 };
 export { inquiryStatus } from "../utils/inquiryLabels";
 const date = (value: string, lang: Lang) =>
-  new Date(value).toLocaleString(lang === "ar" ? "ar-PS" : "en-GB");
+  new Date(value).toLocaleString(lang === "ar" ? "ar-PS" : "en-GB", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 export function AccountHeading({ title, description }: { title: string; description: string }) {
   return (
     <header className="workspace-page-heading">
       <div>
         <p className="eyebrow">VOIC</p>
         <h1>{title}</h1>
-        <p>{description}</p>
+        <p>{description.startsWith("VOIC-") ? <bdi dir="ltr">{description}</bdi> : description}</p>
       </div>
     </header>
   );
@@ -186,12 +193,14 @@ export function InquiryListPage({ lang, go, search = "" }: Props) {
                             go={go}
                             href={withLang(`/account/inquiries/${i.id}`, lang)}
                           >
-                            {i.reference}
+                            <bdi dir="ltr">{i.reference}</bdi>
                           </AppLink>
                         </td>
                         <td>{i.destination || "—"}</td>
                         <td>{inquiryStatus(i.status, lang)}</td>
-                        <td>{date(i.createdAt, lang)}</td>
+                        <td>
+                          <bdi dir="ltr">{date(i.createdAt, lang)}</bdi>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

@@ -282,8 +282,8 @@ export async function runAuthUi({
         await page.getByLabel("Password", { exact: true }).fill(password);
         await page.getByRole("button", { name: "Sign in", exact: true }).click();
         await page.waitForURL((url) => url.pathname === "/staff");
-        await page.getByRole("heading", { name: "Staff workspace", exact: true }).waitFor();
-        await page.getByText("Content management is not connected yet.", { exact: true }).waitFor();
+        await page.getByRole("heading", { name: "Content management", exact: true }).waitFor();
+        await page.getByRole("link", { name: "Products", exact: true }).last().waitFor();
         await page.goto("/staff/inquiries?lang=en");
         await page
           .getByRole("heading", { name: "You do not have access to this workspace", exact: true })

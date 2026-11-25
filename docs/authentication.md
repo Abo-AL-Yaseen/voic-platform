@@ -1,5 +1,10 @@
 # Authentication and customer accounts
 
+Update 2026-11-25: local interactive provisioning also supports `content_editor`.
+[Content management](content-management.md) now implements that role's editorial workspace;
+sales/customer identities are denied its APIs. The development capture gate and production
+MFA restriction continue to apply. This does not add employee-management UI.
+
 Authorized scope: 2026-11-24, on permanent `mahmoud`. Native MySQL, NestJS/TypeORM and
 the existing React/React Query application are retained. This implements customer accounts
 and the foundation for staff authorization. Later accepted inquiry submission and staff

@@ -259,7 +259,8 @@ availability targets, monitoring/alerts and redacted operational logs, backups a
 restore/rollback, dependency review, real load/security tests, and approved content/privacy.
 Customer sessions, CSRF, email verification, ownership and idempotent inquiries are implemented
 locally. Staff inquiry workflows are enabled only for explicit local capture testing;
-production staff writes remain disabled pending MFA. Other staff modules remain future work. No deployment,
+production staff writes remain disabled pending MFA. Editorial workspaces are now implemented;
+the staff customer directory, employee management and a general audit screen remain future work. No deployment,
 security certification or capacity claim is made by these local checks.
 
 ## Historical foundation verification (2026-11-23, before native setup)
@@ -336,3 +337,29 @@ The import preserves every existing product and term; it adds only missing recor
 never promotes development content to production approval. Original ingredients are retained
 unpublished. No local seed input is used as a frontend fallback. See the
 [implemented contracts and verification commands](../docs/catalog-implementation.md).
+
+## Content-management development workflow (2026-11-25)
+
+Administrator/content-editor APIs now support private drafts, review, controlled publication,
+products/categories/uses, recipes, structured pages and real raster uploads. Sales/customer
+access is denied. Employee management and staff MFA remain outside this phase. See the
+[content guide](../docs/content-management.md) for exact DTOs, migration/import commands,
+native disposable testing, local account provisioning and manual testing/restoration.
+
+The fifth migration adds six tables; schema synchronization stays disabled. Build using
+`pnpm.cmd build --outDir .tmp/content-build` when preserving an existing backend process.
+`node scripts/apply-native-content.mjs` checks fresh disposable verification evidence before
+the additive native migration/import and compares existing catalog/account/inquiry data.
+The explicit repeatable importer `node scripts/import-development-content.mjs` requires
+`CONFIRM_DEVELOPMENT_CONTENT=yes` and never overwrites existing editorial records.
+
+Uploads persist in ignored `.local-data/media/`, outside build output. Back up this directory
+and the database together. Development uses local disk; production requires separately reviewed
+persistent storage/backup and staff MFA. The dry-run orphan tool is
+`node scripts/cleanup-local-media.mjs`; `--apply` is explicit and restricted to owned, old,
+unreferenced upload files. Never delete original assets or manually reset existing databases.
+
+The helper `node scripts/setup-native-mysql.mjs --content-test` takes the MySQL administrator
+password only in a hidden local prompt (Git Bash: prefix `winpty`). It creates and later removes
+only its random disposable database/user. The checker uses its own API port, frontend 8444,
+test media and `.tmp/auth-build`; preserve existing user servers and their `dist/` output.

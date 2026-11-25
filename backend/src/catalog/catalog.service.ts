@@ -147,7 +147,7 @@ export class CatalogService {
             ...(row.imagePublished &&
             row.image &&
             !row.image.includes("..") &&
-            /^\/assets\/[a-zA-Z0-9/_.-]+$/.test(row.image)
+            /^\/(?:assets\/[a-zA-Z0-9/_.-]+|api\/v1\/media\/[a-f0-9-]{36}\.webp)$/.test(row.image)
               ? { image: row.image }
               : {}),
             ...(field("ar", "ingredients") ? { ingredientsAr: field("ar", "ingredients") } : {}),

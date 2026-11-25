@@ -1,0 +1,458 @@
+[
+  {
+    "id": "home",
+    "slug": "home",
+    "texts": {
+      "text-0": {
+        "ar": "من قلب نابلس، منذ 1953",
+        "en": "From Nablus, since 1953"
+      },
+      "text-1": {
+        "ar": "من نابلس،",
+        "en": "From Nablus,"
+      },
+      "text-2": {
+        "ar": "نكهات بتجمعنا",
+        "en": "flavours that bring us together"
+      },
+      "text-3": {
+        "ar": "للأطباق اللي بنحبها، وللحلويات اللي بتجمعنا. اكتشف منتجاتنا للطبخ والحلويات والمخبوزات.",
+        "en": "For the dishes we love and the sweets that bring us together. Explore products for cooking, sweets and baking."
+      },
+      "text-5": {
+        "ar": "منتجات نعرفها… وطعم تربّينا عليه",
+        "en": "Familiar products and flavours generations grew up with"
+      },
+      "text-6": {
+        "ar": "كنافة وعبوة الغزال",
+        "en": "Kunafa and Al-Ghazal pack"
+      },
+      "text-7": {
+        "ar": "كنافة نابلسية بالفستق",
+        "en": "Nabulsi kunafa with pistachios"
+      },
+      "text-8": {
+        "ar": "عبوة سمن الغزال",
+        "en": "Al-Ghazal vegetable ghee pack"
+      },
+      "text-9": {
+        "ar": "الغزال",
+        "en": "Al-Ghazal"
+      },
+      "text-10": {
+        "ar": "نكهة ترافق وصفاتك",
+        "en": "A flavour for your recipes"
+      },
+      "text-11": {
+        "ar": "شو بدك تحضّر؟",
+        "en": "What are you making?"
+      },
+      "text-12": {
+        "ar": "ابدأ من وصفتك المفضلة",
+        "en": "Start with your favourite recipe"
+      },
+      "text-16": {
+        "ar": "أسماء مألوفة، خيارات متنوعة",
+        "en": "Familiar names, varied options"
+      },
+      "text-17": {
+        "ar": "تعرّف على منتجاتنا، واختار العبوة المناسبة إلك.",
+        "en": "Explore our range and choose the pack size that suits you."
+      },
+      "text-20": {
+        "ar": "جذور فلسطينية. حكاية مستمرة.",
+        "en": "Palestinian roots. An ongoing story."
+      },
+      "text-21": {
+        "ar": "حكاية بدأت من نابلس",
+        "en": "A story that began in Nablus"
+      },
+      "text-22": {
+        "ar": "منذ تأسيس الشركة عام 1953، نواصل تطوير منتجات الزيوت والسمن النباتي، لنكون جزءًا من وصفات البيوت والمطابخ المهنية.",
+        "en": "Since the company was founded in 1953, we have continued developing vegetable oil and ghee products for home and professional kitchens."
+      },
+      "text-24": {
+        "ar": "مصانع الشركة في نابلس",
+        "en": "VOIC factory in Nablus"
+      },
+      "text-25": {
+        "ar": "منذ 1953 / شركة مصانع الزيوت النباتية",
+        "en": "Since 1953 / Vegetable Oil Industries Co."
+      },
+      "text-26": {
+        "ar": "للمطاعم • لمحلات الحلويات • للمخابز • للتجّار",
+        "en": "For restaurants • sweet shops • bakeries • distributors"
+      },
+      "text-27": {
+        "ar": "منتجات تناسب حجم شغلك",
+        "en": "Products sized for your business"
+      },
+      "text-28": {
+        "ar": "اكتشف خيارات التعبئة لقطاع الأعمال، وتواصل معنا لتحديد احتياجك.",
+        "en": "Explore business pack formats and contact us to discuss your needs."
+      },
+      "text-30": {
+        "ar": "عبوات الكواكب للمطابخ المهنية",
+        "en": "Al-Kawakib professional packs"
+      }
+    },
+    "images": {
+      "kunafa": "/assets/25cf4.png",
+      "ghazal": "/assets/a9248.png",
+      "factory": "/assets/3bfa2.png",
+      "kawakeb": "/assets/fe634.png"
+    },
+    "links": {},
+    "rows": [
+      [
+        "للطبخ",
+        "Cooking",
+        "لأطباق كل يوم",
+        "For everyday dishes",
+        "/assets/d46b4.png",
+        "الطبخ"
+      ],
+      [
+        "للحلويات الشرقية",
+        "Traditional sweets",
+        "من الكنافة إلى معمول العيد",
+        "From kunafa to festive sweets",
+        "/assets/25cf4.png",
+        "الحلويات الشرقية"
+      ],
+      [
+        "للمخبوزات",
+        "Baking",
+        "وصفات تستحق التجربة",
+        "Recipes worth trying",
+        "/assets/catalog/croissants.png",
+        "المخبوزات"
+      ]
+    ],
+    "featuredProductIds": [
+      "ghazal-butter",
+      "nabateen",
+      "kawakeb",
+      "ghazal"
+    ]
+  },
+  {
+    "id": "shared",
+    "slug": "shared",
+    "texts": {
+      "text-31": {
+        "ar": "شركة مصانع الزيوت النباتية",
+        "en": "Vegetable Oil Industries Co."
+      },
+      "text-32": {
+        "ar": "من مصانع نابلس… إلى مطبخك.",
+        "en": "From our Nablus factory to your kitchen."
+      },
+      "text-38": {
+        "ar": "شركة مصانع الزيوت النباتية",
+        "en": "Vegetable Oil Industries Co."
+      },
+      "address": {
+        "ar": "المنطقة الصناعية الشرقية، نابلس، فلسطين",
+        "en": "Eastern Industrial Area, Nablus, Palestine"
+      },
+      "address-short": {
+        "ar": "نابلس، فلسطين",
+        "en": "Nablus, Palestine"
+      }
+    },
+    "images": {},
+    "links": {
+      "email": "info@voic.ps",
+      "phone": "+970 9 2324011",
+      "phone-secondary": "+970 9 2324010",
+      "fax": "+970 9 2325036",
+      "instagram": "https://www.instagram.com/voic.ltd",
+      "facebook": "https://www.facebook.com/voic.ltd/",
+      "linkedin": "https://www.linkedin.com/company/voic"
+    },
+    "rows": [],
+    "featuredProductIds": []
+  },
+  {
+    "id": "business",
+    "slug": "business",
+    "texts": {
+      "text-39": {
+        "ar": "للمطاعم والمخابز والموزعين",
+        "en": "For kitchens, bakeries and distributors"
+      },
+      "text-40": {
+        "ar": "منتجات تناسب حجم شغلك",
+        "en": "Products sized for your business"
+      },
+      "text-41": {
+        "ar": "خيارات من السمن والزيوت النباتية للمطاعم ومحلات الحلويات والمخابز والموزعين. تعرّف على المنتجات وأحجام التعبئة، وتواصل معنا لمناقشة احتياجات التوريد.",
+        "en": "Vegetable ghee and oil options for restaurants, sweet shops, bakeries and distributors. Explore products and pack sizes, then contact us to discuss supply needs."
+      },
+      "text-43": {
+        "ar": "عبوات الكواكب",
+        "en": "Al-Kawakib packs"
+      },
+      "text-44": {
+        "ar": "مسارات لاحتياجك",
+        "en": "Paths for your business"
+      },
+      "text-45": {
+        "ar": "أحجام مهنية معروفة",
+        "en": "Known professional formats"
+      },
+      "text-46": {
+        "ar": "خيارات للتحضير والتوريد",
+        "en": "Options for preparation and supply"
+      },
+      "text-47": {
+        "ar": "استفسار تجاري",
+        "en": "Commercial inquiry"
+      },
+      "text-48": {
+        "ar": "خلّينا نتعرّف على احتياجك",
+        "en": "Tell us about your needs"
+      },
+      "text-49": {
+        "ar": "شاركنا المنتجات والأحجام والكميات التقريبية وبلد الوجهة، لبدء التواصل مع فريق الشركة.",
+        "en": "Share the products, sizes, approximate quantities and destination country to begin a conversation with our team."
+      },
+      "text-50": {
+        "ar": "مسار استفسار التوريد",
+        "en": "Supply inquiry journey"
+      },
+      "text-51": {
+        "ar": "اختيار المنتجات ← إنشاء حساب والتحقق ← مراجعة الاستفسار ← متابعة رد الشركة",
+        "en": "Choose products → create and verify an account → review the inquiry → track the company response"
+      },
+      "text-53": {
+        "ar": "أسئلة شائعة",
+        "en": "Frequently asked questions"
+      }
+    },
+    "images": {
+      "hero": "/assets/fe634.png"
+    },
+    "links": {},
+    "rows": [
+      [
+        "كيف أطلب عرض سعر؟",
+        "How do I request a quotation?",
+        "حدّد المنتجات والأحجام والكميات التقريبية وبلد الوجهة، ثم تواصل مع فريق الشركة لمناقشة طلبك.",
+        "Specify products, sizes, approximate quantities and destination country, then contact the company team to discuss your request."
+      ],
+      [
+        "هل يمكن الاستفسار عن التوريد إلى ألمانيا؟",
+        "Can I inquire about supply to Germany?",
+        "يمكنك ذكر ألمانيا أو أي وجهة مطلوبة في استفسارك، ومناقشة إمكانية التوريد ومتطلباته مباشرة مع الشركة.",
+        "You can name Germany or any requested destination in your inquiry and discuss supply feasibility and requirements directly with the company."
+      ],
+      [
+        "هل أستطيع الشراء مباشرة من الموقع؟",
+        "Can I buy directly from the website?",
+        "الموقع يعرّفك بمنتجاتنا ويساعدك على الاختيار. يتم التواصل بشأن الأسعار وشروط التوريد مباشرة مع الشركة.",
+        "The website introduces our products and helps you choose. Pricing and supply terms are discussed directly with the company."
+      ],
+      [
+        "كيف أحصل على تفاصيل التعبئة والمواصفات؟",
+        "How do I obtain packaging and specification details?",
+        "اذكر اسم المنتج والحجم المطلوب في استفسارك، وأضف المعلومات الفنية التي تحتاجها.",
+        "Include the product name, required size and the technical information you need in your inquiry."
+      ]
+    ],
+    "featuredProductIds": []
+  },
+  {
+    "id": "about",
+    "slug": "about",
+    "texts": {
+      "text-54": {
+        "ar": "منذ 1953",
+        "en": "Since 1953"
+      },
+      "text-55": {
+        "ar": "حكاية بدأت من نابلس",
+        "en": "A story that began in Nablus"
+      },
+      "text-56": {
+        "ar": "تأسست شركة مصانع الزيوت النباتية عام 1953 في المنطقة الصناعية الشرقية بمدينة نابلس. بدأت مسيرتها بتكرير زيت الزيتون وتعبئته، ثم توسعت إلى إنتاج السمن النباتي وتكرير الزيوت النباتية السائلة. واليوم تضم مجموعتها علامات للسمن وزيوت الصويا والذرة ودوار الشمس.",
+        "en": "Vegetable Oil Industries Co. was established in 1953 in Nablus's Eastern Industrial Area. It began by refining and packing olive oil, then expanded into vegetable ghee and liquid vegetable-oil refining. Today its range includes ghee, soybean, corn and sunflower oil brands."
+      },
+      "text-57": {
+        "ar": "مصنع الشركة في نابلس",
+        "en": "VOIC factory in Nablus"
+      },
+      "text-58": {
+        "ar": "محطات من المسيرة",
+        "en": "Milestones"
+      },
+      "text-59": {
+        "ar": "رؤيتنا",
+        "en": "Our vision"
+      },
+      "text-60": {
+        "ar": "نكهة أصيلة ومنتجات نعتزّ بها.",
+        "en": "Authentic flavour and products we are proud of."
+      },
+      "text-61": {
+        "ar": "رسالتنا",
+        "en": "Our mission"
+      },
+      "text-62": {
+        "ar": "نعمل على تقديم السمن والزيوت النباتية وتطوير عملياتنا وبناء علاقات طويلة الأمد مع عملائنا، والمساهمة في الصناعة والاقتصاد الفلسطيني.",
+        "en": "We work to provide vegetable ghee and oils, develop our operations, build long-term customer relationships, and contribute to Palestinian industry and the economy."
+      },
+      "text-63": {
+        "ar": "نهج الجودة",
+        "en": "Our quality approach"
+      },
+      "text-64": {
+        "ar": "الجودة في صميم عملنا",
+        "en": "Quality at the heart of our work"
+      },
+      "text-65": {
+        "ar": "نعتمد إدارة الجودة أساسًا لتطوير أعمالنا الفنية والإدارية ومتابعة جودة منتجاتنا، مع استمرار العمل على تحسين العمليات.",
+        "en": "We use quality management as a basis for developing our technical and administrative work, monitoring product quality and continuously improving our processes."
+      },
+      "text-67": {
+        "ar": "مرافق الشركة",
+        "en": "Company facilities"
+      }
+    },
+    "images": {
+      "factory": "/assets/site/factory-panorama.png",
+      "quality": "/assets/3bfa2.png"
+    },
+    "links": {},
+    "rows": [
+      [
+        "1953",
+        "تأسيس الشركة في نابلس، وبداية العمل في تكرير زيت الزيتون وتعبئته.",
+        "VOIC was established in Nablus, beginning with olive-oil refining and packing.",
+        "/assets/site/history-1954.jpg"
+      ],
+      [
+        "1961",
+        "بدء إنتاج السمن النباتي وتطوير الخبرات الفنية بالتعاون مع خبراء هولنديين.",
+        "Vegetable ghee production began, with technical expertise developed in cooperation with Dutch experts.",
+        "/assets/site/history-1961.jpg"
+      ],
+      [
+        "1985",
+        "التوسع في تكرير الزيوت النباتية السائلة وتحديث تجهيزات المصنع.",
+        "The company expanded into liquid vegetable-oil refining and modernised factory equipment.",
+        "/assets/site/history-2016.jpg"
+      ]
+    ],
+    "featuredProductIds": []
+  },
+  {
+    "id": "contact",
+    "slug": "contact",
+    "texts": {
+      "text-68": {
+        "ar": "شركة مصانع الزيوت النباتية",
+        "en": "Vegetable Oil Industries Co."
+      },
+      "text-69": {
+        "ar": "خلّينا على تواصل",
+        "en": "Let's stay in touch"
+      },
+      "text-70": {
+        "ar": "عندك سؤال عن منتج أو حاب تناقش احتياجات التوريد؟ تواصل معنا عبر القنوات التالية.",
+        "en": "Have a product question or want to discuss supply needs? Contact us through the following channels."
+      },
+      "text-75": {
+        "ar": "صندوق بريد 95",
+        "en": "P.O. Box 95"
+      }
+    },
+    "images": {},
+    "links": {
+      "map": "https://www.google.com/maps/search/?api=1&query=Vegetable%20Oil%20Industries%20Co%20Eastern%20Industrial%20Area%20Nablus%20Palestine"
+    },
+    "rows": [],
+    "featuredProductIds": []
+  },
+  {
+    "id": "privacy",
+    "slug": "privacy",
+    "texts": {
+      "text-80": {
+        "ar": "الجهة المسؤولة والتواصل",
+        "en": "Responsible company and contact"
+      },
+      "text-81": {
+        "ar": "شركة مصانع الزيوت النباتية، المنطقة الصناعية الشرقية، نابلس، فلسطين. للاستفسارات: {{email}}.",
+        "en": "Vegetable Oil Industries Co., Eastern Industrial Area, Nablus, Palestine. Contact: {{email}}."
+      },
+      "text-82": {
+        "ar": "البيانات التي قد تُجمع",
+        "en": "Data that may be collected"
+      },
+      "text-83": {
+        "ar": "قد تشمل بيانات الحساب الاسم والبريد ونوع الحساب والشركة والدولة والهاتف الاختياري، إضافة إلى منتجات الاستفسار والكميات والوجهة والملاحظات.",
+        "en": "Account data may include name, email, account type, company, country and optional phone, plus inquiry products, quantities, destination and notes."
+      },
+      "text-84": {
+        "ar": "الأغراض",
+        "en": "Purposes"
+      },
+      "text-85": {
+        "ar": "إدارة الحساب والتحقق من البريد ومراجعة استفسارات التوريد والتواصل بشأنها وحماية الخدمة.",
+        "en": "Account administration, email verification, review of supply inquiries, related communication and service protection."
+      },
+      "text-86": {
+        "ar": "الوصول والاحتفاظ",
+        "en": "Access and retention"
+      },
+      "text-87": {
+        "ar": "يجب تحديد صلاحيات الوصول وفترات الاحتفاظ والحذف في سياسة معتمدة قبل النشر. لا تحدد هذه المسودة مدة قانونية.",
+        "en": "Access controls and retention/deletion periods must be approved before publication. This draft does not state a legal retention period."
+      },
+      "text-88": {
+        "ar": "طلبات المستخدم",
+        "en": "User requests"
+      },
+      "text-89": {
+        "ar": "يجب أن توضح النسخة القانونية المعتمدة طريقة طلب الوصول أو التصحيح أو الحذف والقيود التي قد تنطبق.",
+        "en": "The approved legal version must explain how to request access, correction or deletion and any applicable limitations."
+      },
+      "text-90": {
+        "ar": "ملفات الارتباط والتحليلات",
+        "en": "Cookies and analytics"
+      },
+      "text-91": {
+        "ar": "لا يضيف هذا التنفيذ أدوات تحليلات تسويقية. يجب توثيق أي ملفات ارتباط أو خدمات مستقبلية قبل تفعيلها.",
+        "en": "This implementation adds no marketing analytics. Any future cookies or services must be documented before activation."
+      },
+      "text-93": {
+        "ar": "مسودة إشعار الخصوصية",
+        "en": "Privacy notice draft"
+      },
+      "text-94": {
+        "ar": "هذه بنية تحريرية غير معتمدة للنشر القانوني. لا تتضمن أساسًا قانونيًا أو فترات احتفاظ أو معالِجين غير مؤكّدين.",
+        "en": "This is an editorial structure, not an approved legal notice. It does not assert legal bases, exact retention periods or unconfirmed processors."
+      }
+    },
+    "images": {},
+    "links": {},
+    "rows": [],
+    "featuredProductIds": []
+  },
+  {
+    "id": "header",
+    "slug": "header",
+    "texts": {
+      "identity": {
+        "ar": "صناعة فلسطينية • من نابلس إلى موائدكم منذ 1953",
+        "en": "Made in Palestine • From Nablus to your table since 1953"
+      }
+    },
+    "images": {},
+    "links": {},
+    "rows": [],
+    "featuredProductIds": []
+  }
+]

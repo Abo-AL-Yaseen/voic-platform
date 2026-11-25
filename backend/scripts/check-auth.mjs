@@ -1,3 +1,7 @@
+import { checkContent } from "./check-content.mjs";
+import { runContentUi } from "../../frontend/e2e/content-workflow.mjs";
+import sharp from "sharp";
+import { importDevelopmentContent } from "../.tmp/auth-build/content/import.js";
 import "reflect-metadata";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -33,15 +37,26 @@ let source,
   app,
   webProcess,
   stage = "target validation";
+function phase(value) {
+  stage = value;
+  fs.writeFileSync(
+    ".tmp/auth-test-progress.json",
+    JSON.stringify({ stage, checkedAt: new Date().toISOString() }),
+  );
+}
 const front = "http://127.0.0.1:8444";
 const scope = fs.existsSync(".tmp/verification-scope.json")
   ? JSON.parse(fs.readFileSync(".tmp/verification-scope.json", "utf8")).scope
   : "all";
-if (!["all", "staff", "regression"].includes(scope)) throw new Error("Invalid verification scope");
+if (!["all", "staff", "regression", "content"].includes(scope))
+  throw new Error("Invalid verification scope");
 process.env.APP_URL = front;
 process.env.CORS_ORIGINS = front;
 process.env.MAIL_MODE = "capture";
 process.env.STAFF_INQUIRY_WRITES = "true";
+process.env.MEDIA_TEST_NAME = "check-" + randomBytes(8).toString("hex");
+const ownedMediaRoot = path.resolve(".tmp/media-test-" + process.env.MEDIA_TEST_NAME);
+assert.equal(fs.existsSync(ownedMediaRoot), false);
 process.env.MAIL_CAPTURE_NAME = `auth-test-${randomBytes(6).toString("hex")}`;
 const mailDir = path.resolve(".tmp", process.env.MAIL_CAPTURE_NAME);
 const password = "test-only long password 2026";
@@ -84,6 +99,12 @@ try {
     )
   ).map((r) => r.name);
   const owned = [
+    "content_media_usage",
+    "staff_editorial_events",
+    "content_revisions",
+    "content_documents",
+    "content_media",
+    "content_write_lock",
     "inquiry_audit_events",
     "inquiry_internal_notes",
     "inquiry_messages",
@@ -103,8 +124,8 @@ try {
   ];
   assert.ok(names.every((n) => owned.includes(n)));
   for (const name of owned) if (names.includes(name)) await source.query(`DROP TABLE \`${name}\``);
-  stage = "migrations and catalog preservation";
-  assert.equal((await source.runMigrations()).length, 4);
+  phase("migrations and catalog preservation");
+  assert.equal((await source.runMigrations()).length, 5);
   assert.equal((await source.runMigrations()).length, 0);
   assert.deepEqual(await seedCatalog(source), { inserted: 11, skipped: 0 });
   await source.query(
@@ -112,63 +133,55 @@ try {
   );
   const preserveId = "00000000-0000-4000-8000-000000000002",
     now = new Date("2026-01-01T00:00:00Z");
-  await source
-    .getRepository(CustomerInquiry)
-    .insert({
-      id: preserveId,
-      userId: "00000000-0000-4000-8000-000000000001",
-      creationKey: "00000000-0000-4000-8000-000000000003",
-      reference: "VOIC-PRESERVED",
-      status: "submitted",
-      revision: 2,
-      lang: "en",
-      fields: {
-        kind: "individual",
-        name: "Preserved",
-        company: "",
-        destination: "PS",
-        phone: "",
-        notes: "Legacy request",
-      },
-      contactEmail: "preserved@example.test",
-      submissionKey: "00000000-0000-4000-8000-000000000004",
-      submittedRevision: 1,
-      createdAt: now,
-      updatedAt: now,
-      submittedAt: now,
-    });
-  await source
-    .getRepository(InquiryLine)
-    .insert({
-      id: "00000000-0000-4000-8000-000000000005",
-      inquiryId: preserveId,
-      position: 0,
-      productId: "ghazal",
-      packageId: null,
-      quantity: "5",
-      unit: "kg",
-      requirements: "Legacy packaging discussion",
-      snapshot: { name: "Legacy snapshot", description: "Preserved at submission", package: null },
-    });
-  await source
-    .getRepository(InquiryHistory)
-    .insert({
-      id: "00000000-0000-4000-8000-000000000006",
-      inquiryId: preserveId,
-      status: "submitted",
-      occurredAt: now,
-    });
-  await source
-    .getRepository(InquiryNotification)
-    .insert({
-      id: "00000000-0000-4000-8000-000000000007",
-      inquiryId: preserveId,
-      audience: "customer",
-      recipient: "preserved@example.test",
-      state: "captured",
-      attempts: 1,
-      nextAttemptAt: now,
-    });
+  await source.getRepository(CustomerInquiry).insert({
+    id: preserveId,
+    userId: "00000000-0000-4000-8000-000000000001",
+    creationKey: "00000000-0000-4000-8000-000000000003",
+    reference: "VOIC-PRESERVED",
+    status: "submitted",
+    revision: 2,
+    lang: "en",
+    fields: {
+      kind: "individual",
+      name: "Preserved",
+      company: "",
+      destination: "PS",
+      phone: "",
+      notes: "Legacy request",
+    },
+    contactEmail: "preserved@example.test",
+    submissionKey: "00000000-0000-4000-8000-000000000004",
+    submittedRevision: 1,
+    createdAt: now,
+    updatedAt: now,
+    submittedAt: now,
+  });
+  await source.getRepository(InquiryLine).insert({
+    id: "00000000-0000-4000-8000-000000000005",
+    inquiryId: preserveId,
+    position: 0,
+    productId: "ghazal",
+    packageId: null,
+    quantity: "5",
+    unit: "kg",
+    requirements: "Legacy packaging discussion",
+    snapshot: { name: "Legacy snapshot", description: "Preserved at submission", package: null },
+  });
+  await source.getRepository(InquiryHistory).insert({
+    id: "00000000-0000-4000-8000-000000000006",
+    inquiryId: preserveId,
+    status: "submitted",
+    occurredAt: now,
+  });
+  await source.getRepository(InquiryNotification).insert({
+    id: "00000000-0000-4000-8000-000000000007",
+    inquiryId: preserveId,
+    audience: "customer",
+    recipient: "preserved@example.test",
+    state: "captured",
+    attempts: 1,
+    nextAttemptAt: now,
+  });
   const legacyBefore = JSON.stringify(
     await source.getRepository(CustomerInquiry).findOneBy({ id: preserveId }),
   );
@@ -246,7 +259,7 @@ try {
   await a.request("/auth/login", { email: "none@example.test", password }, 403, {
     Origin: "https://attacker.invalid",
   });
-  stage = "registration and concurrent unique identity";
+  phase("registration and concurrent unique identity");
   const email = "concurrent@example.test";
   const dto = {
     ...profile,
@@ -279,7 +292,7 @@ try {
     "/inquiries/new?products=ghazal%2Cnabateen",
   );
   assert.ok(await tokens.findOneBy({ tokenHash: hashToken(verification.token) }));
-  stage = "sessions rotation csrf and ownership";
+  phase("sessions rotation csrf and ownership");
   const anonymous = { ...a };
   let session = await a.request("/auth/login", { email, password });
   assert.equal(session.user.emailVerified, false);
@@ -314,7 +327,7 @@ try {
   await c.request("/auth/login", { email: "second@example.test", password });
   assert.notEqual((await c.request("/account/profile")).id, u.id);
   assert.equal((await a.request("/account/profile")).name, "Edited customer");
-  stage = "verification expiry atomic use and resend";
+  phase("verification expiry atomic use and resend");
   await tokens.update(
     { tokenHash: hashToken(verification.token) },
     { expiresAt: new Date(Date.now() - 60000) },
@@ -348,7 +361,7 @@ try {
       .get(AuthService)
       .requireVerified({ auth: { user: { role: "customer", emailVerifiedAt: null } } }),
   );
-  stage = "password recovery and revocation";
+  phase("password recovery and revocation");
   const forgot = await a.request("/auth/password/forgot", { email, lang: "en" });
   assert.deepEqual(
     forgot,
@@ -391,7 +404,7 @@ try {
     { expiresAt: new Date(Date.now() - 60000) },
   );
   await a.request("/account/profile", undefined, 401);
-  stage = "roles cookies and rate limits";
+  phase("roles cookies and rate limits");
   await users.update({ id: u.id }, { role: "sales" });
   await a.request("/auth/session");
   await a.request("/auth/login", { email, password });
@@ -432,14 +445,23 @@ try {
   for (let i = 0; i < 3; i++)
     await rate.request("/auth/password/forgot", { email: "limited-forgot@example.test" });
   await rate.request("/auth/password/forgot", { email: "limited-forgot@example.test" }, 429);
-  stage = "inquiry ownership concurrency snapshots and notifications";
+  phase("inquiry ownership concurrency snapshots and notifications");
   await app.close();
   app = undefined;
   base = await openApp();
   const inquiryResult = await checkInquiries({ app, source, base, front, password, captured });
-  stage = "staff workflow security and persistence";
+  phase("staff workflow security and persistence");
+  await importDevelopmentContent(source);
   const staffResult = await checkStaffWorkflow({ app, source, base, front, password, captured });
-  stage = "real browser flows and private cache isolation";
+  phase("content publication media and permissions");
+  await app.close();
+  app = undefined;
+  base = await openApp();
+  const contentResult = await checkContent({ app, source, base, front, password });
+  await sharp({ create: { width: 96, height: 64, channels: 4, background: "#78845d" } })
+    .png()
+    .toFile(".tmp/content-upload.png");
+  phase("real browser flows and private cache isolation");
   // New app resets only its in-memory limits. The disposable database remains intact.
   await app.close();
   app = undefined;
@@ -466,43 +488,55 @@ try {
     } catch {}
     await new Promise((r) => setTimeout(r, 200));
   }
-  const browserResult =
-    scope === "staff"
-      ? undefined
-      : await runAuthUi({
-          front,
-          base,
-          mailDir,
-          captured,
-          password,
-          source,
-          AuthSession,
-          AuthUser,
-        });
+  const browserResult = ["staff", "content"].includes(scope)
+    ? undefined
+    : await runAuthUi({
+        front,
+        base,
+        mailDir,
+        captured,
+        password,
+        source,
+        AuthSession,
+        AuthUser,
+      });
   await app.close();
   app = undefined;
   base = await openApp(Number(new URL(base).port));
-  stage = "real inquiry browser flows";
-  const inquiryBrowserResult =
-    scope === "staff"
-      ? undefined
-      : await runInquiryUi({
-          front,
-          base,
-          captured,
-          password,
-          source,
-          AuthUser,
-        });
+  phase("real inquiry browser flows");
+  const inquiryBrowserResult = ["staff", "content"].includes(scope)
+    ? undefined
+    : await runInquiryUi({
+        front,
+        base,
+        captured,
+        password,
+        source,
+        AuthUser,
+      });
   await app.close();
   app = undefined;
   base = await openApp(Number(new URL(base).port));
-  stage = "staff customer browser workflow";
-  const staffBrowserResult =
-    scope === "regression"
-      ? undefined
-      : await runStaffUi({ front, base, password, source, AuthUser });
-  stage = "public catalog browser regression";
+  phase("staff customer browser workflow");
+  const staffBrowserResult = ["regression", "content"].includes(scope)
+    ? undefined
+    : await runStaffUi({ front, base, password, source, AuthUser });
+  await app.close();
+  app = undefined;
+  base = await openApp(Number(new URL(base).port));
+  phase("content browser workflow");
+  const contentBrowserResult =
+    scope === "content" || scope === "all"
+      ? await runContentUi({
+          front,
+          base,
+          password,
+          source,
+          AuthUser,
+          persistedMediaUrl: contentResult.mediaPersistenceUrl,
+        })
+      : undefined;
+  phase("public catalog browser regression");
   await new Promise((resolve, reject) => {
     const runner = spawn(
       process.execPath,
@@ -539,6 +573,8 @@ try {
       inquiryBrowserResult,
       staffResult,
       staffBrowserResult,
+      contentResult,
+      contentBrowserResult,
       catalogBrowserTests: 9,
     }),
   );
@@ -574,4 +610,10 @@ try {
   }
   if (app) await app.close();
   if (source?.isInitialized) await source.destroy();
+  if (
+    fs.existsSync(ownedMediaRoot) &&
+    fs.realpathSync(ownedMediaRoot) === ownedMediaRoot &&
+    path.dirname(ownedMediaRoot) === path.resolve(".tmp")
+  )
+    fs.rmSync(ownedMediaRoot, { recursive: true });
 }

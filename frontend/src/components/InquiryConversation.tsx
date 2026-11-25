@@ -17,8 +17,9 @@ export function RecordPager({
   lang: Lang;
   onPage: (page: number) => void;
 }) {
+  if (info.totalPages <= 1) return null;
   return (
-    <div className="page-actions">
+    <div className="page-actions record-pager">
       <button
         type="button"
         className="button button-secondary"
@@ -27,9 +28,9 @@ export function RecordPager({
       >
         {t(lang, "السابق", "Previous")}
       </button>
-      <span>
+      <bdi>
         {info.page} / {info.totalPages}
-      </span>
+      </bdi>
       <button
         type="button"
         className="button button-secondary"
@@ -64,8 +65,8 @@ export function InquiryConversation({
                   ? t(lang, "فريق الشركة", "Company staff")
                   : t(lang, "العميل", "Customer")}
               </strong>
-              <time dateTime={m.createdAt}>
-                {new Date(m.createdAt).toLocaleString(lang === "ar" ? "ar-PS" : "en-GB")}
+              <time dateTime={m.createdAt} dir="ltr">
+                <bdi>{new Date(m.createdAt).toLocaleString(lang === "ar" ? "ar-PS" : "en-GB")}</bdi>
               </time>
               <p>{m.text}</p>
             </li>
@@ -184,17 +185,19 @@ export function WorkflowComposer({
   };
   return (
     <section className="workspace-section">
-      <div className="page-actions">
-        <button
-          type="button"
-          className="button button-secondary"
-          disabled={mutation.isPending || uncertain}
-          onClick={() => void review()}
-        >
-          {t(lang, "تحديث ومراجعة مع الاحتفاظ بالنص", "Refresh and review, keeping text")}
-        </button>
-      </div>
-      {stale && (
+      {open && (
+        <div className="page-actions">
+          <button
+            type="button"
+            className="button button-secondary"
+            disabled={mutation.isPending || uncertain}
+            onClick={() => void review()}
+          >
+            {t(lang, "تحديث ومراجعة مع الاحتفاظ بالنص", "Refresh and review, keeping text")}
+          </button>
+        </div>
+      )}
+      {open && stale && (
         <p role="alert">
           {t(
             lang,
@@ -208,7 +211,47 @@ export function WorkflowComposer({
       </p>
       {error && <p role="alert">{error}</p>}
       {!open ? (
-        <p>{t(lang, "هذا الاستفسار للقراءة فقط.", "This inquiry is read-only.")}</p>
+        <div>
+          <p>{t(lang, "هذا الاستفسار للقراءة فقط.", "This inquiry is read-only.")}</p>
+          {(text || note) && (
+            <section className="retained-composer">
+              <h2>
+                {t(lang, "نص غير مرسل محفوظ في هذه الصفحة", "Unsent text retained on this page")}
+              </h2>
+              {text && (
+                <>
+                  <h3>{t(lang, "نص الرسالة غير المرسلة", "Unsent customer message")}</h3>
+                  <pre>{text}</pre>
+                </>
+              )}
+              {note && (
+                <>
+                  <h3>{t(lang, "الملاحظة الداخلية غير المحفوظة", "Unsaved internal note")}</h3>
+                  <pre>{note}</pre>
+                </>
+              )}
+              <button
+                className="button button-secondary"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText([text, note].filter(Boolean).join("\n\n"));
+                    setNotice(t(lang, "نُسخ النص غير المرسل.", "Unsent text copied."));
+                  } catch {
+                    setError(
+                      t(
+                        lang,
+                        "تعذر النسخ؛ حدّد النص الظاهر وانسخه يدويًا.",
+                        "Copy failed; select the displayed text and copy it manually.",
+                      ),
+                    );
+                  }
+                }}
+              >
+                {t(lang, "نسخ النص غير المرسل", "Copy unsent text")}
+              </button>
+            </section>
+          )}
+        </div>
       ) : !allowed ? (
         <p>
           {t(

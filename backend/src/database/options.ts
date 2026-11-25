@@ -1,3 +1,4 @@
+import { contentEntities } from "../content/content.entities.js";
 import { join } from "node:path";
 import type { DataSourceOptions } from "typeorm";
 import type { Environment } from "../config/environment.js";
@@ -19,7 +20,13 @@ export function databaseOptions(env: Environment): DataSourceOptions {
     synchronize: false,
     dropSchema: false,
     migrationsRun: false,
-    entities: [...catalogEntities, ...authEntities, ...inquiryEntities, ...workflowEntities],
+    entities: [
+      ...catalogEntities,
+      ...authEntities,
+      ...inquiryEntities,
+      ...workflowEntities,
+      ...contentEntities,
+    ],
     migrations: [join(import.meta.dirname, "migrations", "*.js")],
     migrationsTableName: "voic_migrations",
     migrationsTransactionMode: "each",

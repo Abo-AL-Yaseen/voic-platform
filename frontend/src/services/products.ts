@@ -1,3 +1,4 @@
+import { resolvePublicMedia } from "../utils/publicMedia";
 import { apiRequest } from "./api";
 import type { Product } from "../catalog";
 import type { Lang } from "../i18n";
@@ -31,12 +32,10 @@ export type ProductFilters = {
   recommendationUses: FilterChoice[];
 };
 export type ProductLookup = { items: Product[]; unavailableIds: string[] };
-const request = <T>(path: string, signal?: AbortSignal) =>
-  apiRequest<T>(
-    import.meta.env.VITE_API_BASE_URL || window.location.origin,
-    `/api/v1/products${path}`,
-    { signal },
-  );
+const request = async <T>(path: string, signal?: AbortSignal) => {
+  const base = import.meta.env.VITE_API_BASE_URL || window.location.origin;
+  return resolvePublicMedia(await apiRequest<T>(base, `/api/v1/products${path}`, { signal }), base);
+};
 export function productParams(scope: ProductScope) {
   const params = new URLSearchParams({ lang: scope.locale });
   for (const [key, value] of Object.entries(scope)) {

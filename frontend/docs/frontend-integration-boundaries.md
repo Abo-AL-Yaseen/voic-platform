@@ -5,8 +5,10 @@ contracts, CSRF, private-cache behavior and local email setup are in
 [authentication](../../docs/authentication.md). Staff workspace access is server-authorized,
 and administrators/sales now use real inquiry lists, counts, frozen details, conversation,
 status actions and separate internal notes. Writes require the explicit local development
-setting; production writes remain disabled pending staff MFA. Other staff modules remain
-disconnected designs. [Staff contracts and testing](../../docs/staff-inquiries.md).
+setting; production writes remain disabled pending staff MFA. Product/category/use/recipe/page/media
+workspaces now use real private editorial APIs; see [content contracts](../../docs/content-management.md).
+The staff customer directory, employee management and the general audit screen remain disconnected designs.
+[Staff inquiry contracts and testing](../../docs/staff-inquiries.md).
 Customer inquiry drafts,
 submission, counts/list/detail and notification states now use real owner-checked endpoints;
 [the inquiry guide](../../docs/customer-inquiries.md) records their contracts and verification.
@@ -23,7 +25,8 @@ Before integrating remaining business features, the backend contract must define
 - Inquiry reads/ownership, package validation, transactional submission/idempotency and
   durable notification retries and canonical staff transitions are implemented.
 - Customer-visible messages are separate from append-only internal staff notes and audit events.
-- Publication workflows for products, recipes, categories, uses, media and page content.
+- Publication workflows for products, recipes, categories, uses, media and page content are implemented
+  with private drafts, optimistic versions, review and explicit administrator publication.
 - For features beyond catalog: pagination, filtering, locale, sorting, error and cancellation contracts.
   The implemented catalog contract is in `docs/catalog-implementation.md` at the repository root.
 - Platform-wide audit management remains future work; inquiry audit rows are server-generated

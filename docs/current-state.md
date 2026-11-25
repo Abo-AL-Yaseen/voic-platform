@@ -1,8 +1,95 @@
 # VOIC platform current state
 
-Inspected: 2026-11-24. Application baseline:
+Inspected: 2026-11-25. Application baseline:
 `9c9c0310b74c3df34a10ad2828104bf9bc94e897` (`chore: import VOIC frontend baseline`).
 Repository: <https://github.com/Abo-AL-Yaseen/voic-platform>.
+
+## Content management (2026-11-25)
+
+The explicitly requested phase adds administrator/content-editor workspaces for products,
+categories, uses, recipes, structured pages and real raster media. Editors save private
+versioned drafts and request review; administrators explicitly publish a reviewed revision.
+Sales/customers are denied by the server. Production staff writes remain disabled pending MFA,
+and development imports remain unapproved for production. [Content guide](content-management.md)
+records the schema, APIs, media persistence, commands and manual restore steps.
+
+Public recipes and company/page content now use API-backed hooks without local fallback.
+The four original recipes and seven structured page records are explicit insert-only import
+inputs. Original assets, fonts, product identities and homepage featured order are preserved.
+Shared contact information has one published source. Existing inquiry snapshots remain immutable.
+Inquiry fixes cover explicit known-package choice, compact cards/actions, bidi isolation,
+single-page pagination, overflow and retaining unsent text when an inquiry closes.
+
+Staff customer directory, employee-management UI, shared general-audit UI and MFA remain unsupported; connected content
+and inquiry modules no longer display broad disconnected notices. Verification results below
+distinguish actual local checks from production approval.
+
+### Content verification (2026-11-25, Asia/Jerusalem)
+
+- Backend `pnpm.cmd test`: 21/21; frontend `pnpm.cmd test`: 14/14. Both typechecks and
+  builds passed after the final application changes. Backend compilation used
+  `pnpm.cmd build --outDir .tmp/content-build`; the user's `dist/` was retained.
+  The only new direct dependency is sharp 0.35.5 for real raster decoding/re-encoding;
+  no frontend dependency or original asset/font/LFS rule changed.
+- The user entered MySQL administrator credentials locally in the hidden interactive
+  native helper. The earlier operator expired during an interruption; a new operator
+  created its own separate disposable database/user. No administrator credential was saved.
+- Content scope passed at `2026-11-25T11:01:33.157Z` (13:01 local): five migration
+  apply/idempotence, empty content rollback/reapply preserving catalog/accounts/inquiry
+  fixtures, refusal to roll back retained content, insert-only repeated imports,
+  administrator/editor permissions and customer/sales/anonymous denial, CSRF/bounded fields,
+  private draft isolation, review/publication and explicit production/locale/legal gates,
+  concurrent version and unique-identity conflicts, package/taxonomy protections, unchanged
+  inquiry snapshots, all 11 original products and exact featured ordering.
+- Real installed-Chrome content flows passed in Arabic RTL and English LTR, including
+  390px layouts: private draft preview, conflicting editors retaining input, explicit review
+  and publication then restoring the original product description, actual raster upload,
+  image selection, authorized preview of a retained file after API restart, shared-contact
+  form edit/publication/public rendering then restoration, original four recipes, quantity
+  scaling/checklists/print invocation/search, structured page rendering, API failure/recovery
+  without local fallback, permission revocation clearing private caches, and no horizontal
+  overflow. Screenshots were inspected. All nine public catalog browser tests passed.
+- A real concurrent-edit check exposed an earlier MySQL snapshot race: editorial writes now
+  use READ COMMITTED after authenticating, under the editorial lock, so the losing edit gets
+  the intended version conflict. Cross-origin image previews use explicit CORS credentials,
+  retaining exact allowed-origin and server resource-policy restrictions. Images are checked
+  with bounded browser waits after scrolling lazy previews into view.
+
+- Staff scope passed at `2026-11-25T11:05:04.294Z`: real administrator/sales/customer
+  journeys in both languages, private notes separated from public conversation, close-dialog
+  focus/cancellation, background state refresh, unsent text retained and actually copied
+  after closure, stale review/send actions removed, single-page pager hidden, mobile overflow,
+  account switching and permission/late-response cache cleanup. Its nine catalog tests passed.
+- Regression scope passed at `2026-11-25T11:07:09.879Z`: real registration, captured
+  verification/recovery and link reloads, sign-in/selection return, profile/password changes,
+  logout/expiry/revocation/account switching, role denial/editor redirect, Arabic/English
+  390px layouts and failure/retry/token/rate feedback; customer draft/submission, known and
+  discussion packaging, lost-response idempotence, denial layouts and account transitions.
+  API auth/inquiry/staff/content checks and all nine catalog browser tests passed again.
+- After all three scopes passed, `node scripts/apply-native-content.mjs` applied exactly
+  one additive migration at `2026-11-25T11:07:35.250Z`, inserted 35 editorial documents and
+  registered 26 original asset references. A repeated import inserted nothing. Private
+  fingerprints of all 15 pre-existing catalog/account/inquiry/workflow tables matched before
+  and after. No development reset, rollback, account creation, existing publication change,
+  original-asset replacement or existing database/user alteration occurred.
+- The isolated new NestJS build returned liveness/readiness HTTP 200, 11 catalog products,
+  four recipes, all seven page records and anonymous staff HTTP 401. A direct compiled
+  `database/manage.js check` passed again; native MySQL remains 8.0.44 on 3306, InnoDB.
+  Media cleanup dry-run found zero owned orphans and removed zero files; no apply deletion ran.
+- The operator received `finish`; its ready marker and process disappeared. Test API/Vite/
+  browser processes closed; 3000, 8443 and 8444 had no listeners at final inspection, while
+  3306 remained available. No user server was stopped or restarted by this work. Existing
+  `dist/` was retained: load the new backend using the documented build/start commands from
+  the user's own terminal. No default employee account or test credentials were added to development.
+- SMTP external delivery, production MFA/security/load/distributed limits, persistent shared
+  production media storage, backup/restore and human commercial/legal approval remain outside
+  these local results. Production staff writes remain disabled. No deployment occurred.
+- Final staged review covered 67 files: no actual `.env` secret, private/runtime file,
+  token/session export, upload, captured mail or text-encoding damage. Original assets/fonts,
+  LFS attributes and the frontend lockfile were unchanged. An independent semantic comparison
+  confirmed all four imported recipes exactly match their previous text, optional values,
+  images, steps and product links. Script syntax and staged whitespace checks passed.
+  Local and remote `mahmoud` matched before the new commit; remote HEAD is `mahmoud`.
 
 ## Staff inquiry workspace (2026-11-24)
 
@@ -31,7 +118,8 @@ Git Bash commands and numbered two-session manual testing. Earlier records below
   explicit catalog migration are implemented. The authentication migration adds three account/session/token entities.
   The customer inquiry migration adds four draft/line/history/notification entities; eleven
   entities were present at customer-inquiry completion. The staff workflow adds four separate
-  action/message/internal-note/audit entities: fifteen entities and four explicit migrations now exist.
+  action/message/internal-note/audit entities. Content adds six document/revision/media/usage/event/lock
+  entities: twenty-one entities and five explicit migrations now exist.
   Native MySQL Server, managed through the separate Workbench client,
   is the chosen local setup as of 2026-11-23. Legacy Compose files are retained but unused;
   do not operate Docker or containers/volumes for this setup.
@@ -40,8 +128,8 @@ Git Bash commands and numbered two-session manual testing. Earlier records below
 - React 19, TypeScript, Vite 8, Tailwind CSS v4, and pnpm are already configured. The frontend
   runs locally; its four contract tests and TypeScript check passed at baseline import.
 - Public product reads use native MySQL through NestJS, Services and product React Query
-  hooks across all public consumers. Recipes and other page content remain local, with
-  original assets/fonts. The old product records are explicit backend seed input; only
+  hooks across all public consumers. Recipes and structured company/page content also use real
+  published API reads, with original assets/fonts. The old product records are explicit backend seed input; only
   disconnected non-inquiry staff previews retain a separate local fixture.
 - Supported interfaces are Arabic (default, RTL) and English (LTR) only. Unsupported locale
   links fall back to Arabic without changing the product route or other query parameters.
@@ -59,12 +147,12 @@ Git Bash commands and numbered two-session manual testing. Earlier records below
   records the implemented contracts and current verification. Staff workspace access has a
   backend role check. Customer inquiries now implement owned drafts, revisioned saves,
   verified/idempotent submission, snapshots/history, account reads and durable notifications;
-  [the inquiry guide](customer-inquiries.md) records contracts and manual steps. Staff inquiry operations are now connected as described above; employee/content management
-  and staff MFA remain unimplemented.
+  [the inquiry guide](customer-inquiries.md) records contracts and manual steps. Staff inquiry operations and
+  content management are connected as described above; employee management and staff MFA remain unimplemented.
 - `services/api.ts` and `services/products.ts` connect public catalog reads to `/api/v1`
   through same-origin requests (local Vite proxy to port 3000) or `VITE_API_BASE_URL`.
   Authentication/account and inquiry services use that same HTTP boundary. Staff inquiry operations use the same boundary and their own role-scoped hooks; unrelated
-  staff modules remain disconnected.
+  employee management and general audit screens remain disconnected.
 - Product, auth and account feature hooks use the existing QueryClient. Private data uses
   identity/session scope and cancellation/removal on account transitions; public catalog
   cache remains intact. Inquiry hooks now implement private reads/writes/cache management;

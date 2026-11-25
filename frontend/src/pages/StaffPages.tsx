@@ -6,7 +6,7 @@ import { Pagination, StaffLayout, TranslationTabs } from "../components/Workspac
 import { assets } from "../catalog";
 import { products } from "../dev/staff-catalog";
 import { msg, productName, withLang, type Lang } from "../i18n";
-import { recipes } from "../recipes";
+const recipes: import("../recipes").Recipe[] = []; // Disconnected development preview only; real workspace uses editorial hooks.
 
 type Props = { lang: Lang; go: (href: string) => void; path: string; preview?: boolean };
 

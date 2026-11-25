@@ -50,6 +50,7 @@ export async function runStaffUi({ front, base, password, source, AuthUser }) {
         })
         .click();
       await a.waitForURL(/draft=/);
+      await a.getByLabel(t("Package option", "خيار التعبئة"), { exact: true }).selectOption("");
       await a
         .getByLabel(t("Packaging requirements", "متطلبات التعبئة"), { exact: true })
         .fill(`UI supply request ${lang}`);
@@ -221,6 +222,9 @@ export async function runStaffUi({ front, base, password, source, AuthUser }) {
         }),
         false,
       );
+      await a
+        .getByLabel(t("Your reply to the company", "ردك للشركة"), { exact: true })
+        .fill(`UNSENT_ON_CLOSE_${lang}`);
       await message.fill(`Review complete ${lang}; no order accepted.`);
       await next.selectOption("closed");
       await sendButton.click();
@@ -242,6 +246,26 @@ export async function runStaffUi({ front, base, password, source, AuthUser }) {
         await a.getByRole("button", { name: t("Send reply", "إرسال الرد"), exact: true }).count(),
         0,
       );
+      assert.equal(
+        await a
+          .getByRole("button", {
+            name: t("Refresh and review, keeping text", "تحديث ومراجعة مع الاحتفاظ بالنص"),
+            exact: true,
+          })
+          .count(),
+        0,
+      );
+      await a
+        .locator(".retained-composer")
+        .getByText(`UNSENT_ON_CLOSE_${lang}`, { exact: true })
+        .waitFor();
+      await a
+        .getByRole("button", { name: t("Copy unsent text", "نسخ النص غير المرسل"), exact: true })
+        .click();
+      await a
+        .getByText(t("Unsent text copied.", "نُسخ النص غير المرسل."), { exact: true })
+        .waitFor();
+      assert.equal(await a.locator(".record-pager").count(), 0);
       await a.screenshot({ path: `.tmp/staff-customer-${lang}.png`, fullPage: true });
       await b.screenshot({ path: `.tmp/staff-workspace-${lang}.png`, fullPage: true });
       await b.setViewportSize({ width: 390, height: 844 });
@@ -301,12 +325,12 @@ export async function runStaffUi({ front, base, password, source, AuthUser }) {
           .catch(() => {});
       });
       await source.getRepository(AuthUser).update({ id: employee.id }, { role: "content_editor" });
-      await b
-        .getByRole("button", {
-          name: t("Refresh and review, keeping text", "تحديث ومراجعة مع الاحتفاظ بالنص"),
-          exact: true,
-        })
-        .click();
+      await b.evaluate(async () => {
+        const { queryClient } = await import("/src/services/queryClient.ts");
+        await queryClient.invalidateQueries({
+          predicate: (q) => q.queryKey[0] === "staff-inquiries",
+        });
+      });
       await b
         .getByRole("heading", {
           name: t("You do not have access to this workspace", "لا تملك صلاحية الوصول لهذه المساحة"),
@@ -341,6 +365,8 @@ export async function runStaffUi({ front, base, password, source, AuthUser }) {
       privateNotes: true,
       closingDialog: true,
       backgroundRefresh: true,
+      closedUnsentCopy: true,
+      singlePagePagerHidden: true,
       cacheSwitchAndRevocation: true,
     };
   } catch (e) {

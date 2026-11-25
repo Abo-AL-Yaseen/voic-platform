@@ -1,10 +1,12 @@
+import { usePublishedPage } from "./hooks/content/queries";
+import ContentStatus from "./components/ContentStatus";
 import { useMemo, useState } from "react";
 import type { Product } from "./catalog";
 import { useAllProducts, useSelectedProducts, visibleData } from "./hooks/products/queries";
 import CatalogStatus, { ProductTranslation } from "./components/CatalogStatus";
 import { msg, productName, type Lang } from "./i18n";
 
-export function productInquiryHref(product: Product, lang: Lang) {
+export function productInquiryHref(product: Product, lang: Lang, email: string) {
   const name = productName(product, lang);
   const subject = lang === "ar" ? `استفسار تجاري عن ${name}` : `Commercial inquiry about ${name}`;
   const body =
@@ -31,7 +33,7 @@ Estimated quantity:
 
 Additional details:
 `;
-  return `mailto:info@voic.ps?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 type Props = {
@@ -166,7 +168,9 @@ export default function InquiryForm({
     setErrors(next);
     return Object.keys(next).length === 0;
   };
-  const mailto = `mailto:info@voic.ps?subject=${encodeURIComponent(
+  const sharedQuery = usePublishedPage("shared", lang);
+  const email = sharedQuery.data && !sharedQuery.isError ? sharedQuery.data.links.email : "";
+  const mailto = `mailto:${email}?subject=${encodeURIComponent(
     msg(lang, {
       ar: "استفسار من موقع VOIC",
       en: "Inquiry from the VOIC website",
@@ -174,7 +178,7 @@ export default function InquiryForm({
   )}&body=${encodeURIComponent(message)}`;
   const prepareEmail = (event: React.FormEvent) => {
     event.preventDefault();
-    if (validate()) window.location.href = mailto;
+    if (validate() && email) window.location.href = mailto;
   };
   const copyMessage = async () => {
     if (!validate()) return;
@@ -220,6 +224,8 @@ export default function InquiryForm({
     </label>
   );
 
+  if (!sharedQuery.data || sharedQuery.isError)
+    return <ContentStatus query={sharedQuery} lang={lang} />;
   return (
     <form className="inquiry-form" onSubmit={prepareEmail} noValidate>
       <div className="form-grid">

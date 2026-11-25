@@ -1,6 +1,10 @@
+import EditorialWorkspace from "./pages/EditorialPages";
+import { queryClient } from "./services/queryClient";
+import { usePublishedPage } from "./hooks/content/queries";
+import ContentStatus from "./components/ContentStatus";
 import { sizeLabel } from "./utils/productLabels";
 import { lazy, Suspense, useEffect, useRef, useState, type ComponentType } from "react";
-import { assets, usageCards } from "./catalog";
+import { assets } from "./catalog";
 import {
   arrow,
   direction,
@@ -21,14 +25,14 @@ import {
   ContactPage,
   NotFoundPage,
   ProductRoutePage,
-  RecipeDetailPage,
+  RecipeRoutePage,
   RecipesPage,
 } from "./Pages";
 import ProductsPage from "./ProductsPage";
 import { useFeaturedProducts } from "./hooks/products/queries";
 import CatalogStatus, { ProductTranslation } from "./components/CatalogStatus";
 import { decodeRouteSegment } from "./utils/productScope";
-import { recipes } from "./recipes";
+
 import {
   ForgotPasswordPage,
   LoginPage,
@@ -90,6 +94,15 @@ function AppLink({
 
 export default function App() {
   const auth = useAuth();
+  useEffect(() => {
+    const c = new BroadcastChannel("voic-publication");
+    c.onmessage = () => {
+      void queryClient.invalidateQueries({
+        predicate: (q) => ["products", "published-content"].includes(String(q.queryKey[0])),
+      });
+    };
+    return () => c.close();
+  }, []);
   const [menuOpen, setMenuOpen] = useState(false);
   const [location, setLocation] = useState(() => window.location.pathname + window.location.search);
   const homeScroll = useRef(0);
@@ -120,12 +133,8 @@ export default function App() {
     document.documentElement.lang = lang;
     document.documentElement.dir = direction(lang);
     document.querySelector("main")?.setAttribute("id", "main-content");
-    const recipeSegment = /^\/recipes\/([^/]+)$/.exec(path)?.[1];
-    const missingDetail =
-      recipeSegment && !recipes.some((item) => item.slug === decodeRouteSegment(recipeSegment));
-    const routeTitle = missingDetail
-      ? pick(lang, "صفحة غير موجودة", "Page not found")
-      : path === "/"
+    const routeTitle =
+      path === "/"
         ? pick(lang, "الرئيسية", "Home")
         : path.startsWith("/products")
           ? t.products
@@ -288,12 +297,7 @@ export default function App() {
   } else if (path === "/recipes") {
     page = <RecipesPage lang={lang} go={go} search={url.search} />;
   } else if (recipeMatch) {
-    const recipe = recipes.find((item) => item.slug === decodeRouteSegment(recipeMatch[1]));
-    page = recipe ? (
-      <RecipeDetailPage recipe={recipe} lang={lang} go={go} search={url.search} />
-    ) : (
-      <NotFoundPage lang={lang} go={go} />
-    );
+    page = <RecipeRoutePage id={decodeRouteSegment(recipeMatch[1])} lang={lang} go={go} />;
   } else if (path === "/login") {
     page = <LoginPage lang={lang} go={go} search={url.search} />;
   } else if (path === "/register") {
@@ -324,8 +328,18 @@ export default function App() {
     );
   } else if (path === "/staff" || path.startsWith("/staff/")) {
     page = (
-      <SessionGate lang={lang} go={go} staff inquiries={path.startsWith("/staff/inquiries")}>
-        <StaffWorkspace lang={lang} go={go} path={path} search={url.search} />
+      <SessionGate
+        lang={lang}
+        go={go}
+        staff
+        inquiries={path.startsWith("/staff/inquiries")}
+        content={/^\/staff\/(products|categories|uses|recipes|content|media)(\/|$)/.test(path)}
+      >
+        {/^\/staff\/(products|categories|uses|recipes|content|media)(\/|$)/.test(path) ? (
+          <EditorialWorkspace lang={lang} go={go} path={path} search={url.search} />
+        ) : (
+          <StaffWorkspace lang={lang} go={go} path={path} search={url.search} />
+        )}
       </SessionGate>
     );
   } else if (path === "/privacy") {
@@ -345,15 +359,12 @@ export default function App() {
         {msg(lang, { ar: "انتقل إلى المحتوى", en: "Skip to content" })}
       </a>
       <div className="identity-strip">
-        {pick(
-          lang,
-          "صناعة فلسطينية • من نابلس إلى موائدكم منذ 1953",
-          "Made in Palestine • From Nablus to your table since 1953",
-        )}
+        <PublishedIdentity lang={lang} />
       </div>
       <header className="site-header">
         <AppLink href={withLang("/", lang)} go={go} className="brand-button">
           <img
+            crossOrigin="anonymous"
             src={assets.logo}
             alt={pick(lang, "شركة مصانع الزيوت النباتية", "Vegetable Oil Industries Co.")}
           />
@@ -434,25 +445,20 @@ export default function App() {
 function HomePage({ lang, go }: { lang: Lang; go: (href: string) => void }) {
   const featuredQuery = useFeaturedProducts(lang);
   const featuredProducts = featuredQuery.data?.items ?? [];
+  const contentQuery = usePublishedPage("home", lang),
+    content = contentQuery.data;
+  if (!content || contentQuery.isError) return <ContentStatus query={contentQuery} lang={lang} />;
   return (
     <main>
       <section className="hero section-pad" id="home">
         <div className="hero-copy">
-          <p className="eyebrow">
-            {pick(lang, "من قلب نابلس، منذ 1953", "From Nablus, since 1953")}
-          </p>
+          <p className="eyebrow">{content.texts["text-0"][lang]}</p>
           <h1>
-            {pick(lang, "من نابلس،", "From Nablus,")}
+            {content.texts["text-1"][lang]}
             <br />
-            {pick(lang, "نكهات بتجمعنا", "flavours that bring us together")}
+            {content.texts["text-2"][lang]}
           </h1>
-          <p className="hero-description">
-            {pick(
-              lang,
-              "للأطباق اللي بنحبها، وللحلويات اللي بتجمعنا. اكتشف منتجاتنا للطبخ والحلويات والمخبوزات.",
-              "For the dishes we love and the sweets that bring us together. Explore products for cooking, sweets and baking.",
-            )}
-          </p>
+          <p className="hero-description">{content.texts["text-3"][lang]}</p>
           <div className="hero-actions">
             <AppLink className="button button-primary" href={withLang("/products", lang)} go={go}>
               {pick(lang, "اكتشف منتجاتنا", "Explore our products")}
@@ -465,84 +471,66 @@ function HomePage({ lang, go }: { lang: Lang; go: (href: string) => void }) {
               {ui[lang].chooser}
             </AppLink>
           </div>
-          <p className="hero-note">
-            {pick(
-              lang,
-              "منتجات نعرفها… وطعم تربّينا عليه",
-              "Familiar products and flavours generations grew up with",
-            )}
-          </p>
+          <p className="hero-note">{content.texts["text-5"][lang]}</p>
         </div>
-        <div
-          className="hero-art"
-          aria-label={pick(lang, "كنافة وعبوة الغزال", "Kunafa and Al-Ghazal pack")}
-        >
+        <div className="hero-art" aria-label={content.texts["text-6"][lang]}>
           <img
+            crossOrigin="anonymous"
             className="hero-food"
-            src={assets.kunafa}
-            alt={pick(lang, "كنافة نابلسية بالفستق", "Nabulsi kunafa with pistachios")}
+            src={content.images.kunafa}
+            alt={content.texts["text-7"][lang]}
           />
           <div className="product-backdrop" />
           <img
+            crossOrigin="anonymous"
             className="hero-product"
-            src={assets.ghazal}
-            alt={pick(lang, "عبوة سمن الغزال", "Al-Ghazal vegetable ghee pack")}
+            src={content.images.ghazal}
+            alt={content.texts["text-8"][lang]}
           />
           <div className="hero-caption">
-            <strong>{pick(lang, "الغزال", "Al-Ghazal")}</strong>
-            <span>{pick(lang, "نكهة ترافق وصفاتك", "A flavour for your recipes")}</span>
+            <strong>{content.texts["text-9"][lang]}</strong>
+            <span>{content.texts["text-10"][lang]}</span>
           </div>
         </div>
       </section>
       <section className="usage-section section-pad" id="chooser">
         <div className="section-heading split-heading">
           <div>
-            <h2>{pick(lang, "شو بدك تحضّر؟", "What are you making?")}</h2>
+            <h2>{content.texts["text-11"][lang]}</h2>
           </div>
-          <p>{pick(lang, "ابدأ من وصفتك المفضلة", "Start with your favourite recipe")}</p>
+          <p>{content.texts["text-12"][lang]}</p>
         </div>
         <div className="usage-grid">
-          {usageCards.map((card) => (
-            <AppLink
-              className="usage-card"
-              key={card.title}
-              href={withLang(`/products?usage=${encodeURIComponent(card.filter)}`, lang)}
-              go={go}
-            >
-              <img src={card.image} alt="" />
-              <strong>
-                {pick(
-                  lang,
-                  `${card.title} ${arrow(lang)}`,
-                  `${card.filter === "الطبخ" ? pick(lang, "الطبخ", "Cooking") : card.filter === "الحلويات الشرقية" ? pick(lang, "الحلويات الشرقية", "Traditional sweets") : pick(lang, "المخبوزات", "Baking")} ${arrow(lang)}`,
-                )}
-              </strong>
-              <span>
-                {pick(
-                  lang,
-                  card.text,
-                  card.filter === "الطبخ"
-                    ? "For everyday dishes"
-                    : card.filter === "الحلويات الشرقية"
-                      ? "From kunafa to festive sweets"
-                      : "Recipes worth trying",
-                )}
-              </span>
-            </AppLink>
-          ))}
+          {content.rows
+            .map(([title, titleEn, text, textEn, image, filter]) => ({
+              title,
+              titleEn,
+              text,
+              textEn,
+              image,
+              filter,
+            }))
+            .map((card) => (
+              <AppLink
+                className="usage-card"
+                key={card.title}
+                href={withLang(`/products?usage=${encodeURIComponent(card.filter)}`, lang)}
+                go={go}
+              >
+                <img crossOrigin="anonymous" src={card.image} alt="" />
+                <strong>
+                  {lang === "ar" ? card.title : card.titleEn} {arrow(lang)}
+                </strong>
+                <span>{lang === "ar" ? card.text : card.textEn}</span>
+              </AppLink>
+            ))}
         </div>
       </section>
       <section className="products-section section-pad" id="products">
         <div className="section-heading split-heading">
           <div>
-            <h2>{pick(lang, "أسماء مألوفة، خيارات متنوعة", "Familiar names, varied options")}</h2>
-            <p>
-              {pick(
-                lang,
-                "تعرّف على منتجاتنا، واختار العبوة المناسبة إلك.",
-                "Explore our range and choose the pack size that suits you.",
-              )}
-            </p>
+            <h2>{content.texts["text-16"][lang]}</h2>
+            <p>{content.texts["text-17"][lang]}</p>
           </div>
           <AppLink className="text-link" href={withLang("/products", lang)} go={go}>
             {pick(lang, "تصفّح كل المنتجات", "Browse all products")} {arrow(lang)}
@@ -557,7 +545,7 @@ function HomePage({ lang, go }: { lang: Lang; go: (href: string) => void }) {
           {featuredProducts.map((product) => (
             <ProductTranslation key={product.id} product={product} lang={lang}>
               <article className="product-card">
-                <img src={product.image} alt={productName(product, lang)} />
+                <img crossOrigin="anonymous" src={product.image} alt={productName(product, lang)} />
                 <h3>{productName(product, lang)}</h3>
                 <p>{productDescription(product, lang)}</p>
                 <strong className="sizes">
@@ -573,59 +561,35 @@ function HomePage({ lang, go }: { lang: Lang; go: (href: string) => void }) {
       </section>
       <section className="story-section section-pad" id="story">
         <div className="story-copy">
-          <p className="eyebrow">
-            {pick(lang, "جذور فلسطينية. حكاية مستمرة.", "Palestinian roots. An ongoing story.")}
-          </p>
-          <h2>{pick(lang, "حكاية بدأت من نابلس", "A story that began in Nablus")}</h2>
-          <p>
-            {pick(
-              lang,
-              "منذ تأسيس الشركة عام 1953، نواصل تطوير منتجات الزيوت والسمن النباتي، لنكون جزءًا من وصفات البيوت والمطابخ المهنية.",
-              "Since the company was founded in 1953, we have continued developing vegetable oil and ghee products for home and professional kitchens.",
-            )}
-          </p>
+          <p className="eyebrow">{content.texts["text-20"][lang]}</p>
+          <h2>{content.texts["text-21"][lang]}</h2>
+          <p>{content.texts["text-22"][lang]}</p>
           <AppLink className="button button-primary" href={withLang("/about", lang)} go={go}>
             {pick(lang, "اكتشف حكايتنا", "Discover our story")}
           </AppLink>
         </div>
         <figure className="story-image">
           <img
-            src={assets.factory}
-            alt={pick(lang, "مصانع الشركة في نابلس", "VOIC factory in Nablus")}
+            crossOrigin="anonymous"
+            src={content.images.factory}
+            alt={content.texts["text-24"][lang]}
           />
-          <figcaption>
-            {pick(
-              lang,
-              "منذ 1953 / شركة مصانع الزيوت النباتية",
-              "Since 1953 / Vegetable Oil Industries Co.",
-            )}
-          </figcaption>
+          <figcaption>{content.texts["text-25"][lang]}</figcaption>
         </figure>
       </section>
       <section className="business-section section-pad" id="business">
         <div className="business-copy">
-          <p>
-            {pick(
-              lang,
-              "للمطاعم • لمحلات الحلويات • للمخابز • للتجّار",
-              "For restaurants • sweet shops • bakeries • distributors",
-            )}
-          </p>
-          <h2>{pick(lang, "منتجات تناسب حجم شغلك", "Products sized for your business")}</h2>
-          <p>
-            {pick(
-              lang,
-              "اكتشف خيارات التعبئة لقطاع الأعمال، وتواصل معنا لتحديد احتياجك.",
-              "Explore business pack formats and contact us to discuss your needs.",
-            )}
-          </p>
+          <p>{content.texts["text-26"][lang]}</p>
+          <h2>{content.texts["text-27"][lang]}</h2>
+          <p>{content.texts["text-28"][lang]}</p>
           <AppLink className="button button-light" href={withLang("/business", lang)} go={go}>
             {pick(lang, "اكتشف حلول الأعمال", "Explore business options")}
           </AppLink>
         </div>
         <img
-          src={assets.kawakeb}
-          alt={pick(lang, "عبوات الكواكب للمطابخ المهنية", "Al-Kawakib professional packs")}
+          crossOrigin="anonymous"
+          src={content.images.kawakeb}
+          alt={content.texts["text-30"][lang]}
         />
       </section>
     </main>
@@ -633,17 +597,15 @@ function HomePage({ lang, go }: { lang: Lang; go: (href: string) => void }) {
 }
 
 function SiteFooter({ lang, go }: { lang: Lang; go: (href: string) => void }) {
+  const contentQuery = usePublishedPage("shared", lang),
+    content = contentQuery.data;
+  if (!content || contentQuery.isError) return <ContentStatus query={contentQuery} lang={lang} />;
   return (
     <footer className="site-footer section-pad" id="footer">
       <div className="footer-grid expanded-footer-grid">
         <div className="footer-brand">
-          <img
-            src={assets.logo}
-            alt={pick(lang, "شركة مصانع الزيوت النباتية", "Vegetable Oil Industries Co.")}
-          />
-          <p>
-            {pick(lang, "من مصانع نابلس… إلى مطبخك.", "From our Nablus factory to your kitchen.")}
-          </p>
+          <img crossOrigin="anonymous" src={assets.logo} alt={content.texts["text-31"][lang]} />
+          <p>{content.texts["text-32"][lang]}</p>
         </div>
         <div>
           <h3>{pick(lang, "استكشف", "Explore")}</h3>
@@ -663,22 +625,22 @@ function SiteFooter({ lang, go }: { lang: Lang; go: (href: string) => void }) {
         </div>
         <div>
           <h3>{pick(lang, "تواصل معنا", "Contact")}</h3>
-          <a href="mailto:info@voic.ps" dir="ltr">
-            info@voic.ps
+          <a href={`mailto:${content.links.email}`} dir="ltr">
+            {content.links.email}
           </a>
-          <a href="tel:+97092324011" dir="ltr">
-            +970 9 2324011
+          <a href={`tel:${content.links.phone.replace(/ /g, "")}`} dir="ltr">
+            {content.links.phone}
           </a>
-          <p>{pick(lang, "نابلس، فلسطين", "Nablus, Palestine")}</p>
+          <p>{content.texts["address-short"][lang]}</p>
         </div>
         <div>
           <h3>{pick(lang, "تابع حكايتنا", "Follow our story")}</h3>
           <p className="social-links">
-            <a href="https://www.instagram.com/voic.ltd" target="_blank" rel="noreferrer">
+            <a href={content.links.instagram} target="_blank" rel="noreferrer">
               Instagram
             </a>
             <span>•</span>
-            <a href="https://www.facebook.com/voic.ltd/" target="_blank" rel="noreferrer">
+            <a href={content.links.facebook} target="_blank" rel="noreferrer">
               Facebook
             </a>
             <span>•</span>
@@ -706,8 +668,17 @@ function SiteFooter({ lang, go }: { lang: Lang; go: (href: string) => void }) {
             {msg(lang, { ar: "الخصوصية", en: "Privacy" })}
           </AppLink>
         </div>
-        <p>© {pick(lang, "شركة مصانع الزيوت النباتية", "Vegetable Oil Industries Co.")}</p>
+        <p>© {content.texts["text-38"][lang]}</p>
       </div>
     </footer>
+  );
+}
+
+function PublishedIdentity({ lang }: { lang: Lang }) {
+  const q = usePublishedPage("header", lang);
+  return q.data && !q.isError ? (
+    <>{q.data.texts.identity[lang]}</>
+  ) : (
+    <ContentStatus query={q} lang={lang} />
   );
 }

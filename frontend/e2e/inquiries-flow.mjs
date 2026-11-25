@@ -47,12 +47,14 @@ export async function runInquiryUi({ front, password }) {
         const row = lines.nth(i),
           options = row.getByLabel(t("Package option", "خيار التعبئة"), { exact: true });
         if (i === 0 && (await options.locator("option").count()) > 1) {
-          await options.selectOption({ index: 1 });
+          await options.selectOption("ghazal-1");
           await row.getByLabel(t("Number of packages", "عدد العبوات"), { exact: true }).fill("8");
-        } else
+        } else {
+          await options.selectOption("");
           await row
             .getByLabel(t("Packaging requirements", "متطلبات التعبئة"), { exact: true })
             .fill(`Synthetic packaging requirement ${i}`);
+        }
       }
       await page.getByRole("button", { name: t("Save draft", "حفظ المسودة"), exact: true }).click();
       await page.getByText(t("Draft saved.", "حُفظت المسودة."), { exact: true }).waitFor();

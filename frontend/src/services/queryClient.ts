@@ -32,3 +32,5 @@ export async function clearPrivateQueries(userScope?: string) {
       (!userScope || query.queryKey.some((part) => part === userScope)),
   });
 }
+
+queryClient.setQueryDefaults(["editorial"], { meta: { private: true } });

@@ -1,3 +1,4 @@
+import { StaffInquiryWorkflow1795525200000 } from "../.tmp/auth-build/database/migrations/1795525200000-StaffInquiryWorkflow.js";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { randomUUID } from "node:crypto";
@@ -411,8 +412,13 @@ export async function checkStaffWorkflow({ app, source, base, front, password })
     );
     assert.equal((await admin.call(url)).permissions.writesEnabled, false);
     conf.writesEnabled = true;
-    await assert.rejects(source.undoLastMigration());
-    assert.equal(Number((await source.query("SELECT COUNT(*) n FROM voic_migrations"))[0].n), 4);
+    const rollbackProbe = source.createQueryRunner();
+    try {
+      await assert.rejects(new StaffInquiryWorkflow1795525200000().down(rollbackProbe));
+    } finally {
+      await rollbackProbe.release();
+    }
+    assert.equal(Number((await source.query("SELECT COUNT(*) n FROM voic_migrations"))[0].n), 5);
     const ordered = await source
       .getRepository(CustomerInquiry)
       .createQueryBuilder("i")

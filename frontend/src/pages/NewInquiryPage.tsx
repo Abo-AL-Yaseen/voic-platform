@@ -241,6 +241,9 @@ function DraftEditor({
   const [items, setItems] = useState<InquiryItem[]>(() =>
     initial.items.length ? initial.items : initial.revision === 1 ? idsFrom(search).map(blank) : [],
   );
+  const [packageChoice, setPackageChoice] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(initial.items.map((i) => [i.productId, true])),
+  );
   const [step, setStep] = useState(1),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
@@ -278,6 +281,19 @@ function DraftEditor({
         lang,
         "اختر منتجات متاحة أو أزل غير المتاح.",
         "Select available products or remove unavailable ones.",
+      );
+    if (
+      items.some(
+        (x) =>
+          !x.packageId &&
+          !packageChoice[x.productId] &&
+          (products.find((p) => p.id === x.productId)?.packageOptions?.length || 0) > 0,
+      )
+    )
+      return t(
+        lang,
+        "اختر عبوة معروفة، أو اختر مناقشة التعبئة صراحةً لكل منتج.",
+        "Choose a known package, or explicitly choose packaging discussion for each product.",
       );
     if (
       items.some((x) =>
@@ -414,15 +430,24 @@ function DraftEditor({
                       </button>
                       <SelectField
                         label={t(lang, "خيار التعبئة", "Package option")}
-                        value={item.packageId || ""}
-                        onChange={(e) =>
+                        value={
+                          item.packageId ||
+                          (!packageChoice[item.productId] && options.length ? "__choose" : "")
+                        }
+                        onChange={(e) => {
+                          setPackageChoice({ ...packageChoice, [item.productId]: true });
                           update(item.productId, {
                             packageId: e.target.value || null,
                             quantity: e.target.value ? 1 : null,
                             unit: e.target.value ? "packages" : null,
-                          })
-                        }
+                          });
+                        }}
                       >
+                        {!!options.length && (
+                          <option value="__choose" disabled>
+                            {t(lang, "اختر العبوة المطلوبة", "Choose the required package")}
+                          </option>
+                        )}
                         <option value="">
                           {t(lang, "مناقشة التعبئة مع المبيعات", "Discuss packaging with sales")}
                         </option>

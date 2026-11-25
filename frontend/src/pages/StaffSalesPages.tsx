@@ -1,3 +1,4 @@
+import { ContentDashboard } from "./EditorialPages";
 import { useState } from "react";
 import AppLink from "../components/AppLink";
 import { StaffLayout } from "../components/WorkspaceLayouts";
@@ -23,7 +24,14 @@ import { staffInquiryFilters, staffInquiryLocation } from "../utils/staffInquiry
 import { msg, withLang, type Lang } from "../i18n";
 const t = (lang: Lang, ar: string, en: string) => msg(lang, { ar, en });
 const date = (v: string, lang: Lang) =>
-  new Date(v).toLocaleString(lang === "ar" ? "ar-PS" : "en-GB");
+  new Date(v).toLocaleString(lang === "ar" ? "ar-PS" : "en-GB", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 type Props = { lang: Lang; go: (href: string) => void; path: string; search: string };
 export function StaffWorkspace({ lang, go, path, search }: Props) {
   const access = useStaffAccess(),
@@ -56,19 +64,11 @@ export function StaffWorkspace({ lang, go, path, search }: Props) {
           <button onClick={() => access.refetch()}>{t(lang, "إعادة المحاولة", "Retry")}</button>
         </div>
       ) : !sales ? (
-        <>
-          <AccountHeading
-            title={t(lang, "مساحة الموظفين", "Staff workspace")}
-            description={t(
-              lang,
-              "إدارة الاستفسارات متاحة للمبيعات والمسؤولين فقط.",
-              "Inquiry management is available to sales and administrators only.",
-            )}
-          />
-          <IntegrationNotice lang={lang}>
-            {t(lang, "إدارة المحتوى غير متصلة بعد.", "Content management is not connected yet.")}
-          </IntegrationNotice>
-        </>
+        path === "/staff" ? (
+          <ContentDashboard lang={lang} go={go} />
+        ) : (
+          <UnsupportedStaffSection lang={lang} path={path} />
+        )
       ) : (
         <>
           {!user?.emailVerified && (
@@ -91,21 +91,28 @@ export function StaffWorkspace({ lang, go, path, search }: Props) {
           ) : path.startsWith("/staff/inquiries/") ? (
             <StaffInquiryDetail key={path} lang={lang} id={path.split("/").at(-1) || ""} />
           ) : (
-            <>
-              <AccountHeading
-                title={t(lang, "مساحة الموظفين", "Staff workspace")}
-                description={t(
-                  lang,
-                  "هذا القسم غير متصل بعد.",
-                  "This section is not connected yet.",
-                )}
-              />
-              <IntegrationNotice lang={lang} />
-            </>
+            <UnsupportedStaffSection lang={lang} path={path} />
           )}
         </>
       )}
     </StaffLayout>
+  );
+}
+function UnsupportedStaffSection({ lang, path }: { lang: Lang; path: string }) {
+  const title =
+    path === "/staff/customers"
+      ? t(lang, "دليل العملاء للموظفين", "Staff customer directory")
+      : path === "/staff/employees"
+        ? t(lang, "إدارة الموظفين", "Employee management")
+        : t(lang, "واجهة التدقيق العامة", "General audit workspace");
+  return (
+    <IntegrationNotice lang={lang} title={title}>
+      {t(
+        lang,
+        "هذا القسم وحده غير متصل بعد. إدارة المحتوى والاستفسارات تعملان عبر الخدمات الفعلية.",
+        "This section is not connected yet. Content management and inquiry workflows use the real APIs.",
+      )}
+    </IntegrationNotice>
   );
 }
 function StaffDashboard({ lang, go }: { lang: Lang; go: Props["go"] }) {
@@ -175,8 +182,8 @@ function StaffDashboard({ lang, go }: { lang: Lang; go: Props["go"] }) {
       <IntegrationNotice lang={lang}>
         {t(
           lang,
-          "إدارة المنتجات والمحتوى والموظفين غير متصلة هنا. لا توجد أرقام مبيعات أو مخزون.",
-          "Product, content and employee management are not connected here. No revenue or stock figures are shown.",
+          "إدارة الموظفين وواجهة التدقيق العامة غير متصلتين. لا توجد أرقام مبيعات أو مخزون.",
+          "Employee management and the general audit UI remain disconnected. No revenue or stock figures are shown.",
         )}
       </IntegrationNotice>
     </>
@@ -294,7 +301,7 @@ function StaffInquiryList({ lang, go, search }: { lang: Lang; go: Props["go"]; s
                             go={go}
                             href={withLang(`/staff/inquiries/${i.id}`, lang)}
                           >
-                            {i.reference}
+                            <bdi dir="ltr">{i.reference}</bdi>
                           </AppLink>
                         </td>
                         <td>
@@ -306,7 +313,9 @@ function StaffInquiryList({ lang, go, search }: { lang: Lang; go: Props["go"]; s
                         </td>
                         <td>{i.destination}</td>
                         <td>{inquiryStatus(i.status, lang)}</td>
-                        <td>{date(i.submittedAt, lang)}</td>
+                        <td>
+                          <bdi dir="ltr">{date(i.submittedAt, lang)}</bdi>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

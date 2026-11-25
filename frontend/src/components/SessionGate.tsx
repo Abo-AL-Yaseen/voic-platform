@@ -8,12 +8,14 @@ export default function SessionGate({
   go,
   staff = false,
   inquiries = false,
+  content = false,
   children,
 }: {
   lang: Lang;
   go: (href: string) => void;
   staff?: boolean;
   inquiries?: boolean;
+  content?: boolean;
   children: ReactNode;
 }) {
   const auth = useAuth(),
@@ -51,7 +53,9 @@ export default function SessionGate({
     );
   if (
     staff
-      ? user.role === "customer" || (inquiries && user.role === "content_editor")
+      ? user.role === "customer" ||
+        (inquiries && user.role === "content_editor") ||
+        (content && user.role === "sales")
       : user.role !== "customer"
   )
     return (

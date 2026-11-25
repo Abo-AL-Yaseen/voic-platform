@@ -17,7 +17,7 @@ test("featured products retain the approved order", async () => {
 test("all approved product and recipe records remain present", async () => {
   const [catalog, recipes] = await Promise.all([
     readFile(new URL("../../backend/data/catalog-baseline.json", import.meta.url), "utf8"),
-    read("src/recipes.ts"),
+    readFile(new URL("../../backend/data/recipes-baseline.json", import.meta.url), "utf8"),
   ]);
   for (const id of [
     "ghazal-butter",
@@ -40,7 +40,7 @@ test("all approved product and recipe records remain present", async () => {
     "shishbarak-with-yogurt",
     "fish-with-vegetables",
   ]) {
-    assert.match(recipes, new RegExp(`slug: "${slug}"`));
+    assert.ok(JSON.parse(recipes).some((r) => r.slug === slug));
   }
 });
 

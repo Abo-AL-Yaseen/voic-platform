@@ -40,8 +40,9 @@ try {
   const mode = (await prompt.question("Action [create/promote]: ")).trim();
   if (!["create", "promote"].includes(mode)) throw new Error("Action required");
   const email = (await prompt.question("Staff email: ")).trim().toLowerCase();
-  const role = (await prompt.question("Role [sales/administrator]: ")).trim();
-  if (!["sales", "administrator"].includes(role)) throw new Error("Role required");
+  const role = (await prompt.question("Role [sales/administrator/content_editor]: ")).trim();
+  if (!["sales", "administrator", "content_editor"].includes(role))
+    throw new Error("Role required");
   const existing = await source.getRepository(AuthUser).findOneBy({ email });
   if (mode === "create" && existing)
     throw new Error("Account already exists; choose explicit promote after review");

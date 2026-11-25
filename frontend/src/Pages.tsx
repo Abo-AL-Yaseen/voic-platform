@@ -1,3 +1,5 @@
+import { usePublishedPage, useRecipes, useRecipe } from "./hooks/content/queries";
+import ContentStatus from "./components/ContentStatus";
 import { sizeLabel, packageLabel, productUseLabel } from "./utils/productLabels";
 import { useEffect, useState } from "react";
 import { type Product, type UseKey } from "./catalog";
@@ -27,7 +29,7 @@ import {
   useSelectedProducts,
   visibleData,
 } from "./hooks/products/queries";
-import { recipes, type Recipe } from "./recipes";
+import type { Recipe } from "./recipes";
 
 type PageProps = { lang: Lang; go: (href: string) => void; search?: string };
 
@@ -89,7 +91,7 @@ function Breadcrumb({
 
 function ProductImage({ product, lang }: { product: Product; lang: Lang }) {
   return product.image ? (
-    <img src={product.image} alt={productName(product, lang)} />
+    <img crossOrigin="anonymous" src={product.image} alt={productName(product, lang)} />
   ) : (
     <div
       className="missing-product-image"
@@ -178,7 +180,9 @@ function ProductMiniCard({
 export function ProductDetailPage({ product, lang, go }: PageProps & { product: Product }) {
   const relatedQuery = useRelatedProducts(product.id, lang);
   const related = relatedQuery.data?.items ?? [];
-  const relatedRecipes = recipes.filter((recipe) => recipe.productIds.includes(product.id));
+  const recipeQuery = useRecipes({ lang, productId: product.id, pageSize: 3 });
+  const relatedRecipes = recipeQuery.isError ? [] : recipeQuery.data?.items || [];
+  const sharedQuery = usePublishedPage("shared", lang);
   return (
     <main id="main-content" className="page-shell product-page section-pad">
       <Breadcrumb
@@ -235,12 +239,20 @@ export function ProductDetailPage({ product, lang, go }: PageProps & { product: 
               {ui[lang].inquiry}
             </PageLink>
             <small>{ui[lang].emailHint}</small>
-            <a className="text-link" href={productInquiryHref(product, lang)}>
+            <a
+              className="text-link"
+              href={
+                sharedQuery.data && !sharedQuery.isError
+                  ? productInquiryHref(product, lang, sharedQuery.data.links.email)
+                  : undefined
+              }
+            >
               {pick(lang, "تواصل بالبريد بدلًا من ذلك", "Contact by email instead")}
             </a>
           </div>
         </div>
       </section>
+      <ContentStatus query={recipeQuery} lang={lang} />
       {relatedRecipes.length > 0 && (
         <section className="related-section">
           <div className="page-section-heading">
@@ -254,7 +266,7 @@ export function ProductDetailPage({ product, lang, go }: PageProps & { product: 
                 go={go}
                 className="related-recipe"
               >
-                <img src={recipe.image} alt="" loading="lazy" />
+                <img crossOrigin="anonymous" src={recipe.image} alt="" loading="lazy" />
                 <strong>{pick(lang, recipe.titleAr, recipe.titleEn)}</strong>
               </PageLink>
             ))}
@@ -655,31 +667,30 @@ export function BusinessPage({ lang, go, search = "" }: PageProps) {
   ];
   const professionalIds = ["kawakeb", "nabateen", "balqa", "mumtaz", "aseel", "kawkab-soybean-oil"];
   const professionalQuery = useProductLookup(professionalIds, lang);
+  const contentQuery = usePublishedPage("business", lang),
+    content = contentQuery.data;
+  if (!content || contentQuery.isError) return <ContentStatus query={contentQuery} lang={lang} />;
   return (
     <main className="page-shell business-page">
       <section className="business-page-hero section-pad">
         <div>
           <Breadcrumb lang={lang} go={go} items={[{ label: ui[lang].business }]} />
-          <p className="eyebrow">
-            {pick(lang, "للمطاعم والمخابز والموزعين", "For kitchens, bakeries and distributors")}
-          </p>
-          <h1>{pick(lang, "منتجات تناسب حجم شغلك", "Products sized for your business")}</h1>
-          <p className="lead">
-            {pick(
-              lang,
-              "خيارات من السمن والزيوت النباتية للمطاعم ومحلات الحلويات والمخابز والموزعين. تعرّف على المنتجات وأحجام التعبئة، وتواصل معنا لمناقشة احتياجات التوريد.",
-              "Vegetable ghee and oil options for restaurants, sweet shops, bakeries and distributors. Explore products and pack sizes, then contact us to discuss supply needs.",
-            )}
-          </p>
+          <p className="eyebrow">{content.texts["text-39"][lang]}</p>
+          <h1>{content.texts["text-40"][lang]}</h1>
+          <p className="lead">{content.texts["text-41"][lang]}</p>
           <PageLink className="button button-light" href={withLang("/inquiries/new", lang)} go={go}>
             {pick(lang, "ابدأ استفسارك", "Start an inquiry")}
           </PageLink>
         </div>
-        <img src="/assets/fe634.png" alt={pick(lang, "عبوات الكواكب", "Al-Kawakib packs")} />
+        <img
+          crossOrigin="anonymous"
+          src={content.images.hero}
+          alt={content.texts["text-43"][lang]}
+        />
       </section>
       <section className="section-pad audience-section">
         <div className="page-section-heading">
-          <h2>{pick(lang, "مسارات لاحتياجك", "Paths for your business")}</h2>
+          <h2>{content.texts["text-44"][lang]}</h2>
         </div>
         <div className="audience-grid">
           {[
@@ -707,10 +718,8 @@ export function BusinessPage({ lang, go, search = "" }: PageProps) {
       </section>
       <section className="section-pad professional-products">
         <div className="page-section-heading">
-          <p className="eyebrow">
-            {pick(lang, "أحجام مهنية معروفة", "Known professional formats")}
-          </p>
-          <h2>{pick(lang, "خيارات للتحضير والتوريد", "Options for preparation and supply")}</h2>
+          <p className="eyebrow">{content.texts["text-45"][lang]}</p>
+          <h2>{content.texts["text-46"][lang]}</h2>
         </div>
         <div className="professional-list">
           <CatalogStatus
@@ -745,26 +754,14 @@ export function BusinessPage({ lang, go, search = "" }: PageProps) {
       </section>
       <section className="section-pad inquiry-section" id="business-inquiry">
         <div className="page-section-heading">
-          <p className="eyebrow">{pick(lang, "استفسار تجاري", "Commercial inquiry")}</p>
-          <h2>{pick(lang, "خلّينا نتعرّف على احتياجك", "Tell us about your needs")}</h2>
-          <p>
-            {pick(
-              lang,
-              "شاركنا المنتجات والأحجام والكميات التقريبية وبلد الوجهة، لبدء التواصل مع فريق الشركة.",
-              "Share the products, sizes, approximate quantities and destination country to begin a conversation with our team.",
-            )}
-          </p>
+          <p className="eyebrow">{content.texts["text-47"][lang]}</p>
+          <h2>{content.texts["text-48"][lang]}</h2>
+          <p>{content.texts["text-49"][lang]}</p>
         </div>
         <InquiryForm lang={lang} mode="business" initialProductIds={initialProductIds} />
         <div className="business-inquiry-path">
-          <strong>{pick(lang, "مسار استفسار التوريد", "Supply inquiry journey")}</strong>
-          <p>
-            {pick(
-              lang,
-              "اختيار المنتجات ← إنشاء حساب والتحقق ← مراجعة الاستفسار ← متابعة رد الشركة",
-              "Choose products → create and verify an account → review the inquiry → track the company response",
-            )}
-          </p>
+          <strong>{content.texts["text-50"][lang]}</strong>
+          <p>{content.texts["text-51"][lang]}</p>
           <PageLink
             href={withLang(
               `/inquiries/new${initialProductIds.length ? `?products=${initialProductIds.join(",")}` : ""}`,
@@ -779,35 +776,10 @@ export function BusinessPage({ lang, go, search = "" }: PageProps) {
       </section>
       <section className="section-pad faq-section">
         <div className="page-section-heading">
-          <h2>{pick(lang, "أسئلة شائعة", "Frequently asked questions")}</h2>
+          <h2>{content.texts["text-53"][lang]}</h2>
         </div>
         <div className="faq-list">
-          {[
-            [
-              "كيف أطلب عرض سعر؟",
-              "How do I request a quotation?",
-              "حدّد المنتجات والأحجام والكميات التقريبية وبلد الوجهة، ثم تواصل مع فريق الشركة لمناقشة طلبك.",
-              "Specify products, sizes, approximate quantities and destination country, then contact the company team to discuss your request.",
-            ],
-            [
-              "هل يمكن الاستفسار عن التوريد إلى ألمانيا؟",
-              "Can I inquire about supply to Germany?",
-              "يمكنك ذكر ألمانيا أو أي وجهة مطلوبة في استفسارك، ومناقشة إمكانية التوريد ومتطلباته مباشرة مع الشركة.",
-              "You can name Germany or any requested destination in your inquiry and discuss supply feasibility and requirements directly with the company.",
-            ],
-            [
-              "هل أستطيع الشراء مباشرة من الموقع؟",
-              "Can I buy directly from the website?",
-              "الموقع يعرّفك بمنتجاتنا ويساعدك على الاختيار. يتم التواصل بشأن الأسعار وشروط التوريد مباشرة مع الشركة.",
-              "The website introduces our products and helps you choose. Pricing and supply terms are discussed directly with the company.",
-            ],
-            [
-              "كيف أحصل على تفاصيل التعبئة والمواصفات؟",
-              "How do I obtain packaging and specification details?",
-              "اذكر اسم المنتج والحجم المطلوب في استفسارك، وأضف المعلومات الفنية التي تحتاجها.",
-              "Include the product name, required size and the technical information you need in your inquiry.",
-            ],
-          ].map(([qAr, qEn, aAr, aEn]) => (
+          {content.rows.map(([qAr, qEn, aAr, aEn]) => (
             <details key={qAr}>
               <summary>{pick(lang, qAr, qEn)}</summary>
               <p>{pick(lang, aAr, aEn)}</p>
@@ -820,56 +792,35 @@ export function BusinessPage({ lang, go, search = "" }: PageProps) {
 }
 
 export function AboutPage({ lang, go }: PageProps) {
-  const milestones = [
-    [
-      "1953",
-      "تأسيس الشركة في نابلس، وبداية العمل في تكرير زيت الزيتون وتعبئته.",
-      "VOIC was established in Nablus, beginning with olive-oil refining and packing.",
-      "/assets/site/history-1954.jpg",
-    ],
-    [
-      "1961",
-      "بدء إنتاج السمن النباتي وتطوير الخبرات الفنية بالتعاون مع خبراء هولنديين.",
-      "Vegetable ghee production began, with technical expertise developed in cooperation with Dutch experts.",
-      "/assets/site/history-1961.jpg",
-    ],
-    [
-      "1985",
-      "التوسع في تكرير الزيوت النباتية السائلة وتحديث تجهيزات المصنع.",
-      "The company expanded into liquid vegetable-oil refining and modernised factory equipment.",
-      "/assets/site/history-2016.jpg",
-    ],
-  ];
+  const contentQuery = usePublishedPage("about", lang),
+    content = contentQuery.data;
+  if (!content || contentQuery.isError) return <ContentStatus query={contentQuery} lang={lang} />;
+  const milestones = content.rows;
   return (
     <main className="page-shell about-page">
       <section className="about-hero section-pad">
         <Breadcrumb lang={lang} go={go} items={[{ label: ui[lang].about }]} />
         <div className="about-hero-grid">
           <div>
-            <p className="eyebrow">{pick(lang, "منذ 1953", "Since 1953")}</p>
-            <h1>{pick(lang, "حكاية بدأت من نابلس", "A story that began in Nablus")}</h1>
-            <p className="lead">
-              {pick(
-                lang,
-                "تأسست شركة مصانع الزيوت النباتية عام 1953 في المنطقة الصناعية الشرقية بمدينة نابلس. بدأت مسيرتها بتكرير زيت الزيتون وتعبئته، ثم توسعت إلى إنتاج السمن النباتي وتكرير الزيوت النباتية السائلة. واليوم تضم مجموعتها علامات للسمن وزيوت الصويا والذرة ودوار الشمس.",
-                "Vegetable Oil Industries Co. was established in 1953 in Nablus's Eastern Industrial Area. It began by refining and packing olive oil, then expanded into vegetable ghee and liquid vegetable-oil refining. Today its range includes ghee, soybean, corn and sunflower oil brands.",
-              )}
-            </p>
+            <p className="eyebrow">{content.texts["text-54"][lang]}</p>
+            <h1>{content.texts["text-55"][lang]}</h1>
+            <p className="lead">{content.texts["text-56"][lang]}</p>
           </div>
           <img
-            src="/assets/site/factory-panorama.png"
-            alt={pick(lang, "مصنع الشركة في نابلس", "VOIC factory in Nablus")}
+            crossOrigin="anonymous"
+            src={content.images.factory}
+            alt={content.texts["text-57"][lang]}
           />
         </div>
       </section>
       <section className="section-pad timeline-section">
         <div className="page-section-heading">
-          <h2>{pick(lang, "محطات من المسيرة", "Milestones")}</h2>
+          <h2>{content.texts["text-58"][lang]}</h2>
         </div>
         <div className="timeline">
           {milestones.map(([year, ar, en, image]) => (
             <article key={year} className="timeline-item">
-              <img src={image} alt="" loading="lazy" />
+              <img crossOrigin="anonymous" src={image} alt="" loading="lazy" />
               <div>
                 <span>{year}</span>
                 <p>{pick(lang, ar, en)}</p>
@@ -880,37 +831,19 @@ export function AboutPage({ lang, go }: PageProps) {
       </section>
       <section className="section-pad purpose-section">
         <article>
-          <p className="eyebrow">{pick(lang, "رؤيتنا", "Our vision")}</p>
-          <h2>
-            {pick(
-              lang,
-              "نكهة أصيلة ومنتجات نعتزّ بها.",
-              "Authentic flavour and products we are proud of.",
-            )}
-          </h2>
+          <p className="eyebrow">{content.texts["text-59"][lang]}</p>
+          <h2>{content.texts["text-60"][lang]}</h2>
         </article>
         <article>
-          <p className="eyebrow">{pick(lang, "رسالتنا", "Our mission")}</p>
-          <p>
-            {pick(
-              lang,
-              "نعمل على تقديم السمن والزيوت النباتية وتطوير عملياتنا وبناء علاقات طويلة الأمد مع عملائنا، والمساهمة في الصناعة والاقتصاد الفلسطيني.",
-              "We work to provide vegetable ghee and oils, develop our operations, build long-term customer relationships, and contribute to Palestinian industry and the economy.",
-            )}
-          </p>
+          <p className="eyebrow">{content.texts["text-61"][lang]}</p>
+          <p>{content.texts["text-62"][lang]}</p>
         </article>
       </section>
       <section className="quality-section section-pad">
         <div>
-          <p className="eyebrow">{pick(lang, "نهج الجودة", "Our quality approach")}</p>
-          <h2>{pick(lang, "الجودة في صميم عملنا", "Quality at the heart of our work")}</h2>
-          <p>
-            {pick(
-              lang,
-              "نعتمد إدارة الجودة أساسًا لتطوير أعمالنا الفنية والإدارية ومتابعة جودة منتجاتنا، مع استمرار العمل على تحسين العمليات.",
-              "We use quality management as a basis for developing our technical and administrative work, monitoring product quality and continuously improving our processes.",
-            )}
-          </p>
+          <p className="eyebrow">{content.texts["text-63"][lang]}</p>
+          <h2>{content.texts["text-64"][lang]}</h2>
+          <p>{content.texts["text-65"][lang]}</p>
           <PageLink
             href={withLang("/contact?topic=quality", lang)}
             go={go}
@@ -923,7 +856,11 @@ export function AboutPage({ lang, go }: PageProps) {
             )}
           </PageLink>
         </div>
-        <img src="/assets/3bfa2.png" alt={pick(lang, "مرافق الشركة", "Company facilities")} />
+        <img
+          crossOrigin="anonymous"
+          src={content.images.quality}
+          alt={content.texts["text-67"][lang]}
+        />
       </section>
     </main>
   );
@@ -934,62 +871,57 @@ export function ContactPage({ lang, go, search = "" }: PageProps) {
   const mapQuery = encodeURIComponent(
     "Vegetable Oil Industries Co Eastern Industrial Area Nablus Palestine",
   );
+  const contentQuery = usePublishedPage("contact", lang),
+    content = contentQuery.data;
+  const sharedQuery = usePublishedPage("shared", lang),
+    shared = sharedQuery.data;
+  if (!shared || sharedQuery.isError) return <ContentStatus query={sharedQuery} lang={lang} />;
+  if (!content || contentQuery.isError) return <ContentStatus query={contentQuery} lang={lang} />;
   return (
     <main className="page-shell contact-page section-pad">
       <Breadcrumb lang={lang} go={go} items={[{ label: ui[lang].contact }]} />
       <section className="page-intro">
-        <p className="eyebrow">
-          {pick(lang, "شركة مصانع الزيوت النباتية", "Vegetable Oil Industries Co.")}
-        </p>
-        <h1>{pick(lang, "خلّينا على تواصل", "Let's stay in touch")}</h1>
-        <p>
-          {pick(
-            lang,
-            "عندك سؤال عن منتج أو حاب تناقش احتياجات التوريد؟ تواصل معنا عبر القنوات التالية.",
-            "Have a product question or want to discuss supply needs? Contact us through the following channels.",
-          )}
-        </p>
+        <p className="eyebrow">{content.texts["text-68"][lang]}</p>
+        <h1>{content.texts["text-69"][lang]}</h1>
+        <p>{content.texts["text-70"][lang]}</p>
       </section>
       <div className="contact-layout">
         <section className="contact-details">
           <article>
             <span>{pick(lang, "البريد الإلكتروني", "Email")}</span>
-            <a href="mailto:info@voic.ps" dir="ltr" aria-label="info@voic.ps">
-              info@voic.ps
+            <a href={`mailto:${shared.links.email}`} dir="ltr" aria-label={shared.links.email}>
+              {shared.links.email}
             </a>
           </article>
           <article>
             <span>{pick(lang, "الهاتف", "Telephone")}</span>
-            <a href="tel:+97092324011" dir="ltr" aria-label="+970 9 2324011">
-              +970 9 2324011
+            <a
+              href={`tel:${shared.links["phone"].replace(/ /g, "")}`}
+              dir="ltr"
+              aria-label={shared.links["phone"]}
+            >
+              {shared.links["phone"]}
             </a>
-            <a href="tel:+97092324010" dir="ltr" aria-label="+970 9 2324010">
-              +970 9 2324010
+            <a
+              href={`tel:${shared.links["phone-secondary"].replace(/ /g, "")}`}
+              dir="ltr"
+              aria-label={shared.links["phone-secondary"]}
+            >
+              {shared.links["phone-secondary"]}
             </a>
           </article>
           <article>
             <span>{pick(lang, "العنوان", "Address")}</span>
-            <p>
-              {pick(
-                lang,
-                "المنطقة الصناعية الشرقية، نابلس، فلسطين",
-                "Eastern Industrial Area, Nablus, Palestine",
-              )}
-            </p>
-            <p>{pick(lang, "صندوق بريد 95", "P.O. Box 95")}</p>
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-link"
-            >
+            <p>{shared.texts.address[lang]}</p>
+            <p>{content.texts["text-75"][lang]}</p>
+            <a href={content.links.map} target="_blank" rel="noreferrer" className="text-link">
               {pick(lang, "ابحث عن الموقع على الخريطة", "Search for the location on the map")}{" "}
               {arrow(lang)}
             </a>
           </article>
           <article className="secondary-contact">
             <span>{pick(lang, "فاكس", "Fax")}</span>
-            <p dir="ltr">+970 9 2325036</p>
+            <p dir="ltr">{shared.links.fax}</p>
           </article>
         </section>
         <section className="contact-form-wrap">
@@ -1013,12 +945,10 @@ export function ContactPage({ lang, go, search = "" }: PageProps) {
 export function RecipesPage({ lang, go }: PageProps) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
-  const visible = recipes.filter((recipe) => {
-    const text =
-      `${recipe.titleAr} ${recipe.titleEn} ${recipe.descriptionAr} ${recipe.descriptionEn}`.toLowerCase();
-    return text.includes(query.toLowerCase()) && (!category || recipe.category === category);
-  });
-  const linkedQuery = useProductLookup([...new Set(recipes.flatMap((r) => r.productIds))], lang);
+  const [page, setPage] = useState(1);
+  const recipesQuery = useRecipes({ lang, q: query, category, page, pageSize: 12 });
+  const visible = recipesQuery.isError ? [] : recipesQuery.data?.items || [];
+  const linkedQuery = useProductLookup([...new Set(visible.flatMap((r) => r.productIds))], lang);
   const products = linkedQuery.data?.items ?? [];
   return (
     <main className="page-shell recipes-page section-pad">
@@ -1040,13 +970,22 @@ export function RecipesPage({ lang, go }: PageProps) {
           <input
             type="search"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
             placeholder={pick(lang, "اسم الوصفة...", "Recipe name...")}
           />
         </label>
         <label>
           <span>{pick(lang, "الفئة", "Category")}</span>
-          <select value={category} onChange={(e) => setCategory(e.target.value)}>
+          <select
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              setPage(1);
+            }}
+          >
             <option value="">{pick(lang, "كل الوصفات", "All recipes")}</option>
             <option value="sweets-baking">
               {pick(lang, "حلويات ومخبوزات", "Sweets & baking")}
@@ -1055,6 +994,7 @@ export function RecipesPage({ lang, go }: PageProps) {
           </select>
         </label>
       </div>
+      <ContentStatus query={recipesQuery} lang={lang} />
       <CatalogStatus query={linkedQuery} lang={lang} />
       <div className="recipe-grid">
         {visible.map((recipe) => {
@@ -1064,7 +1004,11 @@ export function RecipesPage({ lang, go }: PageProps) {
           return (
             <article className="recipe-card" key={recipe.slug}>
               <PageLink href={withLang(`/recipes/${recipe.slug}`, lang)} go={go}>
-                <img src={recipe.image} alt={pick(lang, recipe.titleAr, recipe.titleEn)} />
+                <img
+                  crossOrigin="anonymous"
+                  src={recipe.image}
+                  alt={pick(lang, recipe.titleAr, recipe.titleEn)}
+                />
               </PageLink>
               <div>
                 <span>
@@ -1092,7 +1036,7 @@ export function RecipesPage({ lang, go }: PageProps) {
           );
         })}
       </div>
-      {!visible.length && (
+      {recipesQuery.data && !recipesQuery.isError && !visible.length && (
         <div className="catalog-empty">
           <h2>{pick(lang, "ما لقينا وصفات بتطابق بحثك", "No recipes match your search")}</h2>
           <button
@@ -1105,6 +1049,19 @@ export function RecipesPage({ lang, go }: PageProps) {
             {pick(lang, "مسح البحث", "Clear search")}
           </button>
         </div>
+      )}
+      {recipesQuery.data && recipesQuery.data.totalPages > 1 && (
+        <nav className="page-actions">
+          <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            {pick(lang, "السابق", "Previous")}
+          </button>
+          <bdi>
+            {page} / {recipesQuery.data.totalPages}
+          </bdi>
+          <button disabled={page >= recipesQuery.data.totalPages} onClick={() => setPage(page + 1)}>
+            {pick(lang, "التالي", "Next")}
+          </button>
+        </nav>
       )}
     </main>
   );
@@ -1121,8 +1078,9 @@ function formatAmount(value: number, lang: Lang) {
 
 export function RecipeDetailPage({ recipe, lang, go }: PageProps & { recipe: Recipe }) {
   const [multiplier, setMultiplier] = useState(1);
-  const related = recipes
-    .filter((item) => item.slug !== recipe.slug && item.category === recipe.category)
+  const relatedQuery = useRecipes({ lang, category: recipe.category, pageSize: 4 });
+  const related = (relatedQuery.isError ? [] : relatedQuery.data?.items || [])
+    .filter((item) => item.slug !== recipe.slug)
     .slice(0, 3);
   const linkedQuery = useProductLookup(recipe.productIds, lang);
   const linkedProducts = linkedQuery.data?.items ?? [];
@@ -1139,7 +1097,11 @@ export function RecipeDetailPage({ recipe, lang, go }: PageProps & { recipe: Rec
         />
       </div>
       <section className="recipe-hero">
-        <img src={recipe.image} alt={pick(lang, recipe.titleAr, recipe.titleEn)} />
+        <img
+          crossOrigin="anonymous"
+          src={recipe.image}
+          alt={pick(lang, recipe.titleAr, recipe.titleEn)}
+        />
         <div>
           <p className="eyebrow">
             {recipe.category === "sweets-baking"
@@ -1235,6 +1197,7 @@ export function RecipeDetailPage({ recipe, lang, go }: PageProps & { recipe: Rec
           </PageLink>
         </section>
       )}
+      <ContentStatus query={relatedQuery} lang={lang} />
       {related.length > 0 && (
         <section className="section-pad related-section">
           <div className="page-section-heading">
@@ -1248,7 +1211,7 @@ export function RecipeDetailPage({ recipe, lang, go }: PageProps & { recipe: Rec
                 go={go}
                 className="related-recipe"
               >
-                <img src={item.image} alt="" loading="lazy" />
+                <img crossOrigin="anonymous" src={item.image} alt="" loading="lazy" />
                 <strong>{pick(lang, item.titleAr, item.titleEn)}</strong>
               </PageLink>
             ))}
@@ -1283,4 +1246,15 @@ export function NotFoundPage({ lang, go }: PageProps) {
       </div>
     </main>
   );
+}
+
+export function RecipeRoutePage({ id, lang, go }: PageProps & { id: string }) {
+  const q = useRecipe(id, lang);
+  if (!q.data || q.isError)
+    return (
+      <main>
+        <ContentStatus query={q} lang={lang} />
+      </main>
+    );
+  return <RecipeDetailPage key={q.data.slug} recipe={q.data} lang={lang} go={go} />;
 }

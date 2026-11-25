@@ -1,5 +1,11 @@
 # Staff inquiry and sales workspace
 
+Update 2026-11-25: [content workspaces](content-management.md) are connected separately for
+administrator/content_editor. Inquiry access remains administrator/sales only. Local provisioning
+supports content_editor as well. Inquiry cards/actions/heading spacing, bidi dates/references,
+one-page pagination and responsive footer have been corrected. On closure, stale review/send
+actions disappear and unsent text remains visible with a copy option.
+
 Authorized 2026-11-24 on permanent `mahmoud`, building on customer inquiries `2d89755`.
 Native MySQL only; preserve accounts, products, submitted request fields/snapshots and drafts.
 

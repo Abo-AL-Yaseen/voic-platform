@@ -6,6 +6,12 @@
 
 # Customer supply inquiries
 
+Update 2026-11-25: known Al-Ghazal package options are present in MySQL and the public DTO.
+New inquiry forms now require an explicit known-package or discussion choice instead of
+preselecting discussion; unknown specifications remain unknown. Closure preserves unsent
+conversation text for copying. [Content-management verification](content-management.md)
+also covers these fixes and the preserved inquiry regressions.
+
 Authorized 2026-11-24 on `mahmoud`. Native MySQL only. This slice preserves catalog and
 authentication and adds customer-owned drafts/submissions; staff business writes remain future work.
 

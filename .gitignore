@@ -41,3 +41,6 @@ service-account*.json
 
 # Redundant generated frontend snapshot; retain Figma configuration and assets
 /frontend/.figma/master-baseline/
+
+# Persistent local media uploads; back up separately from Git
+.local-data/

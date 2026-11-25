@@ -1,0 +1,498 @@
+[
+  {
+    "id": "semolina-maamoul",
+    "slug": "semolina-maamoul",
+    "titleAr": "معمول السميد بالتمر",
+    "titleEn": "Date-filled Semolina Maamoul",
+    "category": "sweets-baking",
+    "descriptionAr": "معمول بحشوة التمر ولمسة المحلب، مع سمن النباتين.",
+    "descriptionEn": "Semolina maamoul with date filling, mahlab and Al-Nabatin ghee.",
+    "productIds": [
+      "nabateen"
+    ],
+    "image": "/assets/site/recipe-maamoul.jpg",
+    "ingredients": [
+      {
+        "amount": 1,
+        "unitAr": "كغم",
+        "unitEn": "kg",
+        "nameAr": "سميد ناعم",
+        "nameEn": "fine semolina"
+      },
+      {
+        "amount": 2,
+        "unitAr": "ملعقة كبيرة",
+        "unitEn": "tbsp",
+        "nameAr": "محلب مطحون",
+        "nameEn": "ground mahlab"
+      },
+      {
+        "amount": 3,
+        "unitAr": "أكواب",
+        "unitEn": "cups",
+        "nameAr": "سمن النباتين",
+        "nameEn": "Al-Nabatin ghee"
+      },
+      {
+        "amount": 1,
+        "unitAr": "ملعقة كبيرة",
+        "unitEn": "tbsp",
+        "nameAr": "خميرة فورية",
+        "nameEn": "instant yeast"
+      },
+      {
+        "amount": 1,
+        "unitAr": "كوب",
+        "unitEn": "cup",
+        "nameAr": "حليب كامل الدسم دافئ",
+        "nameEn": "warm whole milk"
+      },
+      {
+        "amount": 400,
+        "unitAr": "غم",
+        "unitEn": "g",
+        "nameAr": "تمر مهروس",
+        "nameEn": "mashed dates"
+      },
+      {
+        "amount": 2,
+        "unitAr": "ملعقة صغيرة",
+        "unitEn": "tsp",
+        "nameAr": "جوزة الطيب",
+        "nameEn": "nutmeg"
+      },
+      {
+        "amount": 1,
+        "unitAr": "ملعقة كبيرة",
+        "unitEn": "tbsp",
+        "nameAr": "قرفة",
+        "nameEn": "cinnamon"
+      },
+      {
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "زيت زيتون للحشوة حسب الحاجة",
+        "nameEn": "olive oil for the filling, as needed"
+      },
+      {
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "سكر بودرة للتقديم حسب الرغبة",
+        "nameEn": "icing sugar to serve, if desired"
+      }
+    ],
+    "stepsAr": [
+      "افرك السميد بالمحلب والسمن، ثم غطّه واتركه أربع ساعات.",
+      "أضف الخميرة والحليب بالتدريج واعجن حتى تتكوّن عجينة طرية.",
+      "حضّر حشوة التمر مع القرفة وجوزة الطيب وقليل من الزيت.",
+      "قسّم العجين واحشه بالتمر، وشكّل الحبات بالقالب. اتركها ترتاح 15 دقيقة.",
+      "اخبز على 175°م لمدة 15–20 دقيقة مع متابعة اللون، ثم برّد الحبات وقدّمها مع السكر حسب الرغبة."
+    ],
+    "stepsEn": [
+      "Rub the semolina with the mahlab and ghee, then cover and leave for four hours.",
+      "Add the yeast and milk gradually and knead until a soft dough forms.",
+      "Prepare the date filling with cinnamon, nutmeg and a little oil.",
+      "Divide the dough, fill with dates and shape in a mould. Rest for 15 minutes.",
+      "Bake at 175°C for 15–20 minutes, watching the colour. Cool and serve with sugar if desired."
+    ],
+    "knownTimeAr": "راحة العجين: 4 ساعات، ثم 15 دقيقة بعد التشكيل. الخبز: 15–20 دقيقة.",
+    "knownTimeEn": "Dough rest: 4 hours, then 15 minutes after shaping. Baking: 15–20 minutes.",
+    "temperatureC": 175
+  },
+  {
+    "id": "qidra-with-lamb",
+    "slug": "qidra-with-lamb",
+    "titleAr": "القدرة باللحم",
+    "titleEn": "Qidra with Lamb",
+    "category": "main-dishes",
+    "descriptionAr": "أرز ولحم وحمص، مع زيت نباتي وسمن النباتين.",
+    "descriptionEn": "Rice, lamb and chickpeas prepared with vegetable oil and Al-Nabatin ghee.",
+    "productIds": [
+      "nabateen",
+      "reem-sunflower-oil",
+      "ghazalein-corn-oil"
+    ],
+    "image": "/assets/site/recipe-qidra-lamb.jpg",
+    "ingredients": [
+      {
+        "amount": 2,
+        "unitAr": "كوب",
+        "unitEn": "cups",
+        "nameAr": "أرز بسمتي",
+        "nameEn": "basmati rice"
+      },
+      {
+        "amount": 1,
+        "unitAr": "كغم",
+        "unitEn": "kg",
+        "nameAr": "لحم",
+        "nameEn": "lamb"
+      },
+      {
+        "amount": 1,
+        "unitAr": "كوب",
+        "unitEn": "cup",
+        "nameAr": "حمص مسلوق",
+        "nameEn": "cooked chickpeas"
+      },
+      {
+        "amount": 0.5,
+        "unitAr": "كوب",
+        "unitEn": "cup",
+        "nameAr": "زيت ريم أو الغزالين",
+        "nameEn": "Reem or Al-Ghazalein oil"
+      },
+      {
+        "amount": 1,
+        "unitAr": "ملعقة كبيرة",
+        "unitEn": "tbsp",
+        "nameAr": "سمن النباتين",
+        "nameEn": "Al-Nabatin ghee"
+      },
+      {
+        "amount": 2,
+        "unitAr": "لتر",
+        "unitEn": "L",
+        "nameAr": "ماء",
+        "nameEn": "water"
+      },
+      {
+        "amount": 2,
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "بصلة مفرومة",
+        "nameEn": "onions, chopped"
+      },
+      {
+        "amount": 2,
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "بصلة شرائح",
+        "nameEn": "onions, sliced"
+      },
+      {
+        "amount": 3,
+        "unitAr": "ملاعق كبيرة",
+        "unitEn": "tbsp",
+        "nameAr": "ثوم مهروس",
+        "nameEn": "crushed garlic"
+      },
+      {
+        "amount": 1,
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "مكعب مرق دجاج",
+        "nameEn": "chicken stock cube"
+      },
+      {
+        "amount": 2,
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "ورقة غار",
+        "nameEn": "bay leaves"
+      },
+      {
+        "amount": 0.5,
+        "unitAr": "ملعقة صغيرة",
+        "unitEn": "tsp",
+        "nameAr": "كمون",
+        "nameEn": "cumin"
+      },
+      {
+        "amount": 1,
+        "unitAr": "ملعقة صغيرة",
+        "unitEn": "tsp",
+        "nameAr": "كركم",
+        "nameEn": "turmeric"
+      },
+      {
+        "amount": 1,
+        "unitAr": "ملعقة صغيرة",
+        "unitEn": "tsp",
+        "nameAr": "حب هال",
+        "nameEn": "cardamom pods"
+      },
+      {
+        "amount": 1,
+        "unitAr": "ملعقة كبيرة",
+        "unitEn": "tbsp",
+        "nameAr": "هال مطحون",
+        "nameEn": "ground cardamom"
+      },
+      {
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "ملح وفلفل أسود حسب الذوق",
+        "nameEn": "salt and black pepper to taste"
+      }
+    ],
+    "stepsAr": [
+      "شوّح البصل المفروم بنصف الزيت، وأضف اللحم والغار وحب الهال. اسكب الماء واترك اللحم حتى ينضج، ثم احفظ المرق.",
+      "حمّر شرائح البصل ببقية الزيت وقلّب معها الحمص والكمون والفلفل.",
+      "تبّل الأرز بالثوم والكركم والهال المطحون والملح. رتّب نصفه ثم خليط الحمص ثم بقية الأرز.",
+      "أضف مكعب المرق وأربعة أكواب من مرق اللحم المصفّى. ابدأ بالغليان ثم خفّف النار حتى ينضج الأرز.",
+      "وزّع السمن فوق الأرز وغطّه ليذوب، ثم قدّم الأرز مع اللحم."
+    ],
+    "stepsEn": [
+      "Sauté the chopped onion in half the oil. Add the lamb, bay leaves and cardamom pods. Add the water and cook until tender, reserving the stock.",
+      "Brown the sliced onions in the remaining oil, then stir in the chickpeas, cumin and pepper.",
+      "Season the rice with garlic, turmeric, ground cardamom and salt. Layer half the rice, the chickpea mixture, then the remaining rice.",
+      "Add the stock cube and four cups of strained lamb stock. Bring to a boil, then reduce the heat until the rice is cooked.",
+      "Spread the ghee over the rice and cover until it melts, then serve with the lamb."
+    ]
+  },
+  {
+    "id": "shishbarak-with-yogurt",
+    "slug": "shishbarak-with-yogurt",
+    "titleAr": "شيشبرك باللبن",
+    "titleEn": "Shishbarak with Yogurt",
+    "category": "main-dishes",
+    "descriptionAr": "عجينة محشوة باللحم، تُقدّم مع اللبن والثوم والكزبرة.",
+    "descriptionEn": "Meat-filled dumplings served with yogurt, garlic and coriander.",
+    "productIds": [
+      "reem-sunflower-oil"
+    ],
+    "image": "/assets/site/recipe-shishbarak.jpg",
+    "ingredients": [
+      {
+        "amount": 500,
+        "unitAr": "غم",
+        "unitEn": "g",
+        "nameAr": "لحم مفروم",
+        "nameEn": "minced meat"
+      },
+      {
+        "amount": 2,
+        "unitAr": "كوب",
+        "unitEn": "cups",
+        "nameAr": "دقيق منخول",
+        "nameEn": "sifted flour"
+      },
+      {
+        "amount": 1,
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "بصلة صغيرة مفرومة",
+        "nameEn": "small onion, chopped"
+      },
+      {
+        "amount": 2,
+        "unitAr": "ملعقة كبيرة",
+        "unitEn": "tbsp",
+        "nameAr": "زيت ريم للحشوة",
+        "nameEn": "Reem oil for the filling"
+      },
+      {
+        "amount": 0.5,
+        "unitAr": "ملعقة كبيرة",
+        "unitEn": "tbsp",
+        "nameAr": "زيت للثوم والكزبرة",
+        "nameEn": "oil for the garlic and coriander"
+      },
+      {
+        "amount": 1,
+        "unitAr": "ملعقة صغيرة",
+        "unitEn": "tsp",
+        "nameAr": "جوزة الطيب",
+        "nameEn": "nutmeg"
+      },
+      {
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "ملح وبهارات حسب الذوق",
+        "nameEn": "salt and spices to taste"
+      },
+      {
+        "amount": 1,
+        "unitAr": "كغم",
+        "unitEn": "kg",
+        "nameAr": "لبن",
+        "nameEn": "yogurt"
+      },
+      {
+        "amount": 2,
+        "unitAr": "ملعقة كبيرة",
+        "unitEn": "tbsp",
+        "nameAr": "كزبرة مفرومة",
+        "nameEn": "chopped coriander"
+      },
+      {
+        "amount": 1,
+        "unitAr": "فص",
+        "unitEn": "clove",
+        "nameAr": "ثوم مفروم",
+        "nameEn": "chopped garlic"
+      },
+      {
+        "amount": 3,
+        "unitAr": "ملاعق كبيرة",
+        "unitEn": "tbsp",
+        "nameAr": "نشا",
+        "nameEn": "starch"
+      },
+      {
+        "amount": 0.5,
+        "unitAr": "كوب",
+        "unitEn": "cup",
+        "nameAr": "ماء لإذابة النشا",
+        "nameEn": "water to dissolve the starch"
+      },
+      {
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "ماء للعجين حسب الحاجة",
+        "nameEn": "water for the dough, as needed"
+      }
+    ],
+    "stepsAr": [
+      "اعجن الدقيق والملح بماء يضاف تدريجيًا. غطّ العجين وبرّده 30 دقيقة.",
+      "قلّب البصل في الزيت، ثم أضف اللحم والبهارات وجوزة الطيب واطبخ الحشوة حتى تنضج.",
+      "افرد العجين وقطّعه دوائر، واحشها وأغلقها بشكل الشيشبرك.",
+      "رتّبها على صينية مدهونة قليلًا، واخبز عند 180°م نحو 10 دقائق مع متابعة التحمير.",
+      "حرّك اللبن مع النشا على نار متوسطة حتى يثخن. قلّب الثوم والكزبرة بالزيت وأضفهما إلى اللبن، ثم قدّم مع الشيشبرك."
+    ],
+    "stepsEn": [
+      "Knead the flour and salt with water added gradually. Cover and chill the dough for 30 minutes.",
+      "Sauté the onion in oil, add the meat, spices and nutmeg, and cook the filling through.",
+      "Roll out the dough, cut into circles, fill and close into shishbarak shapes.",
+      "Arrange on a lightly greased tray and bake at 180°C for about 10 minutes, watching the browning.",
+      "Stir the yogurt with the starch over medium heat until thick. Sauté the garlic and coriander in oil, add to the yogurt and serve with the shishbarak."
+    ],
+    "knownTimeAr": "تبريد العجين: 30 دقيقة. خبز الحبات: نحو 10 دقائق.",
+    "knownTimeEn": "Chilling the dough: 30 minutes. Baking the dumplings: about 10 minutes.",
+    "temperatureC": 180
+  },
+  {
+    "id": "fish-with-vegetables",
+    "slug": "fish-with-vegetables",
+    "titleAr": "صينية سمك بالخضروات",
+    "titleEn": "Baked Fish with Vegetables",
+    "category": "main-dishes",
+    "descriptionAr": "سمك بالفرن مع الخضروات والليمون والثوم والبهارات.",
+    "descriptionEn": "Oven-baked fish with vegetables, lemon, garlic and spices.",
+    "productIds": [],
+    "image": "/assets/site/recipe-fish.jpg",
+    "ingredients": [
+      {
+        "amount": 4,
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "سمكات متوسطة",
+        "nameEn": "medium fish"
+      },
+      {
+        "amount": 1,
+        "unitAr": "كوب",
+        "unitEn": "cup",
+        "nameAr": "بقدونس مفروم، وقليل للتزيين",
+        "nameEn": "chopped parsley, plus a little to garnish"
+      },
+      {
+        "amount": 0.25,
+        "unitAr": "كوب",
+        "unitEn": "cup",
+        "nameAr": "عصير ليمون",
+        "nameEn": "lemon juice"
+      },
+      {
+        "amount": 2,
+        "unitAr": "ملعقة كبيرة",
+        "unitEn": "tbsp",
+        "nameAr": "زيت زيتون",
+        "nameEn": "olive oil"
+      },
+      {
+        "amount": 6,
+        "unitAr": "فصوص",
+        "unitEn": "cloves",
+        "nameAr": "ثوم مهروس",
+        "nameEn": "crushed garlic"
+      },
+      {
+        "amount": 1,
+        "unitAr": "ملعقة صغيرة",
+        "unitEn": "tsp each",
+        "nameAr": "كركم وكمون وبابريكا وملح",
+        "nameEn": "turmeric, cumin, paprika and salt"
+      },
+      {
+        "amount": 0.5,
+        "unitAr": "ملعقة صغيرة",
+        "unitEn": "tsp",
+        "nameAr": "زعفران",
+        "nameEn": "saffron"
+      },
+      {
+        "amount": 0.5,
+        "unitAr": "ملعقة صغيرة",
+        "unitEn": "tsp",
+        "nameAr": "فلفل أسود",
+        "nameEn": "black pepper"
+      },
+      {
+        "amount": 1,
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "قرن فلفل حار شرائح",
+        "nameEn": "hot pepper, sliced"
+      },
+      {
+        "amount": 3,
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "حبات جزر كبيرة شرائح",
+        "nameEn": "large carrots, sliced"
+      },
+      {
+        "amount": 4,
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "أوراق غار",
+        "nameEn": "bay leaves"
+      },
+      {
+        "amount": 1,
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "ليمونة شرائح",
+        "nameEn": "lemon, sliced"
+      },
+      {
+        "amount": 1,
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "بصلة شرائح",
+        "nameEn": "onion, sliced"
+      },
+      {
+        "amount": 2,
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "فلفل أخضر حلو مكعبات",
+        "nameEn": "green sweet peppers, diced"
+      },
+      {
+        "amount": 1,
+        "unitAr": "",
+        "unitEn": "",
+        "nameAr": "طماطم مقشرة ومفرومة",
+        "nameEn": "tomato, peeled and chopped"
+      }
+    ],
+    "stepsAr": [
+      "حضّر السمك ونظّفه وصفّه. اخلط العصير والزيت والثوم والبقدونس والتوابل.",
+      "تبّل السمك من الداخل والخارج، وضع ورقة غار داخل كل سمكة.",
+      "وزّع جزءًا من الخضروات والليمون في الصينية، ثم السمك وبقية الخضروات والطماطم والتتبيلة.",
+      "غطّ الصينية بورق الألمنيوم واخبزها على 190°م نحو 60 دقيقة حتى النضج، ثم اكشفها للتحمير وقدّمها ساخنة."
+    ],
+    "stepsEn": [
+      "Prepare, clean and drain the fish. Mix the lemon juice, oil, garlic, parsley and spices.",
+      "Season the fish inside and out, placing one bay leaf inside each fish.",
+      "Spread some vegetables and lemon in the tray, then add the fish, remaining vegetables, tomato and marinade.",
+      "Cover with foil and bake at 190°C for about 60 minutes until cooked, then uncover to brown and serve hot."
+    ],
+    "knownTimeAr": "الخبز: نحو 60 دقيقة، ثم التحمير.",
+    "knownTimeEn": "Baking: about 60 minutes, followed by browning.",
+    "temperatureC": 190
+  }
+]

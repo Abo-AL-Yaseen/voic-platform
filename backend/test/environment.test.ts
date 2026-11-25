@@ -58,7 +58,7 @@ test("database options never synchronize or run migrations on startup", () => {
   assert.equal(options.dropSchema, false);
   assert.equal(options.migrationsRun, false);
   assert.equal(options.logging, false);
-  assert.equal((options.entities as unknown[]).length, 15);
+  assert.equal((options.entities as unknown[]).length, 21);
 });
 
 test("the real bootstrap exits on invalid configuration without leaking supplied values", () => {

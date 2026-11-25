@@ -8,7 +8,7 @@ import { passwordOptions, hashToken } from "./auth.service.js";
 export type LocalStaffInput = {
   mode: "create" | "promote";
   email: string;
-  role: "administrator" | "sales";
+  role: "administrator" | "sales" | "content_editor";
   name?: string;
   country?: string;
   password?: string;
@@ -38,7 +38,7 @@ export async function provisionLocalStaff(
     !["create", "promote"].includes(input.mode) ||
     !isEmail(email) ||
     email.length > 254 ||
-    !["administrator", "sales"].includes(input.role)
+    !["administrator", "sales", "content_editor"].includes(input.role)
   )
     throw new Error("Invalid local staff identity");
   if (

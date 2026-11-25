@@ -26,6 +26,7 @@ export function configureHttp(app: NestExpressApplication, env: Environment): vo
     },
     maxAge: 600,
   });
+  app.use("/api/v1/staff/content/media/upload", express.json({ limit: "7mb", strict: true }));
   app.use(express.json({ limit: "64kb", strict: true }));
   app.use(express.urlencoded({ limit: "64kb", extended: false, parameterLimit: 100 }));
   app.useGlobalPipes(

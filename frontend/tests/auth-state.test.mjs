@@ -16,6 +16,7 @@ async function load(file) {
 const { safeInternalPath } = await load("utils/navigation.ts");
 const { queryClient, clearPrivateQueries } = await load("services/queryClient.ts");
 const { inquiryKeys } = await load("hooks/inquiries/keys.ts");
+const { editorialKeys } = await load("hooks/editorial/keys.ts");
 const { inquiryPayload } = await load("utils/inquiryPayload.ts");
 const { staffInquiryKeys } = await load("hooks/staff-inquiries/keys.ts");
 const { staffInquiryFilters, staffInquiryLocation } = await load("utils/staffInquiryLocation.ts");
@@ -123,6 +124,9 @@ test("logout cancellation prevents a late private response restoring old data an
   const staffKey = staffInquiryKeys.detail("old-user", "sales", 1, "id");
   queryClient.setQueryData(staffKey, { internalNotes: [{ text: "private staff note" }] });
   assert.equal(queryClient.getQueryCache().find({ queryKey: staffKey }).meta.private, true);
+  const editorialKey = editorialKeys.detail("old-user", "content_editor", 1, "products", "ghazal");
+  queryClient.setQueryData(editorialKey, { body: { descriptionEn: "private editorial draft" } });
+  assert.equal(queryClient.getQueryCache().find({ queryKey: editorialKey }).meta.private, true);
   // A write may seed inquiry detail before any useQuery has established its metadata.
   queryClient.setQueryData(["inquiries", "customer", "old-user", 2, "detail", "id"], {
     notes: "private draft",
@@ -167,4 +171,13 @@ test("logout cancellation prevents a late private response restoring old data an
   assert.equal(queryClient.getMutationCache().getAll().length, 0);
   assert.deepEqual(queryClient.getQueryData(["products", "public"]), [{ id: "ghazal" }]);
   queryClient.clear();
+});
+
+test("editorial keys isolate permission context and never overlap public product records", () => {
+  const k = editorialKeys.detail("a", "content_editor", 1, "products", "ghazal");
+  assert.notDeepEqual(k, editorialKeys.detail("b", "content_editor", 1, "products", "ghazal"));
+  assert.notDeepEqual(k, editorialKeys.detail("a", "administrator", 1, "products", "ghazal"));
+  assert.notDeepEqual(k, editorialKeys.detail("a", "content_editor", 2, "products", "ghazal"));
+  assert.notDeepEqual(k, editorialKeys.detail("a", "content_editor", 1, "recipes", "ghazal"));
+  assert.equal(k[0], "editorial");
 });

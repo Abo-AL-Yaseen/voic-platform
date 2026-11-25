@@ -1,3 +1,5 @@
+import { usePublishedPage } from "./hooks/content/queries";
+import ContentStatus from "./components/ContentStatus";
 import { packageLabel, productUseLabel } from "./utils/productLabels";
 import type { ReactNode } from "react";
 import type { Product } from "./catalog";
@@ -29,12 +31,14 @@ export default function ProductQuickView({
   feedback?: ReactNode;
 }) {
   const t = ui[lang];
+  const sharedQuery = usePublishedPage("shared", lang);
   return (
     <Modal title={productName(product, lang)} onClose={onClose} lang={lang}>
       {feedback}
+      <ContentStatus query={sharedQuery} lang={lang} />
       <div className="product-detail">
         {product.image ? (
-          <img src={product.image} alt={productName(product, lang)} />
+          <img crossOrigin="anonymous" src={product.image} alt={productName(product, lang)} />
         ) : (
           <div
             className="missing-product-image detail-missing-image"
@@ -82,7 +86,14 @@ export default function ProductQuickView({
               {t.inquiry}
             </button>
             <p>{t.emailHint}</p>
-            <a className="text-link quick-full-link" href={productInquiryHref(product, lang)}>
+            <a
+              className="text-link quick-full-link"
+              href={
+                sharedQuery.data && !sharedQuery.isError
+                  ? productInquiryHref(product, lang, sharedQuery.data.links.email)
+                  : undefined
+              }
+            >
               {lang === "ar" ? "تواصل بالبريد بدلًا من ذلك" : "Contact by email instead"}
             </a>
             <button
